@@ -1,0 +1,84 @@
+syntax = "proto3";
+package crossrefd.crossref.v1;
+
+option go_package = "github.com/crossref/crossrefd/x/crossref/types";
+
+// CrossrefPacketData defines the Crossref data packet.
+message CrossrefPacketData {
+  oneof packet {
+    NoData noData = 1;
+    CrossReferencePacketData cross_reference = 2;
+  }
+}
+
+// NoData defines an empty data packet.
+message NoData {}
+
+message DomainInfo {
+  string domain_id = 1;
+  string chain_id = 2;
+  bytes validator_set_hash = 3;
+  string metadata_uri = 4;
+}
+
+message DomainChannel {
+  string local_domain_id = 1;
+  string remote_domain_id = 2;
+  string port_id = 3;
+  string channel_id = 4;
+  string client_id = 5;
+  string counterparty_port_id = 6;
+  string counterparty_channel_id = 7;
+}
+
+message Checkpoint {
+  string domain_id = 1;
+  uint64 height = 2;
+  bytes block_hash = 3;
+  bytes app_hash = 4;
+  bytes validator_set_hash = 5;
+  bytes previous_checkpoint_hash = 6;
+  bytes checkpoint_hash = 7;
+  bytes hysteresis_signature = 8;
+  int64 block_time_unix = 9;
+}
+
+message CrossReference {
+  string local_domain_id = 1;
+  string remote_domain_id = 2;
+  uint64 remote_height = 3;
+  bytes remote_checkpoint_hash = 4;
+  string port_id = 5;
+  string channel_id = 6;
+  string relayer = 7;
+  int64 received_time_unix = 8;
+}
+
+message TamperAlert {
+  string domain_id = 1;
+  uint64 height = 2;
+  bytes existing_checkpoint_hash = 3;
+  bytes conflicting_checkpoint_hash = 4;
+  string reason = 5;
+  int64 detected_time_unix = 6;
+}
+
+message CrossReferencePacketData {
+  string source_domain_id = 1;
+  string source_chain_id = 2;
+  uint64 source_height = 3;
+  bytes block_hash = 4;
+  bytes app_hash = 5;
+  bytes validator_set_hash = 6;
+  bytes previous_checkpoint_hash = 7;
+  bytes checkpoint_hash = 8;
+  bytes hysteresis_signature = 9;
+  int64 block_time_unix = 10;
+}
+
+message CrossReferencePacketAck {
+  bool accepted = 1;
+  string code = 2;
+  string message = 3;
+  bytes stored_checkpoint_hash = 4;
+}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package crossrefd.crossref.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/crossref/crossrefd/x/crossref/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "crossrefd/x/crossref/Params";
+  option (gogoproto.equal) = true;
+}

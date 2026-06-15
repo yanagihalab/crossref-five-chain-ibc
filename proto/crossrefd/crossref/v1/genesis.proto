@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package crossrefd.crossref.v1;
+
+import "amino/amino.proto";
+import "crossrefd/crossref/v1/params.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/crossref/crossrefd/x/crossref/types";
+
+// GenesisState defines the crossref module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  string port_id = 2;
+}

@@ -1,0 +1,109 @@
+syntax = "proto3";
+package crossrefd.crossref.v1;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "crossrefd/crossref/v1/params.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/crossref/crossrefd/x/crossref/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  rpc RegisterDomain(MsgRegisterDomain) returns (MsgRegisterDomainResponse);
+  rpc BindDomainChannel(MsgBindDomainChannel) returns (MsgBindDomainChannelResponse);
+  rpc SubmitCheckpoint(MsgSubmitCheckpoint) returns (MsgSubmitCheckpointResponse);
+  rpc SendCrossReferencePacket(MsgSendCrossReferencePacket) returns (MsgSendCrossReferencePacketResponse);
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "crossrefd/x/crossref/MsgUpdateParams";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+message MsgRegisterDomain {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "crossrefd/x/crossref/MsgRegisterDomain";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string domain_id = 2;
+  string chain_id = 3;
+  bytes validator_set_hash = 4;
+  string metadata_uri = 5;
+}
+
+message MsgRegisterDomainResponse {}
+
+message MsgBindDomainChannel {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "crossrefd/x/crossref/MsgBindDomainChannel";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string local_domain_id = 2;
+  string remote_domain_id = 3;
+  string port_id = 4;
+  string channel_id = 5;
+  string client_id = 6;
+  string counterparty_port_id = 7;
+  string counterparty_channel_id = 8;
+}
+
+message MsgBindDomainChannelResponse {}
+
+message MsgSubmitCheckpoint {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "crossrefd/x/crossref/MsgSubmitCheckpoint";
+
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string domain_id = 2;
+  uint64 height = 3;
+  bytes block_hash = 4;
+  bytes app_hash = 5;
+  bytes validator_set_hash = 6;
+  bytes previous_checkpoint_hash = 7;
+  bytes checkpoint_hash = 8;
+  bytes hysteresis_signature = 9;
+  int64 block_time_unix = 10;
+}
+
+message MsgSubmitCheckpointResponse {
+  bytes checkpoint_hash = 1;
+}
+
+message MsgSendCrossReferencePacket {
+  option (cosmos.msg.v1.signer) = "sender";
+  option (amino.name) = "crossrefd/x/crossref/MsgSendCrossReferencePacket";
+
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string source_domain_id = 2;
+  uint64 source_height = 3;
+  string port_id = 4;
+  string channel_id = 5;
+  uint64 timeout_seconds = 6;
+}
+
+message MsgSendCrossReferencePacketResponse {
+  uint64 sequence = 1;
+}

@@ -37,9 +37,9 @@ import (
 	_ "cosmossdk.io/x/upgrade"    // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"       // import for side-effects
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	_ "github.com/cosmos/cosmos-sdk/x/authz/module" // import for side-effects
@@ -67,6 +67,8 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	_ "github.com/crossref/crossrefd/x/crossref/module"
+	crossrefmoduletypes "github.com/crossref/crossrefd/x/crossref/types"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -81,7 +83,7 @@ var (
 		{Account: nft.ModuleName},
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: icatypes.ModuleName},
-	}
+		{Account: crossrefmoduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}}}
 
 	// blocked account addresses
 	blockAccAddrs = []string{
@@ -122,14 +124,14 @@ var (
 						// ibc modules
 						ibcexported.ModuleName,
 						// chain modules
-					},
+						crossrefmoduletypes.ModuleName},
 					EndBlockers: []string{
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
 						// chain modules
-					},
+						crossrefmoduletypes.ModuleName},
 					// The following is mostly only needed when ModuleName != StoreKey name.
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -164,7 +166,7 @@ var (
 						ibctransfertypes.ModuleName,
 						icatypes.ModuleName,
 						// chain modules
-					},
+						crossrefmoduletypes.ModuleName},
 				}),
 			},
 			{
@@ -259,6 +261,9 @@ var (
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
-		},
+			{
+				Name:   crossrefmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&crossrefmoduletypes.Module{}),
+			}},
 	})
 )

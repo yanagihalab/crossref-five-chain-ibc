@@ -1,0 +1,78 @@
+syntax = "proto3";
+package crossrefd.crossref.v1;
+
+import "amino/amino.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "crossrefd/crossref/v1/packet.proto";
+import "crossrefd/crossref/v1/params.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/crossref/crossrefd/x/crossref/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/params";
+  }
+  rpc Domain(QueryDomainRequest) returns (QueryDomainResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/domains/{domain_id}";
+  }
+  rpc Checkpoint(QueryCheckpointRequest) returns (QueryCheckpointResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/checkpoints/{domain_id}/{height}";
+  }
+  rpc LatestCheckpoint(QueryLatestCheckpointRequest) returns (QueryLatestCheckpointResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/checkpoints/{domain_id}/latest";
+  }
+  rpc CrossReference(QueryCrossReferenceRequest) returns (QueryCrossReferenceResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/references/{local_domain_id}/{remote_domain_id}/{remote_height}";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+message QueryDomainRequest {
+  string domain_id = 1;
+}
+
+message QueryDomainResponse {
+  DomainInfo domain = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryCheckpointRequest {
+  string domain_id = 1;
+  uint64 height = 2;
+}
+
+message QueryCheckpointResponse {
+  Checkpoint checkpoint = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryLatestCheckpointRequest {
+  string domain_id = 1;
+}
+
+message QueryLatestCheckpointResponse {
+  Checkpoint checkpoint = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryCrossReferenceRequest {
+  string local_domain_id = 1;
+  string remote_domain_id = 2;
+  uint64 remote_height = 3;
+}
+
+message QueryCrossReferenceResponse {
+  CrossReference cross_reference = 1 [(gogoproto.nullable) = false];
+}

@@ -1,0 +1,67 @@
+services:
+  chain-a:
+    build:
+      context: ..
+      dockerfile: docker/crossrefd.Dockerfile
+    container_name: crossref-chain-a
+    environment:
+      CHAIN_ID: crossref-a
+      MONIKER: chain-a
+      HOME_DIR: /var/crossref
+      VALIDATOR_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+    command: ["/opt/crossref/scripts/start-chain.sh"]
+    ports:
+      - "26657:26657"
+      - "9090:9090"
+      - "1317:1317"
+    volumes:
+      - chain-a-data:/var/crossref
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:26657/status"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  chain-b:
+    build:
+      context: ..
+      dockerfile: docker/crossrefd.Dockerfile
+    container_name: crossref-chain-b
+    environment:
+      CHAIN_ID: crossref-b
+      MONIKER: chain-b
+      HOME_DIR: /var/crossref
+      VALIDATOR_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+    command: ["/opt/crossref/scripts/start-chain.sh"]
+    ports:
+      - "26667:26657"
+      - "9091:9090"
+      - "1318:1317"
+    volumes:
+      - chain-b-data:/var/crossref
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:26657/status"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  relayer:
+    image: ghcr.io/informalsystems/hermes:v1.10.5
+    container_name: crossref-hermes
+    depends_on:
+      chain-a:
+        condition: service_healthy
+      chain-b:
+        condition: service_healthy
+    environment:
+      RELAYER_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+    entrypoint: ["/bin/sh", "/opt/crossref/scripts/setup-ibc.sh"]
+    volumes:
+      - ./hermes/config.toml:/root/.hermes/config.toml:ro
+      - ./scripts:/opt/crossref/scripts:ro
+      - hermes-keys:/root/.hermes/keys
+
+volumes:
+  chain-a-data:
+  chain-b-data:
+  hermes-keys:

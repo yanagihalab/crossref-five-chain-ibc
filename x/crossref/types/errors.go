@@ -8,7 +8,15 @@ import (
 
 // x/crossref module sentinel errors
 var (
-	ErrInvalidSigner        = errors.Register(ModuleName, 1100, "expected gov account as only signer for proposal message")
-	ErrInvalidPacketTimeout = errors.Register(ModuleName, 1500, "invalid packet timeout")
-	ErrInvalidVersion       = errors.Register(ModuleName, 1501, "invalid version")
+	ErrInvalidSigner            = errors.Register(ModuleName, 1100, "expected gov account as only signer for proposal message")
+	ErrInvalidPacketTimeout     = errors.Register(ModuleName, 1500, "invalid packet timeout")
+	ErrInvalidVersion           = errors.Register(ModuleName, 1501, "invalid version")
+	ErrInvalidRequest           = errors.Register(ModuleName, 1502, "invalid request")
+	ErrDomainNotFound           = errors.Register(ModuleName, 1503, "domain not found")
+	ErrDomainChannelNotFound    = errors.Register(ModuleName, 1504, "domain channel not found")
+	ErrUnauthorizedChannel      = errors.Register(ModuleName, 1505, "channel is not authorized for domain")
+	ErrCheckpointNotFound       = errors.Register(ModuleName, 1506, "checkpoint not found")
+	ErrCheckpointConflict       = errors.Register(ModuleName, 1507, "checkpoint conflict")
+	ErrCheckpointHashMismatch   = errors.Register(ModuleName, 1508, "checkpoint hash mismatch")
+	ErrPreviousCheckpointBroken = errors.Register(ModuleName, 1509, "previous checkpoint hash does not match latest known checkpoint")
 )

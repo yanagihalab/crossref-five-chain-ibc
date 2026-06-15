@@ -6,10 +6,6 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
 	_ "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -19,6 +15,9 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -115,35 +114,444 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+type QueryDomainRequest struct {
+	DomainId string `protobuf:"bytes,1,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty"`
+}
+
+func (m *QueryDomainRequest) Reset()         { *m = QueryDomainRequest{} }
+func (m *QueryDomainRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDomainRequest) ProtoMessage()    {}
+func (*QueryDomainRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{2}
+}
+func (m *QueryDomainRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDomainRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDomainRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDomainRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDomainRequest.Merge(m, src)
+}
+func (m *QueryDomainRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDomainRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDomainRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDomainRequest proto.InternalMessageInfo
+
+func (m *QueryDomainRequest) GetDomainId() string {
+	if m != nil {
+		return m.DomainId
+	}
+	return ""
+}
+
+type QueryDomainResponse struct {
+	Domain DomainInfo `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain"`
+}
+
+func (m *QueryDomainResponse) Reset()         { *m = QueryDomainResponse{} }
+func (m *QueryDomainResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDomainResponse) ProtoMessage()    {}
+func (*QueryDomainResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{3}
+}
+func (m *QueryDomainResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDomainResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDomainResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDomainResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDomainResponse.Merge(m, src)
+}
+func (m *QueryDomainResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDomainResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDomainResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDomainResponse proto.InternalMessageInfo
+
+func (m *QueryDomainResponse) GetDomain() DomainInfo {
+	if m != nil {
+		return m.Domain
+	}
+	return DomainInfo{}
+}
+
+type QueryCheckpointRequest struct {
+	DomainId string `protobuf:"bytes,1,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty"`
+	Height   uint64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
+}
+
+func (m *QueryCheckpointRequest) Reset()         { *m = QueryCheckpointRequest{} }
+func (m *QueryCheckpointRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryCheckpointRequest) ProtoMessage()    {}
+func (*QueryCheckpointRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{4}
+}
+func (m *QueryCheckpointRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCheckpointRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCheckpointRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCheckpointRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCheckpointRequest.Merge(m, src)
+}
+func (m *QueryCheckpointRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCheckpointRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCheckpointRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCheckpointRequest proto.InternalMessageInfo
+
+func (m *QueryCheckpointRequest) GetDomainId() string {
+	if m != nil {
+		return m.DomainId
+	}
+	return ""
+}
+
+func (m *QueryCheckpointRequest) GetHeight() uint64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+type QueryCheckpointResponse struct {
+	Checkpoint Checkpoint `protobuf:"bytes,1,opt,name=checkpoint,proto3" json:"checkpoint"`
+}
+
+func (m *QueryCheckpointResponse) Reset()         { *m = QueryCheckpointResponse{} }
+func (m *QueryCheckpointResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryCheckpointResponse) ProtoMessage()    {}
+func (*QueryCheckpointResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{5}
+}
+func (m *QueryCheckpointResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCheckpointResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCheckpointResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCheckpointResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCheckpointResponse.Merge(m, src)
+}
+func (m *QueryCheckpointResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCheckpointResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCheckpointResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCheckpointResponse proto.InternalMessageInfo
+
+func (m *QueryCheckpointResponse) GetCheckpoint() Checkpoint {
+	if m != nil {
+		return m.Checkpoint
+	}
+	return Checkpoint{}
+}
+
+type QueryLatestCheckpointRequest struct {
+	DomainId string `protobuf:"bytes,1,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty"`
+}
+
+func (m *QueryLatestCheckpointRequest) Reset()         { *m = QueryLatestCheckpointRequest{} }
+func (m *QueryLatestCheckpointRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLatestCheckpointRequest) ProtoMessage()    {}
+func (*QueryLatestCheckpointRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{6}
+}
+func (m *QueryLatestCheckpointRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLatestCheckpointRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLatestCheckpointRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLatestCheckpointRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLatestCheckpointRequest.Merge(m, src)
+}
+func (m *QueryLatestCheckpointRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLatestCheckpointRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLatestCheckpointRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLatestCheckpointRequest proto.InternalMessageInfo
+
+func (m *QueryLatestCheckpointRequest) GetDomainId() string {
+	if m != nil {
+		return m.DomainId
+	}
+	return ""
+}
+
+type QueryLatestCheckpointResponse struct {
+	Checkpoint Checkpoint `protobuf:"bytes,1,opt,name=checkpoint,proto3" json:"checkpoint"`
+}
+
+func (m *QueryLatestCheckpointResponse) Reset()         { *m = QueryLatestCheckpointResponse{} }
+func (m *QueryLatestCheckpointResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLatestCheckpointResponse) ProtoMessage()    {}
+func (*QueryLatestCheckpointResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{7}
+}
+func (m *QueryLatestCheckpointResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLatestCheckpointResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLatestCheckpointResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLatestCheckpointResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLatestCheckpointResponse.Merge(m, src)
+}
+func (m *QueryLatestCheckpointResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLatestCheckpointResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLatestCheckpointResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLatestCheckpointResponse proto.InternalMessageInfo
+
+func (m *QueryLatestCheckpointResponse) GetCheckpoint() Checkpoint {
+	if m != nil {
+		return m.Checkpoint
+	}
+	return Checkpoint{}
+}
+
+type QueryCrossReferenceRequest struct {
+	LocalDomainId  string `protobuf:"bytes,1,opt,name=local_domain_id,json=localDomainId,proto3" json:"local_domain_id,omitempty"`
+	RemoteDomainId string `protobuf:"bytes,2,opt,name=remote_domain_id,json=remoteDomainId,proto3" json:"remote_domain_id,omitempty"`
+	RemoteHeight   uint64 `protobuf:"varint,3,opt,name=remote_height,json=remoteHeight,proto3" json:"remote_height,omitempty"`
+}
+
+func (m *QueryCrossReferenceRequest) Reset()         { *m = QueryCrossReferenceRequest{} }
+func (m *QueryCrossReferenceRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryCrossReferenceRequest) ProtoMessage()    {}
+func (*QueryCrossReferenceRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{8}
+}
+func (m *QueryCrossReferenceRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCrossReferenceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCrossReferenceRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCrossReferenceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCrossReferenceRequest.Merge(m, src)
+}
+func (m *QueryCrossReferenceRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCrossReferenceRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCrossReferenceRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCrossReferenceRequest proto.InternalMessageInfo
+
+func (m *QueryCrossReferenceRequest) GetLocalDomainId() string {
+	if m != nil {
+		return m.LocalDomainId
+	}
+	return ""
+}
+
+func (m *QueryCrossReferenceRequest) GetRemoteDomainId() string {
+	if m != nil {
+		return m.RemoteDomainId
+	}
+	return ""
+}
+
+func (m *QueryCrossReferenceRequest) GetRemoteHeight() uint64 {
+	if m != nil {
+		return m.RemoteHeight
+	}
+	return 0
+}
+
+type QueryCrossReferenceResponse struct {
+	CrossReference CrossReference `protobuf:"bytes,1,opt,name=cross_reference,json=crossReference,proto3" json:"cross_reference"`
+}
+
+func (m *QueryCrossReferenceResponse) Reset()         { *m = QueryCrossReferenceResponse{} }
+func (m *QueryCrossReferenceResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryCrossReferenceResponse) ProtoMessage()    {}
+func (*QueryCrossReferenceResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{9}
+}
+func (m *QueryCrossReferenceResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCrossReferenceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCrossReferenceResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCrossReferenceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCrossReferenceResponse.Merge(m, src)
+}
+func (m *QueryCrossReferenceResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCrossReferenceResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCrossReferenceResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCrossReferenceResponse proto.InternalMessageInfo
+
+func (m *QueryCrossReferenceResponse) GetCrossReference() CrossReference {
+	if m != nil {
+		return m.CrossReference
+	}
+	return CrossReference{}
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "crossrefd.crossref.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "crossrefd.crossref.v1.QueryParamsResponse")
+	proto.RegisterType((*QueryDomainRequest)(nil), "crossrefd.crossref.v1.QueryDomainRequest")
+	proto.RegisterType((*QueryDomainResponse)(nil), "crossrefd.crossref.v1.QueryDomainResponse")
+	proto.RegisterType((*QueryCheckpointRequest)(nil), "crossrefd.crossref.v1.QueryCheckpointRequest")
+	proto.RegisterType((*QueryCheckpointResponse)(nil), "crossrefd.crossref.v1.QueryCheckpointResponse")
+	proto.RegisterType((*QueryLatestCheckpointRequest)(nil), "crossrefd.crossref.v1.QueryLatestCheckpointRequest")
+	proto.RegisterType((*QueryLatestCheckpointResponse)(nil), "crossrefd.crossref.v1.QueryLatestCheckpointResponse")
+	proto.RegisterType((*QueryCrossReferenceRequest)(nil), "crossrefd.crossref.v1.QueryCrossReferenceRequest")
+	proto.RegisterType((*QueryCrossReferenceResponse)(nil), "crossrefd.crossref.v1.QueryCrossReferenceResponse")
 }
 
 func init() { proto.RegisterFile("crossrefd/crossref/v1/query.proto", fileDescriptor_fc4067ce57b12db3) }
 
 var fileDescriptor_fc4067ce57b12db3 = []byte{
-	// 316 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4c, 0x2e, 0xca, 0x2f,
-	0x2e, 0x2e, 0x4a, 0x4d, 0x4b, 0xd1, 0x87, 0xb1, 0xf4, 0xcb, 0x0c, 0xf5, 0x0b, 0x4b, 0x53, 0x8b,
-	0x2a, 0xf5, 0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x44, 0xe1, 0x4a, 0xf4, 0x60, 0x2c, 0xbd, 0x32,
-	0x43, 0x29, 0xc1, 0xc4, 0xdc, 0xcc, 0xbc, 0x7c, 0x7d, 0x30, 0x09, 0x51, 0x29, 0x25, 0x92, 0x9e,
-	0x9f, 0x9e, 0x0f, 0x66, 0xea, 0x83, 0x58, 0x50, 0x51, 0x99, 0xf4, 0xfc, 0xfc, 0xf4, 0x9c, 0x54,
-	0xfd, 0xc4, 0x82, 0x4c, 0xfd, 0xc4, 0xbc, 0xbc, 0xfc, 0x92, 0xc4, 0x92, 0xcc, 0xfc, 0xbc, 0x62,
-	0xa8, 0xac, 0x56, 0x72, 0x7e, 0x71, 0x6e, 0x7e, 0xb1, 0x7e, 0x52, 0x62, 0x71, 0x2a, 0xc4, 0x5a,
-	0xfd, 0x32, 0xc3, 0xa4, 0xd4, 0x92, 0x44, 0x43, 0xfd, 0x82, 0xc4, 0xf4, 0xcc, 0x3c, 0xb0, 0x62,
-	0xa8, 0x5a, 0x25, 0xec, 0x8e, 0x2d, 0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x9a, 0xa7, 0x24, 0xc2, 0x25,
-	0x14, 0x08, 0x32, 0x25, 0x00, 0x2c, 0x18, 0x94, 0x5a, 0x58, 0x9a, 0x5a, 0x5c, 0xa2, 0x14, 0xce,
-	0x25, 0x8c, 0x22, 0x5a, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0x2a, 0xe4, 0xc0, 0xc5, 0x06, 0xd1, 0x2c,
-	0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x6d, 0x24, 0xab, 0x87, 0xd5, 0xaf, 0x7a, 0x10, 0x6d, 0x4e, 0x9c,
-	0x27, 0xee, 0xc9, 0x33, 0xac, 0x78, 0xbe, 0x41, 0x8b, 0x31, 0x08, 0xaa, 0xcf, 0x68, 0x26, 0x23,
-	0x17, 0x2b, 0xd8, 0x64, 0xa1, 0x7e, 0x46, 0x2e, 0x36, 0x88, 0x3a, 0x21, 0x4d, 0x1c, 0xc6, 0x60,
-	0x3a, 0x4c, 0x4a, 0x8b, 0x18, 0xa5, 0x10, 0xd7, 0x2a, 0xe9, 0x35, 0x5d, 0x7e, 0x32, 0x99, 0x49,
-	0x43, 0x48, 0x0d, 0xe1, 0x7b, 0x7c, 0x01, 0xe2, 0xe4, 0x71, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47,
-	0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d,
-	0xc7, 0x72, 0x0c, 0x51, 0x7a, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xd8,
-	0xcc, 0xaa, 0x40, 0x08, 0x96, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0xc3, 0xd6, 0x18, 0x10,
-	0x00, 0x00, 0xff, 0xff, 0x88, 0xaf, 0x70, 0x3a, 0x2e, 0x02, 0x00, 0x00,
+	// 707 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0xc7, 0x3b, 0x88, 0x55, 0x9e, 0xf2, 0xc3, 0x11, 0x91, 0x2c, 0x50, 0x61, 0x8d, 0xa4, 0x92,
+	0xb8, 0x93, 0x82, 0x9e, 0x48, 0x94, 0x54, 0xa2, 0x90, 0x68, 0xa2, 0x8d, 0xd1, 0xc4, 0x4b, 0x33,
+	0xdd, 0x0e, 0xdb, 0x0d, 0xed, 0xce, 0xb2, 0x33, 0x10, 0x49, 0xc3, 0xc5, 0x7f, 0x40, 0x13, 0x8e,
+	0xfa, 0x07, 0x78, 0xf4, 0xe2, 0x9f, 0x60, 0xc2, 0x91, 0xc4, 0x8b, 0x27, 0x43, 0xc0, 0xc4, 0x7f,
+	0xc3, 0x74, 0x66, 0xda, 0xb2, 0xa5, 0x3f, 0xa8, 0xf1, 0xd2, 0x4c, 0x5f, 0xdf, 0xf7, 0xbd, 0xcf,
+	0x7b, 0x6f, 0xde, 0x14, 0xe6, 0xdc, 0x88, 0x0b, 0x11, 0xb1, 0x8d, 0x22, 0xa9, 0x9f, 0xc8, 0x4e,
+	0x86, 0x6c, 0x6d, 0xb3, 0x68, 0xd7, 0x09, 0x23, 0x2e, 0x39, 0xbe, 0xd1, 0x70, 0x71, 0xea, 0x27,
+	0x67, 0x27, 0x63, 0x5d, 0xa3, 0x15, 0x3f, 0xe0, 0x44, 0x7d, 0x6a, 0x4f, 0x6b, 0xc1, 0xe5, 0xa2,
+	0xc2, 0x05, 0x29, 0x50, 0xc1, 0x74, 0x08, 0xb2, 0x93, 0x29, 0x30, 0x49, 0x33, 0x24, 0xa4, 0x9e,
+	0x1f, 0x50, 0xe9, 0xf3, 0xc0, 0xf8, 0xda, 0xed, 0x13, 0x87, 0xd4, 0xdd, 0x64, 0xb2, 0x97, 0x4f,
+	0x44, 0x2b, 0xc2, 0xf8, 0x8c, 0x7b, 0xdc, 0xe3, 0xea, 0x48, 0x6a, 0x27, 0x63, 0x9d, 0xf6, 0x38,
+	0xf7, 0xca, 0x8c, 0xd0, 0xd0, 0x27, 0x34, 0x08, 0xb8, 0x54, 0xa9, 0x8d, 0xc6, 0x1e, 0x07, 0xfc,
+	0xb2, 0x46, 0xf7, 0x42, 0x05, 0xca, 0xb1, 0xad, 0x6d, 0x26, 0xa4, 0xfd, 0x06, 0xae, 0xc7, 0xac,
+	0x22, 0xe4, 0x81, 0x60, 0x78, 0x05, 0x92, 0x3a, 0xe1, 0x24, 0x9a, 0x45, 0xe9, 0x2b, 0x8b, 0x33,
+	0x4e, 0xdb, 0x7e, 0x38, 0x5a, 0x96, 0x1d, 0x3a, 0xf8, 0x75, 0x2b, 0xf1, 0xe5, 0xcf, 0xd7, 0x05,
+	0x94, 0x33, 0x3a, 0x3b, 0x63, 0xd2, 0xad, 0xf2, 0x0a, 0xf5, 0x03, 0x93, 0x0e, 0x4f, 0xc1, 0x50,
+	0x51, 0x19, 0xf2, 0x7e, 0x51, 0x85, 0x1e, 0xca, 0x5d, 0xd6, 0x86, 0xf5, 0xa2, 0xfd, 0xda, 0xb0,
+	0xd4, 0x25, 0x86, 0xe5, 0x11, 0x24, 0xb5, 0x8b, 0x61, 0x99, 0xeb, 0xc0, 0xa2, 0x65, 0xeb, 0xc1,
+	0x06, 0xcf, 0x0e, 0xd6, 0x78, 0x72, 0x46, 0x66, 0x3f, 0x87, 0x09, 0x15, 0xf7, 0x71, 0x89, 0xb9,
+	0x9b, 0x21, 0xf7, 0x03, 0x79, 0x1e, 0x1c, 0x3c, 0x01, 0xc9, 0x12, 0xf3, 0xbd, 0x92, 0x9c, 0x1c,
+	0x98, 0x45, 0xe9, 0xc1, 0x9c, 0xf9, 0x66, 0x17, 0xe0, 0xe6, 0x99, 0x70, 0x06, 0xf5, 0x29, 0x80,
+	0xdb, 0xb0, 0xf6, 0xc0, 0x6d, 0xca, 0x0d, 0xee, 0x29, 0xa9, 0xbd, 0x0c, 0xd3, 0x2a, 0xc7, 0x33,
+	0x2a, 0x99, 0x90, 0xfd, 0x81, 0xdb, 0x25, 0x98, 0xe9, 0x20, 0xfe, 0xdf, 0x98, 0xfb, 0x08, 0x2c,
+	0xdd, 0x8b, 0x9a, 0x22, 0xc7, 0x36, 0x58, 0xc4, 0x02, 0x97, 0xd5, 0x29, 0xe7, 0x61, 0xb4, 0xcc,
+	0x5d, 0x5a, 0xce, 0xb7, 0xb2, 0x0e, 0x2b, 0xf3, 0x6a, 0xbd, 0xd3, 0x69, 0x18, 0x8b, 0x58, 0x85,
+	0x4b, 0x76, 0xca, 0x71, 0x40, 0x39, 0x8e, 0x68, 0x7b, 0xc3, 0xf3, 0x36, 0x0c, 0x1b, 0x4f, 0x33,
+	0x9a, 0x0b, 0x6a, 0x34, 0x57, 0xb5, 0x71, 0x4d, 0x0f, 0x48, 0xc0, 0x54, 0x5b, 0x28, 0x53, 0xfd,
+	0x2b, 0x18, 0x55, 0x05, 0xe6, 0xa3, 0xfa, 0x4f, 0xa6, 0x05, 0x77, 0x3a, 0xb5, 0x20, 0x16, 0xc7,
+	0xb4, 0x61, 0xc4, 0x8d, 0x59, 0x17, 0x3f, 0x5d, 0x82, 0x8b, 0x2a, 0x2b, 0xfe, 0x80, 0x20, 0xa9,
+	0xf7, 0x02, 0xdf, 0xed, 0x10, 0xf1, 0xec, 0x22, 0x5a, 0x0b, 0xe7, 0x71, 0xd5, 0x15, 0xd8, 0xce,
+	0xfb, 0x1f, 0xbf, 0xf7, 0x07, 0xd2, 0x78, 0xbe, 0xf9, 0x42, 0x74, 0x7b, 0x34, 0xf0, 0x67, 0x04,
+	0x49, 0xdd, 0xc2, 0xee, 0x44, 0xb1, 0x5d, 0xed, 0x4e, 0x14, 0xdf, 0x51, 0x7b, 0x59, 0x11, 0x3d,
+	0xc0, 0x4b, 0xbd, 0x88, 0xf4, 0x80, 0x05, 0xa9, 0x36, 0x26, 0xbd, 0x87, 0xbf, 0x21, 0x80, 0xe6,
+	0x35, 0xc3, 0xf7, 0xba, 0xe5, 0x3d, 0xb3, 0x0a, 0x96, 0x73, 0x5e, 0x77, 0x83, 0xba, 0xa6, 0x50,
+	0xb3, 0x78, 0xa5, 0x17, 0x6a, 0xf3, 0x9e, 0xc7, 0x70, 0x49, 0x55, 0x5f, 0xbd, 0x3d, 0xfc, 0x1d,
+	0xc1, 0x58, 0xeb, 0x8e, 0xe1, 0xa5, 0x6e, 0x38, 0x1d, 0xd6, 0xd9, 0xba, 0xdf, 0x9f, 0xc8, 0x54,
+	0xf2, 0x44, 0x55, 0xb2, 0x82, 0x1f, 0xfe, 0x6b, 0x25, 0x65, 0x15, 0x19, 0x1f, 0x21, 0x18, 0x89,
+	0xdf, 0x71, 0x9c, 0xe9, 0xda, 0xd4, 0x76, 0xcb, 0x6e, 0x2d, 0xf6, 0x23, 0x31, 0x15, 0x78, 0xaa,
+	0x02, 0x8a, 0xf3, 0xbd, 0x2a, 0x68, 0xac, 0xaa, 0x20, 0xd5, 0x96, 0x27, 0x65, 0x8f, 0x54, 0x5b,
+	0x1f, 0x8f, 0xa6, 0xc9, 0x8c, 0x2a, 0xbb, 0x76, 0x70, 0x9c, 0x42, 0x87, 0xc7, 0x29, 0x74, 0x74,
+	0x9c, 0x42, 0x1f, 0x4f, 0x52, 0x89, 0xc3, 0x93, 0x54, 0xe2, 0xe7, 0x49, 0x2a, 0xf1, 0xd6, 0xf1,
+	0x7c, 0x59, 0xda, 0x2e, 0x38, 0x2e, 0xaf, 0xb4, 0x83, 0x78, 0xd7, 0x34, 0xca, 0xdd, 0x90, 0x89,
+	0x42, 0x52, 0xfd, 0x9b, 0x2e, 0xfd, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x9f, 0x0f, 0x76, 0xa5, 0x44,
+	0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -160,6 +568,10 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	Domain(ctx context.Context, in *QueryDomainRequest, opts ...grpc.CallOption) (*QueryDomainResponse, error)
+	Checkpoint(ctx context.Context, in *QueryCheckpointRequest, opts ...grpc.CallOption) (*QueryCheckpointResponse, error)
+	LatestCheckpoint(ctx context.Context, in *QueryLatestCheckpointRequest, opts ...grpc.CallOption) (*QueryLatestCheckpointResponse, error)
+	CrossReference(ctx context.Context, in *QueryCrossReferenceRequest, opts ...grpc.CallOption) (*QueryCrossReferenceResponse, error)
 }
 
 type queryClient struct {
@@ -179,10 +591,50 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) Domain(ctx context.Context, in *QueryDomainRequest, opts ...grpc.CallOption) (*QueryDomainResponse, error) {
+	out := new(QueryDomainResponse)
+	err := c.cc.Invoke(ctx, "/crossrefd.crossref.v1.Query/Domain", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Checkpoint(ctx context.Context, in *QueryCheckpointRequest, opts ...grpc.CallOption) (*QueryCheckpointResponse, error) {
+	out := new(QueryCheckpointResponse)
+	err := c.cc.Invoke(ctx, "/crossrefd.crossref.v1.Query/Checkpoint", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) LatestCheckpoint(ctx context.Context, in *QueryLatestCheckpointRequest, opts ...grpc.CallOption) (*QueryLatestCheckpointResponse, error) {
+	out := new(QueryLatestCheckpointResponse)
+	err := c.cc.Invoke(ctx, "/crossrefd.crossref.v1.Query/LatestCheckpoint", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) CrossReference(ctx context.Context, in *QueryCrossReferenceRequest, opts ...grpc.CallOption) (*QueryCrossReferenceResponse, error) {
+	out := new(QueryCrossReferenceResponse)
+	err := c.cc.Invoke(ctx, "/crossrefd.crossref.v1.Query/CrossReference", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Domain(context.Context, *QueryDomainRequest) (*QueryDomainResponse, error)
+	Checkpoint(context.Context, *QueryCheckpointRequest) (*QueryCheckpointResponse, error)
+	LatestCheckpoint(context.Context, *QueryLatestCheckpointRequest) (*QueryLatestCheckpointResponse, error)
+	CrossReference(context.Context, *QueryCrossReferenceRequest) (*QueryCrossReferenceResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -191,6 +643,18 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) Domain(ctx context.Context, req *QueryDomainRequest) (*QueryDomainResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Domain not implemented")
+}
+func (*UnimplementedQueryServer) Checkpoint(ctx context.Context, req *QueryCheckpointRequest) (*QueryCheckpointResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Checkpoint not implemented")
+}
+func (*UnimplementedQueryServer) LatestCheckpoint(ctx context.Context, req *QueryLatestCheckpointRequest) (*QueryLatestCheckpointResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LatestCheckpoint not implemented")
+}
+func (*UnimplementedQueryServer) CrossReference(ctx context.Context, req *QueryCrossReferenceRequest) (*QueryCrossReferenceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CrossReference not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -215,6 +679,78 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Domain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDomainRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Domain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crossrefd.crossref.v1.Query/Domain",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Domain(ctx, req.(*QueryDomainRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Checkpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryCheckpointRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Checkpoint(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crossrefd.crossref.v1.Query/Checkpoint",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Checkpoint(ctx, req.(*QueryCheckpointRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_LatestCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLatestCheckpointRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LatestCheckpoint(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crossrefd.crossref.v1.Query/LatestCheckpoint",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LatestCheckpoint(ctx, req.(*QueryLatestCheckpointRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_CrossReference_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryCrossReferenceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).CrossReference(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crossrefd.crossref.v1.Query/CrossReference",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).CrossReference(ctx, req.(*QueryCrossReferenceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "crossrefd.crossref.v1.Query",
@@ -223,6 +759,22 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Domain",
+			Handler:    _Query_Domain_Handler,
+		},
+		{
+			MethodName: "Checkpoint",
+			Handler:    _Query_Checkpoint_Handler,
+		},
+		{
+			MethodName: "LatestCheckpoint",
+			Handler:    _Query_LatestCheckpoint_Handler,
+		},
+		{
+			MethodName: "CrossReference",
+			Handler:    _Query_CrossReference_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -285,6 +837,275 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryDomainRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDomainRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDomainRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DomainId) > 0 {
+		i -= len(m.DomainId)
+		copy(dAtA[i:], m.DomainId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DomainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryDomainResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDomainResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDomainResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Domain.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCheckpointRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCheckpointRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCheckpointRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Height != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.DomainId) > 0 {
+		i -= len(m.DomainId)
+		copy(dAtA[i:], m.DomainId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DomainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCheckpointResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCheckpointResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCheckpointResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Checkpoint.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLatestCheckpointRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLatestCheckpointRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLatestCheckpointRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DomainId) > 0 {
+		i -= len(m.DomainId)
+		copy(dAtA[i:], m.DomainId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DomainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLatestCheckpointResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLatestCheckpointResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLatestCheckpointResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Checkpoint.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCrossReferenceRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCrossReferenceRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCrossReferenceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.RemoteHeight != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.RemoteHeight))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.RemoteDomainId) > 0 {
+		i -= len(m.RemoteDomainId)
+		copy(dAtA[i:], m.RemoteDomainId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.RemoteDomainId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.LocalDomainId) > 0 {
+		i -= len(m.LocalDomainId)
+		copy(dAtA[i:], m.LocalDomainId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.LocalDomainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCrossReferenceResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCrossReferenceResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCrossReferenceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.CrossReference.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -312,6 +1133,112 @@ func (m *QueryParamsResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryDomainRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DomainId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryDomainResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Domain.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryCheckpointRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DomainId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Height != 0 {
+		n += 1 + sovQuery(uint64(m.Height))
+	}
+	return n
+}
+
+func (m *QueryCheckpointResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Checkpoint.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryLatestCheckpointRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DomainId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLatestCheckpointResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Checkpoint.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryCrossReferenceRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.LocalDomainId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.RemoteDomainId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.RemoteHeight != 0 {
+		n += 1 + sovQuery(uint64(m.RemoteHeight))
+	}
+	return n
+}
+
+func (m *QueryCrossReferenceResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.CrossReference.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -431,6 +1358,736 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDomainRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDomainRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDomainRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DomainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DomainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDomainResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDomainResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDomainResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Domain.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCheckpointRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCheckpointRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCheckpointRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DomainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DomainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCheckpointResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCheckpointResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCheckpointResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Checkpoint.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLatestCheckpointRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLatestCheckpointRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLatestCheckpointRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DomainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DomainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLatestCheckpointResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLatestCheckpointResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLatestCheckpointResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Checkpoint.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCrossReferenceRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCrossReferenceRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCrossReferenceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LocalDomainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LocalDomainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoteDomainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemoteDomainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoteHeight", wireType)
+			}
+			m.RemoteHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RemoteHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCrossReferenceResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCrossReferenceResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCrossReferenceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CrossReference", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.CrossReference.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

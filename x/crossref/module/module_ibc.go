@@ -1,6 +1,7 @@
 package crossref
 
 import (
+	"bytes"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -38,6 +39,9 @@ func (im IBCModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
+	if version == "" {
+		version = types.Version
+	}
 	if version != types.Version {
 		return "", errorsmod.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
 	}
@@ -111,8 +115,6 @@ func (im IBCModule) OnRecvPacket(
 	modulePacket channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	var ack channeltypes.Acknowledgement
-
 	var modulePacketData types.CrossrefPacketData
 	if err := modulePacketData.Unmarshal(modulePacket.GetData()); err != nil {
 		return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal packet data: %s", err.Error()))
@@ -120,13 +122,21 @@ func (im IBCModule) OnRecvPacket(
 
 	// Dispatch packet
 	switch packet := modulePacketData.Packet.(type) {
+	case *types.CrossrefPacketData_CrossReference:
+		hash, err := im.receiveCrossReferencePacket(ctx, modulePacket.GetDestPort(), modulePacket.GetDestChannel(), relayer.String(), packet.CrossReference)
+		if err != nil {
+			return channeltypes.NewErrorAcknowledgement(err)
+		}
+		ackBz := im.cdc.MustMarshalJSON(&types.CrossReferencePacketAck{
+			Accepted:             true,
+			Code:                 "accepted",
+			StoredCheckpointHash: hash,
+		})
+		return channeltypes.NewResultAcknowledgement(ackBz)
 	default:
 		err := fmt.Errorf("unrecognized %s packet type: %T", types.ModuleName, packet)
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
-
-	// NOTE: acknowledgement will be written synchronously during IBC handler execution.
-	return ack
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface
@@ -151,6 +161,9 @@ func (im IBCModule) OnAcknowledgementPacket(
 
 	// Dispatch packet
 	switch packet := modulePacketData.Packet.(type) {
+	case *types.CrossrefPacketData_CrossReference:
+		eventType = "crossref_ack"
+		_ = packet
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s packet type: %T", types.ModuleName, packet)
 		return errorsmod.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
@@ -197,10 +210,62 @@ func (im IBCModule) OnTimeoutPacket(
 
 	// Dispatch packet
 	switch packet := modulePacketData.Packet.(type) {
+	case *types.CrossrefPacketData_CrossReference:
+		_ = packet
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s packet type: %T", types.ModuleName, packet)
 		return errorsmod.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
 	}
 
 	return nil
+}
+
+func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channelID, relayer string, data *types.CrossReferencePacketData) ([]byte, error) {
+	if data == nil || data.SourceDomainId == "" {
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "source_domain_id is required")
+	}
+	binding, found, err := im.keeper.GetDomainChannelByChannel(ctx, portID, channelID)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errorsmod.Wrapf(types.ErrDomainChannelNotFound, "port=%s channel=%s", portID, channelID)
+	}
+	if binding.RemoteDomainId != data.SourceDomainId {
+		return nil, errorsmod.Wrapf(types.ErrUnauthorizedChannel, "packet domain=%s bound domain=%s", data.SourceDomainId, binding.RemoteDomainId)
+	}
+
+	checkpoint := types.Checkpoint{
+		DomainId:               data.SourceDomainId,
+		Height:                 data.SourceHeight,
+		BlockHash:              data.BlockHash,
+		AppHash:                data.AppHash,
+		ValidatorSetHash:       data.ValidatorSetHash,
+		PreviousCheckpointHash: data.PreviousCheckpointHash,
+		CheckpointHash:         data.CheckpointHash,
+		HysteresisSignature:    data.HysteresisSignature,
+		BlockTimeUnix:          data.BlockTimeUnix,
+	}
+	if !bytes.Equal(types.ComputeCheckpointHash(checkpoint), checkpoint.CheckpointHash) {
+		return nil, errorsmod.Wrap(types.ErrCheckpointHashMismatch, "packet checkpoint hash mismatch")
+	}
+	if err := im.keeper.ValidateCheckpoint(ctx, checkpoint); err != nil {
+		return nil, err
+	}
+	if err := im.keeper.SetCheckpoint(ctx, checkpoint); err != nil {
+		return nil, err
+	}
+	if err := im.keeper.SetCrossReference(ctx, types.CrossReference{
+		LocalDomainId:        binding.LocalDomainId,
+		RemoteDomainId:       data.SourceDomainId,
+		RemoteHeight:         data.SourceHeight,
+		RemoteCheckpointHash: data.CheckpointHash,
+		PortId:               portID,
+		ChannelId:            channelID,
+		Relayer:              relayer,
+		ReceivedTimeUnix:     ctx.BlockTime().Unix(),
+	}); err != nil {
+		return nil, err
+	}
+	return checkpoint.CheckpointHash, nil
 }

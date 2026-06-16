@@ -1,62 +1,55 @@
 package keeper
 
 import (
-	"context"
-	"encoding/binary"
-
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/crossref/crossrefd/x/sanction/types"
 )
 
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	authority  string
-	chainID    string
-	bankKeeper BankKeeper
+	storeService      corestore.KVStoreService
+	cdc               codec.Codec
+	addressCodec      address.Codec
+	authority         []byte
+	bankKeeper        types.BankKeeper
+	Schema            collections.Schema
+	Params            collections.Item[types.Params]
+	Agents            collections.Map[string, types.AgentInfo]
+	AgentBySigners    collections.Map[string, string]
+	RiskReports       collections.Map[string, types.RiskReport]
+	SanctionCases     collections.Map[string, types.SanctionCase]
+	SanctionVotes     collections.Map[string, types.SanctionVote]
+	ActiveTxSanctions collections.Map[string, types.ActiveSanction]
+	FrozenAddresses   collections.Map[string, types.FreezeRecord]
+	ExecutionRecords  collections.Map[string, types.ExecutionRecord]
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, authority string, chainID string) Keeper {
-	return Keeper{
-		storeKey:  storeKey,
-		authority: authority,
-		chainID:   chainID,
+func NewKeeper(storeService corestore.KVStoreService, cdc codec.Codec, addressCodec address.Codec, authority []byte, bankKeeper types.BankKeeper) Keeper {
+	if _, err := addressCodec.BytesToString(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
 	}
-}
-
-type BankKeeper interface {
-	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-}
-
-func (k Keeper) WithBankKeeper(bankKeeper BankKeeper) Keeper {
-	k.bankKeeper = bankKeeper
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{storeService: storeService, cdc: cdc, addressCodec: addressCodec, authority: authority, bankKeeper: bankKeeper, Params: collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)), Agents: collections.NewMap(sb, types.AgentKeyPrefix, "agents", collections.StringKey, codec.CollValue[types.AgentInfo](cdc)), AgentBySigners: collections.NewMap(sb, types.AgentBySignerKeyPrefix, "agent_by_signers", collections.StringKey, collections.StringValue), RiskReports: collections.NewMap(sb, types.RiskReportKeyPrefix, "risk_reports", collections.StringKey, codec.CollValue[types.RiskReport](cdc)), SanctionCases: collections.NewMap(sb, types.SanctionCaseKeyPrefix, "sanction_cases", collections.StringKey, codec.CollValue[types.SanctionCase](cdc)), SanctionVotes: collections.NewMap(sb, types.SanctionVoteKeyPrefix, "sanction_votes", collections.StringKey, codec.CollValue[types.SanctionVote](cdc)), ActiveTxSanctions: collections.NewMap(sb, types.ActiveTxSanctionKeyPrefix, "active_tx_sanctions", collections.StringKey, codec.CollValue[types.ActiveSanction](cdc)), FrozenAddresses: collections.NewMap(sb, types.FrozenAddressKeyPrefix, "frozen_addresses", collections.StringKey, codec.CollValue[types.FreezeRecord](cdc)), ExecutionRecords: collections.NewMap(sb, types.ExecutionRecordKeyPrefix, "execution_records", collections.StringKey, codec.CollValue[types.ExecutionRecord](cdc))}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
 	return k
 }
-
-func (k Keeper) GetAuthority() string {
-	return k.authority
-}
-
-func (k Keeper) GetChainID(ctx sdk.Context) string {
-	if k.chainID != "" {
-		return k.chainID
+func (k Keeper) GetAuthority() []byte { return k.authority }
+func (k Keeper) AuthorityString() string {
+	s, err := k.addressCodec.BytesToString(k.authority)
+	if err != nil {
+		panic(err)
 	}
-	return ctx.ChainID()
+	return s
 }
-
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", types.ModuleName)
-}
-
-func (k Keeper) Store(ctx sdk.Context) storetypes.KVStore {
-	return ctx.KVStore(k.storeKey)
-}
-
-func uint64Key(value uint64) []byte {
-	var bz [8]byte
-	binary.BigEndian.PutUint64(bz[:], value)
-	return bz[:]
 }

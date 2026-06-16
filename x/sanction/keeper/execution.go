@@ -1,101 +1,83 @@
 package keeper
 
 import (
-	"fmt"
-
+	"context"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"crypto/sha256"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/crossref/crossrefd/x/sanction/types"
 )
 
-func (k Keeper) IsAddressFrozen(ctx sdk.Context, address string) bool {
-	_, found := k.GetFreezeRecord(ctx, address)
-	return found
+func (k Keeper) IsAddressFrozen(ctx context.Context, address string) bool {
+	found, err := k.FrozenAddresses.Has(ctx, address)
+	return err == nil && found
 }
-
-func (k Keeper) SendCoinsAllowed(ctx sdk.Context, from sdk.AccAddress, to sdk.AccAddress) error {
-	if k.IsAddressFrozen(ctx, from.String()) {
-		return errors.Wrapf(types.ErrAddressAlreadyFrozen, "sender=%s", from.String())
+func (k Keeper) SendCoinsAllowed(ctx context.Context, fromAddr, toAddr string) error {
+	if k.IsAddressFrozen(ctx, fromAddr) {
+		return errors.Wrapf(types.ErrAddressAlreadyFrozen, "from=%s", fromAddr)
 	}
-	if k.IsAddressFrozen(ctx, to.String()) {
-		return errors.Wrapf(types.ErrAddressAlreadyFrozen, "recipient=%s", to.String())
+	if k.IsAddressFrozen(ctx, toAddr) {
+		return errors.Wrapf(types.ErrAddressAlreadyFrozen, "to=%s", toAddr)
 	}
 	return nil
 }
-
-func (k Keeper) executeEscrow(ctx sdk.Context, sanctionCase types.SanctionCase) ([]byte, error) {
+func (k Keeper) executeEscrow(ctx context.Context, sanctionCase types.SanctionCase) error {
 	if k.bankKeeper == nil {
-		return nil, errors.Wrap(types.ErrExecutionUnsupported, "bank keeper is not configured")
+		return nil
 	}
-	report, err := k.primaryReport(ctx, sanctionCase)
-	if err != nil {
-		return nil, err
-	}
-	recipient, err := sdk.AccAddressFromBech32(report.Recipient)
-	if err != nil {
-		return nil, err
+	report, ok := k.primaryReport(ctx, sanctionCase)
+	if !ok {
+		return nil
 	}
 	coins, err := reportCoins(report)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, recipient, types.ModuleName, coins); err != nil {
-		return nil, err
+	from, err := sdk.AccAddressFromBech32(report.FromAddress)
+	if err != nil {
+		return err
 	}
-	return stateChangeHash("escrow", sanctionCase.CaseId, report.Recipient, coins.String()), nil
+	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, from, types.ModuleName, coins)
 }
-
-func (k Keeper) executeRevert(ctx sdk.Context, sanctionCase types.SanctionCase) ([]byte, error) {
+func (k Keeper) executeRevert(ctx context.Context, sanctionCase types.SanctionCase) error {
 	if k.bankKeeper == nil {
-		return nil, errors.Wrap(types.ErrExecutionUnsupported, "bank keeper is not configured")
+		return nil
 	}
-	report, err := k.primaryReport(ctx, sanctionCase)
-	if err != nil {
-		return nil, err
-	}
-	sender, err := sdk.AccAddressFromBech32(report.Sender)
-	if err != nil {
-		return nil, err
-	}
-	recipient, err := sdk.AccAddressFromBech32(report.Recipient)
-	if err != nil {
-		return nil, err
+	report, ok := k.primaryReport(ctx, sanctionCase)
+	if !ok {
+		return nil
 	}
 	coins, err := reportCoins(report)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if err := k.bankKeeper.SendCoins(ctx, recipient, sender, coins); err != nil {
-		return nil, err
+	from, err := sdk.AccAddressFromBech32(report.ToAddress)
+	if err != nil {
+		return err
 	}
-	return stateChangeHash("revert", sanctionCase.CaseId, report.Recipient, report.Sender, coins.String()), nil
+	to, err := sdk.AccAddressFromBech32(report.FromAddress)
+	if err != nil {
+		return err
+	}
+	return k.bankKeeper.SendCoins(ctx, from, to, coins)
 }
-
-func (k Keeper) primaryReport(ctx sdk.Context, sanctionCase types.SanctionCase) (types.RiskReport, error) {
+func (k Keeper) primaryReport(ctx context.Context, sanctionCase types.SanctionCase) (types.RiskReport, bool) {
 	if len(sanctionCase.ReportIds) == 0 {
-		return types.RiskReport{}, errors.Wrap(types.ErrRiskReportNotFound, "case has no reports")
+		return types.RiskReport{}, false
 	}
-	report, found := k.GetRiskReport(ctx, sanctionCase.ReportIds[0])
-	if !found {
-		return types.RiskReport{}, errors.Wrapf(types.ErrRiskReportNotFound, "report=%s", sanctionCase.ReportIds[0])
-	}
-	return report, nil
+	report, err := k.RiskReports.Get(ctx, sanctionCase.ReportIds[0])
+	return report, err == nil
 }
-
 func reportCoins(report types.RiskReport) (sdk.Coins, error) {
-	if report.Amount == "" || report.Denom == "" {
-		return nil, fmt.Errorf("report amount and denom are required")
-	}
 	amount, ok := sdkmath.NewIntFromString(report.Amount)
 	if !ok {
-		return nil, fmt.Errorf("invalid amount: %s", report.Amount)
+		return nil, fmt.Errorf("invalid report amount: %s", report.Amount)
 	}
-	coin := sdk.NewCoin(report.Denom, amount)
-	return sdk.NewCoins(coin), nil
+	return sdk.NewCoins(sdk.NewCoin(report.Denom, amount)), nil
 }
-
-func stateChangeHash(parts ...string) []byte {
-	return EvidenceHashStrings(parts...)
+func stateChangeHash(record types.ExecutionRecord) []byte {
+	sum := sha256.Sum256([]byte(fmt.Sprintf("%s/%s/%x/%s/%d", record.CaseId, types.ActionName(record.Action), record.TxHash, record.TargetAddress, record.ExecutedHeight)))
+	return sum[:]
 }

@@ -1,25 +1,22 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	ModuleName = "sanction"
 	StoreKey   = ModuleName
 
-	RouterKey = ModuleName
+	GovModuleName = "gov"
 )
 
 var (
-	ParamsKey = []byte{0x01}
-
-	AgentKeyPrefix            = []byte{0x10}
-	AgentBySignerKeyPrefix    = []byte{0x11}
-	RiskReportKeyPrefix       = []byte{0x20}
-	RiskReportByTxKeyPrefix   = []byte{0x21}
-	RiskReportByAddrKeyPrefix = []byte{0x22}
-	SanctionCaseKeyPrefix     = []byte{0x30}
-	CaseByTxKeyPrefix         = []byte{0x31}
-	CaseByAddrKeyPrefix       = []byte{0x32}
-	SanctionVoteKeyPrefix     = []byte{0x40}
-	ActiveTxSanctionKeyPrefix = []byte{0x50}
-	FrozenAddressKeyPrefix    = []byte{0x51}
-	ExecutionRecordKeyPrefix  = []byte{0x60}
+	ParamsKey                 = collections.NewPrefix("p_sanction")
+	AgentKeyPrefix            = collections.NewPrefix("agent/")
+	AgentBySignerKeyPrefix    = collections.NewPrefix("agent_by_signer/")
+	RiskReportKeyPrefix       = collections.NewPrefix("risk_report/")
+	SanctionCaseKeyPrefix     = collections.NewPrefix("case/")
+	SanctionVoteKeyPrefix     = collections.NewPrefix("vote/")
+	ActiveTxSanctionKeyPrefix = collections.NewPrefix("active_tx/")
+	FrozenAddressKeyPrefix    = collections.NewPrefix("frozen_address/")
+	ExecutionRecordKeyPrefix  = collections.NewPrefix("execution/")
 )

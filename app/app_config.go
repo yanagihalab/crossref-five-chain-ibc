@@ -69,6 +69,8 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	_ "github.com/crossref/crossrefd/x/crossref/module"
 	crossrefmoduletypes "github.com/crossref/crossrefd/x/crossref/types"
+	_ "github.com/crossref/crossrefd/x/sanction/module"
+	sanctionmoduletypes "github.com/crossref/crossrefd/x/sanction/types"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -83,6 +85,7 @@ var (
 		{Account: nft.ModuleName},
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: icatypes.ModuleName},
+		{Account: sanctionmoduletypes.ModuleName},
 		{Account: crossrefmoduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}}}
 
 	// blocked account addresses
@@ -124,6 +127,7 @@ var (
 						// ibc modules
 						ibcexported.ModuleName,
 						// chain modules
+						sanctionmoduletypes.ModuleName,
 						crossrefmoduletypes.ModuleName},
 					EndBlockers: []string{
 						govtypes.ModuleName,
@@ -131,6 +135,7 @@ var (
 						feegrant.ModuleName,
 						group.ModuleName,
 						// chain modules
+						sanctionmoduletypes.ModuleName,
 						crossrefmoduletypes.ModuleName},
 					// The following is mostly only needed when ModuleName != StoreKey name.
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
@@ -166,6 +171,7 @@ var (
 						ibctransfertypes.ModuleName,
 						icatypes.ModuleName,
 						// chain modules
+						sanctionmoduletypes.ModuleName,
 						crossrefmoduletypes.ModuleName},
 				}),
 			},
@@ -260,6 +266,10 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			{
+				Name:   sanctionmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&sanctionmoduletypes.Module{}),
 			},
 			{
 				Name:   crossrefmoduletypes.ModuleName,

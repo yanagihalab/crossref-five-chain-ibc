@@ -47,6 +47,7 @@ import (
 
 	"github.com/crossref/crossrefd/docs"
 	crossrefmodulekeeper "github.com/crossref/crossrefd/x/crossref/keeper"
+	sanctionmodulekeeper "github.com/crossref/crossrefd/x/sanction/keeper"
 )
 
 const (
@@ -100,6 +101,7 @@ type App struct {
 
 	// simulation manager
 	sm             *module.SimulationManager
+	SanctionKeeper sanctionmodulekeeper.Keeper
 	CrossrefKeeper crossrefmodulekeeper.Keeper
 }
 
@@ -180,6 +182,7 @@ func New(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
+		&app.SanctionKeeper,
 		&app.CrossrefKeeper,
 	); err != nil {
 		panic(err)
@@ -191,6 +194,8 @@ func New(
 
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+	app.SetPrepareProposal(app.SanctionKeeper.PrepareProposalHandler())
+	app.SetProcessProposal(app.SanctionKeeper.ProcessProposalHandler())
 
 	// register legacy modules
 	if err := app.registerIBCModules(appOpts); err != nil {

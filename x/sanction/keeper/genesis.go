@@ -1,76 +1,101 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"context"
 	"github.com/crossref/crossrefd/x/sanction/types"
 )
 
-func (k Keeper) InitGenesis(ctx sdk.Context, genesis *types.GenesisState) {
-	if genesis == nil {
-		genesis = types.DefaultGenesis()
+func (k Keeper) InitGenesis(ctx context.Context, genesis types.GenesisState) error {
+	if err := genesis.Validate(); err != nil {
+		return err
 	}
-	if genesis.Params != nil {
-		k.SetParams(ctx, *genesis.Params)
+	if err := k.Params.Set(ctx, genesis.Params); err != nil {
+		return err
 	}
-	for _, agent := range genesis.Agents {
-		if agent != nil {
-			k.SetAgent(ctx, *agent)
+	for _, v := range genesis.Agents {
+		if err := k.Agents.Set(ctx, v.AgentId, v); err != nil {
+			return err
+		}
+		if err := k.AgentBySigners.Set(ctx, v.SignerAddress, v.AgentId); err != nil {
+			return err
 		}
 	}
-	for _, report := range genesis.RiskReports {
-		if report != nil {
-			k.SetRiskReport(ctx, *report)
+	for _, v := range genesis.RiskReports {
+		if err := k.RiskReports.Set(ctx, v.ReportId, v); err != nil {
+			return err
 		}
 	}
-	for _, sanctionCase := range genesis.SanctionCases {
-		if sanctionCase != nil {
-			k.SetSanctionCase(ctx, *sanctionCase)
+	for _, v := range genesis.SanctionCases {
+		if err := k.SanctionCases.Set(ctx, v.CaseId, v); err != nil {
+			return err
 		}
 	}
-	for _, vote := range genesis.SanctionVotes {
-		if vote != nil {
-			k.SetSanctionVote(ctx, *vote)
+	for _, v := range genesis.SanctionVotes {
+		if err := k.SanctionVotes.Set(ctx, voteKey(v.CaseId, v.AgentId), v); err != nil {
+			return err
 		}
 	}
-	for _, sanction := range genesis.ActiveSanctions {
-		if sanction != nil {
-			k.SetActiveTxSanction(ctx, *sanction)
+	for _, v := range genesis.ActiveSanctions {
+		if err := k.ActiveTxSanctions.Set(ctx, txKey(v.TxHash), v); err != nil {
+			return err
 		}
 	}
-	for _, freeze := range genesis.FrozenAddresses {
-		if freeze != nil {
-			k.SetFreezeRecord(ctx, *freeze)
+	for _, v := range genesis.FrozenAddresses {
+		if err := k.FrozenAddresses.Set(ctx, v.Address, v); err != nil {
+			return err
 		}
 	}
-	for _, record := range genesis.ExecutionRecords {
-		if record != nil {
-			k.SetExecutionRecord(ctx, *record)
+	for _, v := range genesis.ExecutionRecords {
+		if err := k.ExecutionRecords.Set(ctx, v.CaseId, v); err != nil {
+			return err
 		}
 	}
+	return nil
 }
-
-func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	params := k.GetParams(ctx)
-	return &types.GenesisState{
-		Params:           &params,
-		Agents:           k.GetAllAgents(ctx),
-		RiskReports:      k.GetAllRiskReports(ctx),
-		SanctionCases:    k.GetAllSanctionCases(ctx),
-		SanctionVotes:    k.getAllSanctionVotes(ctx),
-		ActiveSanctions:  k.GetAllActiveSanctions(ctx),
-		FrozenAddresses:  k.GetAllFreezeRecords(ctx),
-		ExecutionRecords: k.GetAllExecutionRecords(ctx),
+func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
+	p, err := k.Params.Get(ctx)
+	if err != nil {
+		p = types.DefaultParams()
 	}
-}
-
-func (k Keeper) getAllSanctionVotes(ctx sdk.Context) []*types.SanctionVote {
-	votes := []*types.SanctionVote{}
-	for _, sanctionCase := range k.GetAllSanctionCases(ctx) {
-		if sanctionCase == nil {
-			continue
-		}
-		votes = append(votes, k.GetSanctionVotes(ctx, sanctionCase.CaseId)...)
+	gs := &types.GenesisState{Params: p}
+	if err := k.Agents.Walk(ctx, nil, func(_ string, v types.AgentInfo) (bool, error) { gs.Agents = append(gs.Agents, v); return false, nil }); err != nil {
+		return nil, err
 	}
-	return votes
+	if err := k.RiskReports.Walk(ctx, nil, func(_ string, v types.RiskReport) (bool, error) {
+		gs.RiskReports = append(gs.RiskReports, v)
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.SanctionCases.Walk(ctx, nil, func(_ string, v types.SanctionCase) (bool, error) {
+		gs.SanctionCases = append(gs.SanctionCases, v)
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.SanctionVotes.Walk(ctx, nil, func(_ string, v types.SanctionVote) (bool, error) {
+		gs.SanctionVotes = append(gs.SanctionVotes, v)
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.ActiveTxSanctions.Walk(ctx, nil, func(_ string, v types.ActiveSanction) (bool, error) {
+		gs.ActiveSanctions = append(gs.ActiveSanctions, v)
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.FrozenAddresses.Walk(ctx, nil, func(_ string, v types.FreezeRecord) (bool, error) {
+		gs.FrozenAddresses = append(gs.FrozenAddresses, v)
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.ExecutionRecords.Walk(ctx, nil, func(_ string, v types.ExecutionRecord) (bool, error) {
+		gs.ExecutionRecords = append(gs.ExecutionRecords, v)
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+	return gs, nil
 }

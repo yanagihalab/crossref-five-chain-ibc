@@ -1,0 +1,7 @@
+.git
+.gocache
+build/crossrefd
+release
+vue/node_modules
+vue/dist
+*.log

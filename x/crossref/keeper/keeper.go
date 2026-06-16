@@ -7,10 +7,15 @@ import (
 	"cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	"github.com/crossref/crossrefd/x/crossref/types"
 )
+
+type CheckpointProofVerifier func(ctx sdk.Context, clientID string, height clienttypes.Height, proof []byte, path ibcexported.Path, value []byte) error
 
 type Keeper struct {
 	storeService corestore.KVStoreService
@@ -32,7 +37,8 @@ type Keeper struct {
 	CrossReferences   collections.Map[string, types.CrossReference]
 	OutgoingPackets   collections.Map[string, []byte]
 
-	ibcKeeperFn func() *ibckeeper.Keeper
+	ibcKeeperFn   func() *ibckeeper.Keeper
+	proofVerifier CheckpointProofVerifier
 
 	bankKeeper types.BankKeeper
 }
@@ -78,6 +84,10 @@ func NewKeeper(
 	k.Schema = schema
 
 	return k
+}
+
+func (k *Keeper) SetCheckpointProofVerifier(verifier CheckpointProofVerifier) {
+	k.proofVerifier = verifier
 }
 
 // GetAuthority returns the module's authority.

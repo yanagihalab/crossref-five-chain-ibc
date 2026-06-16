@@ -151,3 +151,9 @@ func (am AppModule) EndBlock(_ context.Context) error {
 func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
 }
+
+// GetQueryCmd returns the root query command for the module.
+// These commands enrich the AutoCLI query commands.
+func (AppModule) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
+}

@@ -10,7 +10,8 @@ import (
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: types.Query_serviceDesc.ServiceName,
+			Service:              types.Query_serviceDesc.ServiceName,
+			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
@@ -102,6 +103,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "source_height"},
 						{ProtoField: "port_id"},
 						{ProtoField: "channel_id"},
+					},
+				},
+				{
+					RpcMethod: "BroadcastCrossReferencePacket",
+					Use:       "broadcast-cross-reference-packet [sender] [source-domain-id] [source-height]",
+					Short:     "Broadcasts a checkpoint to every bound remote domain",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "sender"},
+						{ProtoField: "source_domain_id"},
+						{ProtoField: "source_height"},
 					},
 				},
 			},

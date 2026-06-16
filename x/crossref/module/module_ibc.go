@@ -224,6 +224,9 @@ func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channel
 	if data == nil || data.SourceDomainId == "" {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "source_domain_id is required")
 	}
+	if data.SourceHeight == 0 || len(data.BlockHash) == 0 || len(data.AppHash) == 0 || len(data.CheckpointHash) == 0 {
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "source_height, block_hash, app_hash and checkpoint_hash are required")
+	}
 	binding, found, err := im.keeper.GetDomainChannelByChannel(ctx, portID, channelID)
 	if err != nil {
 		return nil, err
@@ -233,6 +236,16 @@ func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channel
 	}
 	if binding.RemoteDomainId != data.SourceDomainId {
 		return nil, errorsmod.Wrapf(types.ErrUnauthorizedChannel, "packet domain=%s bound domain=%s", data.SourceDomainId, binding.RemoteDomainId)
+	}
+	sourceDomain, found, err := im.keeper.GetDomain(ctx, data.SourceDomainId)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errorsmod.Wrapf(types.ErrDomainNotFound, "source domain=%s", data.SourceDomainId)
+	}
+	if sourceDomain.ChainId != data.SourceChainId {
+		return nil, errorsmod.Wrapf(types.ErrSourceChainMismatch, "domain=%s packet_chain=%s registered_chain=%s", data.SourceDomainId, data.SourceChainId, sourceDomain.ChainId)
 	}
 
 	checkpoint := types.Checkpoint{
@@ -248,6 +261,9 @@ func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channel
 	}
 	if !bytes.Equal(types.ComputeCheckpointHash(checkpoint), checkpoint.CheckpointHash) {
 		return nil, errorsmod.Wrap(types.ErrCheckpointHashMismatch, "packet checkpoint hash mismatch")
+	}
+	if err := im.keeper.VerifySourceCheckpointProof(ctx, binding, checkpoint, data.SourceCheckpointProof, data.SourceProofRevisionNumber, data.SourceProofRevisionHeight); err != nil {
+		return nil, err
 	}
 	if err := im.keeper.ValidateCheckpoint(ctx, checkpoint); err != nil {
 		return nil, err

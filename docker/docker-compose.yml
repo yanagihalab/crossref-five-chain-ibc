@@ -9,6 +9,7 @@ services:
       MONIKER: chain-a
       HOME_DIR: /var/crossref
       VALIDATOR_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+      RELAYER_MNEMONIC: "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit"
     command: ["/opt/crossref/scripts/start-chain.sh"]
     ports:
       - "26657:26657"
@@ -17,7 +18,7 @@ services:
     volumes:
       - chain-a-data:/var/crossref
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:26657/status"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:26657/status | grep -Eq '\"latest_block_height\":\"[1-9][0-9]*\"'"]
       interval: 5s
       timeout: 3s
       retries: 30
@@ -32,6 +33,7 @@ services:
       MONIKER: chain-b
       HOME_DIR: /var/crossref
       VALIDATOR_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+      RELAYER_MNEMONIC: "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit"
     command: ["/opt/crossref/scripts/start-chain.sh"]
     ports:
       - "26667:26657"
@@ -40,21 +42,101 @@ services:
     volumes:
       - chain-b-data:/var/crossref
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:26657/status"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:26657/status | grep -Eq '\"latest_block_height\":\"[1-9][0-9]*\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  chain-c:
+    build:
+      context: ..
+      dockerfile: docker/crossrefd.Dockerfile
+    container_name: crossref-chain-c
+    environment:
+      CHAIN_ID: crossref-c
+      MONIKER: chain-c
+      HOME_DIR: /var/crossref
+      VALIDATOR_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+      RELAYER_MNEMONIC: "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit"
+    command: ["/opt/crossref/scripts/start-chain.sh"]
+    ports:
+      - "26677:26657"
+      - "9092:9090"
+      - "1319:1317"
+    volumes:
+      - chain-c-data:/var/crossref
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:26657/status | grep -Eq '\"latest_block_height\":\"[1-9][0-9]*\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  chain-d:
+    build:
+      context: ..
+      dockerfile: docker/crossrefd.Dockerfile
+    container_name: crossref-chain-d
+    environment:
+      CHAIN_ID: crossref-d
+      MONIKER: chain-d
+      HOME_DIR: /var/crossref
+      VALIDATOR_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+      RELAYER_MNEMONIC: "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit"
+    command: ["/opt/crossref/scripts/start-chain.sh"]
+    ports:
+      - "26687:26657"
+      - "9093:9090"
+      - "1320:1317"
+    volumes:
+      - chain-d-data:/var/crossref
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:26657/status | grep -Eq '\"latest_block_height\":\"[1-9][0-9]*\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  chain-e:
+    build:
+      context: ..
+      dockerfile: docker/crossrefd.Dockerfile
+    container_name: crossref-chain-e
+    environment:
+      CHAIN_ID: crossref-e
+      MONIKER: chain-e
+      HOME_DIR: /var/crossref
+      VALIDATOR_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+      RELAYER_MNEMONIC: "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit"
+    command: ["/opt/crossref/scripts/start-chain.sh"]
+    ports:
+      - "26697:26657"
+      - "9094:9090"
+      - "1321:1317"
+    volumes:
+      - chain-e-data:/var/crossref
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:26657/status | grep -Eq '\"latest_block_height\":\"[1-9][0-9]*\"'"]
       interval: 5s
       timeout: 3s
       retries: 30
 
   relayer:
-    image: ghcr.io/informalsystems/hermes:v1.10.5
+    image: ghcr.io/informalsystems/hermes:1.10.5
     container_name: crossref-hermes
+    user: root
     depends_on:
       chain-a:
         condition: service_healthy
       chain-b:
         condition: service_healthy
+      chain-c:
+        condition: service_healthy
+      chain-d:
+        condition: service_healthy
+      chain-e:
+        condition: service_healthy
     environment:
-      RELAYER_MNEMONIC: "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred"
+      RELAYER_MNEMONIC: "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit"
+      HERMES_CONFIG: /root/.hermes/config.toml
     entrypoint: ["/bin/sh", "/opt/crossref/scripts/setup-ibc.sh"]
     volumes:
       - ./hermes/config.toml:/root/.hermes/config.toml:ro
@@ -64,4 +146,7 @@ services:
 volumes:
   chain-a-data:
   chain-b-data:
+  chain-c-data:
+  chain-d-data:
+  chain-e-data:
   hermes-keys:

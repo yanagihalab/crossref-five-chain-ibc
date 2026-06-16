@@ -19,4 +19,7 @@ var (
 	ErrCheckpointConflict       = errors.Register(ModuleName, 1507, "checkpoint conflict")
 	ErrCheckpointHashMismatch   = errors.Register(ModuleName, 1508, "checkpoint hash mismatch")
 	ErrPreviousCheckpointBroken = errors.Register(ModuleName, 1509, "previous checkpoint hash does not match latest known checkpoint")
+	ErrSourceChainMismatch      = errors.Register(ModuleName, 1510, "packet source chain does not match registered domain")
+	ErrCheckpointProofRequired  = errors.Register(ModuleName, 1511, "checkpoint membership proof is required")
+	ErrCheckpointProofInvalid   = errors.Register(ModuleName, 1512, "checkpoint membership proof is invalid")
 )

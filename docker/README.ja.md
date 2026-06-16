@@ -1,7 +1,7 @@
-# Crossref Five-Chain Docker Experiment
+# Crossref 5チェーン Docker 実験
 
-This directory starts five isolated `crossrefd` chains and one Hermes relayer.
-Hermes opens a full mesh of `crossref` IBC channels between:
+このディレクトリでは、5本の独立した `crossrefd` チェーンと、1つの Hermes relayer を起動します。
+Hermes は次の組み合わせで `crossref` IBC channel の full mesh を開きます。
 
 - `chain-a <-> chain-b`
 - `chain-a <-> chain-c`
@@ -14,16 +14,14 @@ Hermes opens a full mesh of `crossref` IBC channels between:
 - `chain-c <-> chain-e`
 - `chain-d <-> chain-e`
 
-The resulting network has 10 pairwise IBC channels and 20 directed
-cross-reference paths.
+結果として、10本の双方向 IBC channel ペアと、20方向の cross-reference 経路ができます。
 
-## Directed Route Numbers
+## 経路の通し番号
 
-IBC channel IDs are local to each chain, so several chains can each have their
-own `channel-0`. For logs and visual inspection, the experiment assigns one
-global directed route number to every path:
+IBC の channel ID はチェーンごとのローカルIDです。そのため、複数のチェーンがそれぞれ `channel-0` を持ちます。
+ログや visualizer で追いやすくするため、この実験では20方向すべての経路に `route-00` から `route-19` までの通し番号を割り当てています。
 
-| Route | Direction | Actual local endpoint | Actual counterparty endpoint |
+| Route | 方向 | 実ローカル endpoint | 実 counterparty endpoint |
 | --- | --- | --- | --- |
 | `route-00` | `chain-a -> chain-b` | `chain-a/channel-0` | `chain-b/channel-0` |
 | `route-01` | `chain-b -> chain-a` | `chain-b/channel-0` | `chain-a/channel-0` |
@@ -46,54 +44,52 @@ global directed route number to every path:
 | `route-18` | `chain-d -> chain-e` | `chain-d/channel-3` | `chain-e/channel-3` |
 | `route-19` | `chain-e -> chain-d` | `chain-e/channel-3` | `chain-d/channel-3` |
 
-## Build
+## ビルド
 
-Build the Linux ARM64 daemon used by the Docker image:
+Docker image 内で使う Linux ARM64 版の daemon をビルドします。
 
 ```bash
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
 ```
 
-## Start
+## 起動
 
-Start all five chains and the relayer:
+5本のチェーンと relayer を起動します。
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d --build
 ```
 
-The relayer container runs `setup-ibc.sh`, which waits for all chains, imports
-Hermes keys, and creates the full mesh of `crossref` channels.
+relayer コンテナは `setup-ibc.sh` を実行します。
+このスクリプトは全チェーンの起動を待ち、Hermes key を読み込み、`crossref` channel の full mesh を作成します。
 
-## Run the Experiment
+## 実験の実行
 
-Run the end-to-end five-chain experiment:
+5チェーンの end-to-end 実験を実行します。
 
 ```bash
 docker/scripts/run-crossref-experiment.sh
 ```
 
-The script performs these checks:
+このスクリプトは次を確認します。
 
-1. Prints the `route-00` to `route-19` numbering table.
-2. Waits for all 20 directed `crossref` channel endpoints.
-3. Registers all five domains on all five chains.
-4. Binds every directed domain/channel route.
-5. Submits one checkpoint on each source chain.
-6. Queries each source checkpoint with an ICS23 store proof using
-   `query crossref checkpoint-proof`.
-7. Updates the destination light clients to the source proof heights.
-8. Broadcasts each source checkpoint packet to the other four chains.
-9. Verifies that every destination chain stores cross-references for the other
-   four source chains.
+1. `route-00` から `route-19` までの通し番号表を表示する。
+2. 20方向すべての `crossref` channel endpoint が存在するまで待つ。
+3. 5つの domain を全5チェーンに登録する。
+4. すべての directed domain/channel route を bind する。
+5. 各 source chain に checkpoint を1つ登録する。
+6. `query crossref checkpoint-proof` で各 source checkpoint の ICS23 store proof を取得する。
+7. destination 側 light client を source proof height まで更新する。
+8. 各 source checkpoint packet を他の4チェーンへ broadcast する。
+9. 各 destination chain が、他の4つの source chain の cross-reference を保存していることを確認する。
 
-Success ends with:
+成功時は最後に次のメッセージが表示されます。
 
 ```text
 Five-chain cross-reference experiment passed.
 ```
 
-## Endpoints
+## エンドポイント
 
 | Chain | RPC | gRPC | REST |
 | --- | --- | --- | --- |
@@ -103,19 +99,18 @@ Five-chain cross-reference experiment passed.
 | D | `http://localhost:26687` | `localhost:9093` | `http://localhost:1320` |
 | E | `http://localhost:26697` | `localhost:9094` | `http://localhost:1321` |
 
-## Reset
+## リセット
 
-Stop containers and remove all chain state:
+コンテナを停止し、全チェーンの状態を削除します。
 
 ```bash
 docker compose -f docker/docker-compose.yml down -v
 ```
 
-## Notes
+## 注意点
 
-`run-crossref-experiment.sh` assumes the channel and client IDs produced by the
-channel creation order in `setup-ibc.sh`. If the full-mesh channel order changes,
-update `channel_id()` and `client_for_source()` in the experiment script.
+`run-crossref-experiment.sh` は、`setup-ibc.sh` の channel 作成順序によって生成される channel ID と client ID を前提にしています。
+full mesh の channel 作成順序を変更した場合は、実験スクリプト内の `channel_id()` と `client_for_source()` も更新してください。
 
-The script leaves the Docker network running after a successful experiment so
-that query commands and visual inspection can continue.
+実験スクリプトは、成功後も Docker network を起動したままにします。
+これにより、追加の query 実行や visualizer による確認を続けられます。

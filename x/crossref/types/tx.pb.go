@@ -535,12 +535,15 @@ func (m *MsgSubmitCheckpointResponse) GetCheckpointHash() []byte {
 }
 
 type MsgSendCrossReferencePacket struct {
-	Sender         string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	SourceDomainId string `protobuf:"bytes,2,opt,name=source_domain_id,json=sourceDomainId,proto3" json:"source_domain_id,omitempty"`
-	SourceHeight   uint64 `protobuf:"varint,3,opt,name=source_height,json=sourceHeight,proto3" json:"source_height,omitempty"`
-	PortId         string `protobuf:"bytes,4,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId      string `protobuf:"bytes,5,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	TimeoutSeconds uint64 `protobuf:"varint,6,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
+	Sender                    string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	SourceDomainId            string `protobuf:"bytes,2,opt,name=source_domain_id,json=sourceDomainId,proto3" json:"source_domain_id,omitempty"`
+	SourceHeight              uint64 `protobuf:"varint,3,opt,name=source_height,json=sourceHeight,proto3" json:"source_height,omitempty"`
+	PortId                    string `protobuf:"bytes,4,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	ChannelId                 string `protobuf:"bytes,5,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	TimeoutSeconds            uint64 `protobuf:"varint,6,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
+	SourceCheckpointProof     []byte `protobuf:"bytes,7,opt,name=source_checkpoint_proof,json=sourceCheckpointProof,proto3" json:"source_checkpoint_proof,omitempty"`
+	SourceProofRevisionNumber uint64 `protobuf:"varint,8,opt,name=source_proof_revision_number,json=sourceProofRevisionNumber,proto3" json:"source_proof_revision_number,omitempty"`
+	SourceProofRevisionHeight uint64 `protobuf:"varint,9,opt,name=source_proof_revision_height,json=sourceProofRevisionHeight,proto3" json:"source_proof_revision_height,omitempty"`
 }
 
 func (m *MsgSendCrossReferencePacket) Reset()         { *m = MsgSendCrossReferencePacket{} }
@@ -618,6 +621,27 @@ func (m *MsgSendCrossReferencePacket) GetTimeoutSeconds() uint64 {
 	return 0
 }
 
+func (m *MsgSendCrossReferencePacket) GetSourceCheckpointProof() []byte {
+	if m != nil {
+		return m.SourceCheckpointProof
+	}
+	return nil
+}
+
+func (m *MsgSendCrossReferencePacket) GetSourceProofRevisionNumber() uint64 {
+	if m != nil {
+		return m.SourceProofRevisionNumber
+	}
+	return 0
+}
+
+func (m *MsgSendCrossReferencePacket) GetSourceProofRevisionHeight() uint64 {
+	if m != nil {
+		return m.SourceProofRevisionHeight
+	}
+	return 0
+}
+
 type MsgSendCrossReferencePacketResponse struct {
 	Sequence uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
@@ -662,6 +686,228 @@ func (m *MsgSendCrossReferencePacketResponse) GetSequence() uint64 {
 	return 0
 }
 
+type MsgBroadcastCrossReferencePacket struct {
+	Sender                    string   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	SourceDomainId            string   `protobuf:"bytes,2,opt,name=source_domain_id,json=sourceDomainId,proto3" json:"source_domain_id,omitempty"`
+	SourceHeight              uint64   `protobuf:"varint,3,opt,name=source_height,json=sourceHeight,proto3" json:"source_height,omitempty"`
+	PortId                    string   `protobuf:"bytes,4,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	ExcludeRemoteDomainIds    []string `protobuf:"bytes,5,rep,name=exclude_remote_domain_ids,json=excludeRemoteDomainIds,proto3" json:"exclude_remote_domain_ids,omitempty"`
+	TimeoutSeconds            uint64   `protobuf:"varint,6,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
+	SourceCheckpointProof     []byte   `protobuf:"bytes,7,opt,name=source_checkpoint_proof,json=sourceCheckpointProof,proto3" json:"source_checkpoint_proof,omitempty"`
+	SourceProofRevisionNumber uint64   `protobuf:"varint,8,opt,name=source_proof_revision_number,json=sourceProofRevisionNumber,proto3" json:"source_proof_revision_number,omitempty"`
+	SourceProofRevisionHeight uint64   `protobuf:"varint,9,opt,name=source_proof_revision_height,json=sourceProofRevisionHeight,proto3" json:"source_proof_revision_height,omitempty"`
+}
+
+func (m *MsgBroadcastCrossReferencePacket) Reset()         { *m = MsgBroadcastCrossReferencePacket{} }
+func (m *MsgBroadcastCrossReferencePacket) String() string { return proto.CompactTextString(m) }
+func (*MsgBroadcastCrossReferencePacket) ProtoMessage()    {}
+func (*MsgBroadcastCrossReferencePacket) Descriptor() ([]byte, []int) {
+	return fileDescriptor_64da7bc7476dfced, []int{10}
+}
+func (m *MsgBroadcastCrossReferencePacket) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBroadcastCrossReferencePacket) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBroadcastCrossReferencePacket.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBroadcastCrossReferencePacket) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBroadcastCrossReferencePacket.Merge(m, src)
+}
+func (m *MsgBroadcastCrossReferencePacket) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBroadcastCrossReferencePacket) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBroadcastCrossReferencePacket.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBroadcastCrossReferencePacket proto.InternalMessageInfo
+
+func (m *MsgBroadcastCrossReferencePacket) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgBroadcastCrossReferencePacket) GetSourceDomainId() string {
+	if m != nil {
+		return m.SourceDomainId
+	}
+	return ""
+}
+
+func (m *MsgBroadcastCrossReferencePacket) GetSourceHeight() uint64 {
+	if m != nil {
+		return m.SourceHeight
+	}
+	return 0
+}
+
+func (m *MsgBroadcastCrossReferencePacket) GetPortId() string {
+	if m != nil {
+		return m.PortId
+	}
+	return ""
+}
+
+func (m *MsgBroadcastCrossReferencePacket) GetExcludeRemoteDomainIds() []string {
+	if m != nil {
+		return m.ExcludeRemoteDomainIds
+	}
+	return nil
+}
+
+func (m *MsgBroadcastCrossReferencePacket) GetTimeoutSeconds() uint64 {
+	if m != nil {
+		return m.TimeoutSeconds
+	}
+	return 0
+}
+
+func (m *MsgBroadcastCrossReferencePacket) GetSourceCheckpointProof() []byte {
+	if m != nil {
+		return m.SourceCheckpointProof
+	}
+	return nil
+}
+
+func (m *MsgBroadcastCrossReferencePacket) GetSourceProofRevisionNumber() uint64 {
+	if m != nil {
+		return m.SourceProofRevisionNumber
+	}
+	return 0
+}
+
+func (m *MsgBroadcastCrossReferencePacket) GetSourceProofRevisionHeight() uint64 {
+	if m != nil {
+		return m.SourceProofRevisionHeight
+	}
+	return 0
+}
+
+type BroadcastCrossReferencePacketResult struct {
+	RemoteDomainId string `protobuf:"bytes,1,opt,name=remote_domain_id,json=remoteDomainId,proto3" json:"remote_domain_id,omitempty"`
+	PortId         string `protobuf:"bytes,2,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	ChannelId      string `protobuf:"bytes,3,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	Sequence       uint64 `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
+}
+
+func (m *BroadcastCrossReferencePacketResult) Reset()         { *m = BroadcastCrossReferencePacketResult{} }
+func (m *BroadcastCrossReferencePacketResult) String() string { return proto.CompactTextString(m) }
+func (*BroadcastCrossReferencePacketResult) ProtoMessage()    {}
+func (*BroadcastCrossReferencePacketResult) Descriptor() ([]byte, []int) {
+	return fileDescriptor_64da7bc7476dfced, []int{11}
+}
+func (m *BroadcastCrossReferencePacketResult) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BroadcastCrossReferencePacketResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BroadcastCrossReferencePacketResult.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BroadcastCrossReferencePacketResult) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BroadcastCrossReferencePacketResult.Merge(m, src)
+}
+func (m *BroadcastCrossReferencePacketResult) XXX_Size() int {
+	return m.Size()
+}
+func (m *BroadcastCrossReferencePacketResult) XXX_DiscardUnknown() {
+	xxx_messageInfo_BroadcastCrossReferencePacketResult.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BroadcastCrossReferencePacketResult proto.InternalMessageInfo
+
+func (m *BroadcastCrossReferencePacketResult) GetRemoteDomainId() string {
+	if m != nil {
+		return m.RemoteDomainId
+	}
+	return ""
+}
+
+func (m *BroadcastCrossReferencePacketResult) GetPortId() string {
+	if m != nil {
+		return m.PortId
+	}
+	return ""
+}
+
+func (m *BroadcastCrossReferencePacketResult) GetChannelId() string {
+	if m != nil {
+		return m.ChannelId
+	}
+	return ""
+}
+
+func (m *BroadcastCrossReferencePacketResult) GetSequence() uint64 {
+	if m != nil {
+		return m.Sequence
+	}
+	return 0
+}
+
+type MsgBroadcastCrossReferencePacketResponse struct {
+	Results []BroadcastCrossReferencePacketResult `protobuf:"bytes,1,rep,name=results,proto3" json:"results"`
+}
+
+func (m *MsgBroadcastCrossReferencePacketResponse) Reset() {
+	*m = MsgBroadcastCrossReferencePacketResponse{}
+}
+func (m *MsgBroadcastCrossReferencePacketResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBroadcastCrossReferencePacketResponse) ProtoMessage()    {}
+func (*MsgBroadcastCrossReferencePacketResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_64da7bc7476dfced, []int{12}
+}
+func (m *MsgBroadcastCrossReferencePacketResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBroadcastCrossReferencePacketResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBroadcastCrossReferencePacketResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBroadcastCrossReferencePacketResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBroadcastCrossReferencePacketResponse.Merge(m, src)
+}
+func (m *MsgBroadcastCrossReferencePacketResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBroadcastCrossReferencePacketResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBroadcastCrossReferencePacketResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBroadcastCrossReferencePacketResponse proto.InternalMessageInfo
+
+func (m *MsgBroadcastCrossReferencePacketResponse) GetResults() []BroadcastCrossReferencePacketResult {
+	if m != nil {
+		return m.Results
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "crossrefd.crossref.v1.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "crossrefd.crossref.v1.MsgUpdateParamsResponse")
@@ -673,75 +919,91 @@ func init() {
 	proto.RegisterType((*MsgSubmitCheckpointResponse)(nil), "crossrefd.crossref.v1.MsgSubmitCheckpointResponse")
 	proto.RegisterType((*MsgSendCrossReferencePacket)(nil), "crossrefd.crossref.v1.MsgSendCrossReferencePacket")
 	proto.RegisterType((*MsgSendCrossReferencePacketResponse)(nil), "crossrefd.crossref.v1.MsgSendCrossReferencePacketResponse")
+	proto.RegisterType((*MsgBroadcastCrossReferencePacket)(nil), "crossrefd.crossref.v1.MsgBroadcastCrossReferencePacket")
+	proto.RegisterType((*BroadcastCrossReferencePacketResult)(nil), "crossrefd.crossref.v1.BroadcastCrossReferencePacketResult")
+	proto.RegisterType((*MsgBroadcastCrossReferencePacketResponse)(nil), "crossrefd.crossref.v1.MsgBroadcastCrossReferencePacketResponse")
 }
 
 func init() { proto.RegisterFile("crossrefd/crossref/v1/tx.proto", fileDescriptor_64da7bc7476dfced) }
 
 var fileDescriptor_64da7bc7476dfced = []byte{
-	// 1007 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x3d, 0x6f, 0xdb, 0x46,
-	0x18, 0x36, 0x63, 0x59, 0x1f, 0x6f, 0xfc, 0xc9, 0x38, 0xb1, 0x2c, 0x37, 0xaa, 0xab, 0x14, 0x8e,
-	0xea, 0xb6, 0x92, 0xed, 0x00, 0x69, 0xab, 0x29, 0xb1, 0x83, 0xc2, 0x1e, 0x04, 0x18, 0x54, 0xbd,
-	0x74, 0x21, 0xce, 0xe4, 0x99, 0x3c, 0x58, 0xe4, 0xb1, 0x77, 0x47, 0xc3, 0xde, 0x8a, 0x6e, 0xcd,
-	0xd4, 0xad, 0x7f, 0xa1, 0xa3, 0x87, 0xfe, 0x81, 0x02, 0x1d, 0x32, 0x06, 0x9d, 0x8a, 0x0e, 0x6d,
-	0x61, 0x0f, 0xfe, 0x1b, 0x05, 0xef, 0x48, 0x4a, 0xa2, 0xc4, 0xc4, 0x09, 0xba, 0x18, 0xbc, 0xe7,
-	0x79, 0xde, 0xf7, 0xbd, 0xf7, 0xcb, 0x27, 0xa8, 0x5b, 0x8c, 0x72, 0xce, 0xf0, 0x89, 0xdd, 0x4e,
-	0xbe, 0xda, 0x67, 0xdb, 0x6d, 0x71, 0xde, 0x0a, 0x18, 0x15, 0x54, 0xbf, 0x9f, 0xf2, 0xad, 0xe4,
-	0xab, 0x75, 0xb6, 0x5d, 0x5b, 0x42, 0x1e, 0xf1, 0x69, 0x5b, 0xfe, 0x55, 0xca, 0xda, 0x8a, 0x45,
-	0xb9, 0x47, 0x79, 0xdb, 0xe3, 0x4e, 0xe4, 0xc1, 0xe3, 0x4e, 0x4c, 0xac, 0x2a, 0xc2, 0x94, 0xa7,
-	0xb6, 0x3a, 0xc4, 0x54, 0x63, 0x72, 0xf4, 0x00, 0x31, 0xe4, 0x25, 0x9a, 0x65, 0x87, 0x3a, 0x54,
-	0xd9, 0x46, 0x5f, 0x0a, 0x6d, 0xfc, 0xae, 0xc1, 0x42, 0x97, 0x3b, 0x47, 0x81, 0x8d, 0x04, 0x3e,
-	0x94, 0x7a, 0xfd, 0x29, 0x54, 0x50, 0x28, 0x5c, 0xca, 0x88, 0xb8, 0xa8, 0x6a, 0xeb, 0x5a, 0xb3,
-	0xb2, 0x5b, 0xfd, 0xe3, 0xd7, 0xcf, 0x97, 0xe3, 0x90, 0xcf, 0x6d, 0x9b, 0x61, 0xce, 0x7b, 0x82,
-	0x11, 0xdf, 0x31, 0x06, 0x52, 0xfd, 0x19, 0x14, 0x55, 0xc4, 0xea, 0x9d, 0x75, 0xad, 0x79, 0x77,
-	0xe7, 0x61, 0x6b, 0x62, 0xd2, 0x2d, 0x15, 0x66, 0xb7, 0xf2, 0xea, 0xef, 0x0f, 0xa7, 0x7e, 0xb9,
-	0xb9, 0xdc, 0xd4, 0x8c, 0xd8, 0xae, 0xf3, 0xc5, 0x0f, 0x37, 0x97, 0x9b, 0x03, 0x8f, 0x2f, 0x6f,
-	0x2e, 0x37, 0x3f, 0x1e, 0xa4, 0x76, 0x3e, 0x48, 0x2e, 0x73, 0xe5, 0xc6, 0x2a, 0xac, 0x64, 0x20,
-	0x03, 0xf3, 0x80, 0xfa, 0x1c, 0x37, 0x7e, 0xbc, 0x03, 0x4b, 0x5d, 0xee, 0x18, 0xd8, 0x21, 0x5c,
-	0x60, 0xf6, 0x82, 0x7a, 0x88, 0xf8, 0xfa, 0x0e, 0x94, 0x2c, 0x86, 0x91, 0xa0, 0xec, 0xad, 0x19,
-	0x26, 0x42, 0x7d, 0x0d, 0x2a, 0xb6, 0xb4, 0x36, 0x89, 0x2d, 0x53, 0xac, 0x18, 0x65, 0x05, 0x1c,
-	0xd8, 0xfa, 0x2a, 0x94, 0x2d, 0x37, 0xe6, 0xa6, 0x25, 0x57, 0x92, 0xe7, 0x03, 0x5b, 0xff, 0x0c,
-	0xf4, 0x33, 0xd4, 0x27, 0x76, 0xe4, 0xc4, 0xe4, 0x58, 0x98, 0x2e, 0xe2, 0x6e, 0xb5, 0xb0, 0xae,
-	0x35, 0x67, 0x8d, 0xc5, 0x94, 0xe9, 0x61, 0xb1, 0x8f, 0xb8, 0xab, 0x7f, 0x04, 0xb3, 0x1e, 0x16,
-	0xc8, 0x46, 0x02, 0x99, 0x21, 0x23, 0xd5, 0x19, 0xe9, 0xec, 0x6e, 0x82, 0x1d, 0x31, 0xa2, 0xca,
-	0x94, 0x5c, 0x2b, 0x2a, 0xd2, 0x46, 0x5e, 0x91, 0x46, 0xb3, 0x6e, 0xac, 0xc1, 0xea, 0x18, 0x98,
-	0x16, 0xea, 0xe7, 0x69, 0x58, 0xee, 0x72, 0x67, 0x97, 0xf8, 0xb6, 0x62, 0xf6, 0x5c, 0xe4, 0xfb,
-	0xb8, 0xff, 0x5e, 0xb5, 0xda, 0x80, 0x85, 0x3e, 0xb5, 0x50, 0xdf, 0xcc, 0x56, 0x6c, 0x4e, 0xc2,
-	0x2f, 0x92, 0xb2, 0x35, 0x61, 0x91, 0x61, 0x8f, 0x0a, 0x3c, 0x24, 0x54, 0xe5, 0x9b, 0x57, 0x78,
-	0xaa, 0x5c, 0x81, 0x52, 0x40, 0x99, 0x88, 0x04, 0x05, 0x29, 0x28, 0x46, 0xc7, 0x03, 0x5b, 0x7f,
-	0x08, 0x60, 0xa9, 0x9b, 0x46, 0x9c, 0x2a, 0x57, 0x25, 0x46, 0x0e, 0xec, 0xa8, 0x6b, 0x56, 0x9f,
-	0x60, 0x5f, 0x5a, 0x16, 0x55, 0xd7, 0x14, 0x70, 0x60, 0xeb, 0x5b, 0xb0, 0x6c, 0xd1, 0xd0, 0x17,
-	0x98, 0x05, 0x88, 0x89, 0x0b, 0x33, 0x89, 0x50, 0x92, 0x3a, 0x7d, 0x98, 0x3b, 0x54, 0xd1, 0x9e,
-	0xc2, 0xca, 0x88, 0xc5, 0x50, 0xe8, 0xb2, 0x34, 0xba, 0x3f, 0x4c, 0xef, 0x25, 0xd7, 0xe8, 0x74,
-	0xb2, 0x3d, 0xfb, 0x24, 0xaf, 0x67, 0x63, 0x0d, 0x68, 0xd4, 0xe1, 0x83, 0x49, 0x78, 0xda, 0xb9,
-	0x7f, 0xa6, 0xe1, 0x5e, 0x97, 0x3b, 0xbd, 0xf0, 0xd8, 0x23, 0x62, 0xcf, 0xc5, 0xd6, 0x69, 0x40,
-	0x89, 0x2f, 0xfe, 0xff, 0x21, 0x7f, 0x00, 0x45, 0x17, 0x13, 0xc7, 0x15, 0xb2, 0x47, 0x05, 0x23,
-	0x3e, 0x45, 0x2d, 0x38, 0xee, 0x53, 0xeb, 0x74, 0x78, 0xb2, 0x2b, 0x12, 0x91, 0x23, 0xbd, 0x0a,
-	0x65, 0x14, 0x04, 0x8a, 0x9c, 0x91, 0x64, 0x09, 0x05, 0x81, 0xa4, 0x26, 0xef, 0x46, 0x31, 0x67,
-	0x37, 0xbe, 0x84, 0x6a, 0xc0, 0xf0, 0x19, 0xa1, 0x21, 0x37, 0xad, 0x34, 0x4f, 0x65, 0x53, 0x92,
-	0x36, 0x0f, 0x12, 0x7e, 0x50, 0x06, 0x69, 0xf9, 0x18, 0x16, 0xb2, 0x06, 0x65, 0x69, 0x30, 0x6f,
-	0x8d, 0x0a, 0xb7, 0x61, 0xd9, 0xbd, 0x88, 0xb6, 0x03, 0x73, 0xc2, 0x4d, 0x4e, 0x1c, 0x1f, 0x89,
-	0x90, 0xe1, 0x6a, 0x45, 0xaa, 0xef, 0x0d, 0xb8, 0x5e, 0x42, 0x45, 0xb3, 0xae, 0xb2, 0x17, 0xc4,
-	0xc3, 0x66, 0xe8, 0x93, 0xf3, 0x2a, 0xac, 0x6b, 0xcd, 0x69, 0x63, 0x4e, 0xc2, 0xdf, 0x10, 0x0f,
-	0x1f, 0xf9, 0xe4, 0xbc, 0xf3, 0x55, 0x76, 0x04, 0x9a, 0x79, 0x23, 0x90, 0xed, 0x64, 0xe3, 0x6b,
-	0x58, 0x9b, 0x00, 0x27, 0x03, 0x30, 0x29, 0x3b, 0x6d, 0x52, 0x76, 0x8d, 0xdf, 0xee, 0x28, 0x47,
-	0xd8, 0xb7, 0xf7, 0xa2, 0x78, 0x06, 0x3e, 0xc1, 0x0c, 0xfb, 0x16, 0x3e, 0x44, 0xd6, 0x29, 0x16,
-	0xfa, 0x16, 0x14, 0x39, 0xf6, 0x6d, 0xfc, 0xf6, 0x81, 0x89, 0x75, 0xd1, 0x02, 0x73, 0x1a, 0x32,
-	0x0b, 0x8f, 0x6d, 0xfa, 0xbc, 0xc2, 0xd3, 0x05, 0x7e, 0x04, 0x73, 0xb1, 0x72, 0x64, 0x86, 0x66,
-	0x15, 0xb8, 0xaf, 0x26, 0xe9, 0x7d, 0xb7, 0xfc, 0x31, 0x2c, 0x44, 0xd5, 0xa7, 0xa1, 0x30, 0x39,
-	0xb6, 0xa8, 0x6f, 0x73, 0x39, 0x44, 0x05, 0x63, 0x3e, 0x86, 0x7b, 0x0a, 0xed, 0x3c, 0x8b, 0x9a,
-	0x10, 0x5f, 0x3e, 0xea, 0xc1, 0x56, 0x6e, 0x0f, 0x72, 0x6a, 0xd4, 0x78, 0x0e, 0x8f, 0xde, 0x40,
-	0xa7, 0x3d, 0xa9, 0x41, 0x99, 0xe3, 0xef, 0xc2, 0x88, 0x91, 0xc5, 0x2c, 0x18, 0xe9, 0x79, 0xe7,
-	0xaf, 0x02, 0x4c, 0x77, 0xb9, 0xa3, 0x9f, 0xc0, 0xec, 0xc8, 0xcb, 0xbb, 0x91, 0xf3, 0x62, 0x66,
-	0xde, 0xb6, 0x5a, 0xeb, 0x76, 0xba, 0xf4, 0x2e, 0x7d, 0x98, 0xcf, 0xbc, 0x7f, 0xcd, 0x7c, 0x0f,
-	0xa3, 0xca, 0xda, 0xd6, 0x6d, 0x95, 0x69, 0xb4, 0x10, 0x96, 0xc6, 0x1f, 0x91, 0x4f, 0xf3, 0xdd,
-	0x8c, 0x89, 0x6b, 0x4f, 0xde, 0x41, 0x9c, 0x86, 0x65, 0xb0, 0x38, 0xf6, 0x1f, 0x70, 0x33, 0xdf,
-	0x51, 0x56, 0x5b, 0xdb, 0xb9, 0xbd, 0x36, 0x8d, 0xf9, 0x52, 0x83, 0x6a, 0xee, 0x32, 0xbd, 0xc9,
-	0x61, 0x8e, 0x4d, 0xad, 0xf3, 0xee, 0x36, 0xc9, 0x65, 0x6a, 0x33, 0xdf, 0x47, 0x3f, 0xa6, 0x76,
-	0xf7, 0x5f, 0x5d, 0xd5, 0xb5, 0xd7, 0x57, 0x75, 0xed, 0xdf, 0xab, 0xba, 0xf6, 0xd3, 0x75, 0x7d,
-	0xea, 0xf5, 0x75, 0x7d, 0xea, 0xcf, 0xeb, 0xfa, 0xd4, 0xb7, 0x2d, 0x87, 0x08, 0x37, 0x3c, 0x6e,
-	0x59, 0xd4, 0x1b, 0x8c, 0xfa, 0xc4, 0xf9, 0x17, 0x17, 0x01, 0xe6, 0xc7, 0x45, 0xf9, 0x1b, 0xf1,
-	0xc9, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x7b, 0x1b, 0xe0, 0xc1, 0xdd, 0x0a, 0x00, 0x00,
+	// 1216 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x57, 0xbb, 0x6f, 0xe3, 0xc6,
+	0x13, 0x36, 0x2d, 0x59, 0x8f, 0xf1, 0x9b, 0xe7, 0x87, 0x24, 0x9f, 0xf5, 0xd3, 0x4f, 0x0e, 0x7c,
+	0x8a, 0x93, 0x48, 0xb6, 0x0f, 0xb9, 0xcb, 0xa9, 0xb9, 0x3b, 0xfb, 0x12, 0xd8, 0x85, 0x03, 0x83,
+	0x8e, 0x9b, 0x6b, 0x08, 0x9a, 0x5c, 0x53, 0x84, 0x45, 0x2e, 0xb3, 0xbb, 0x34, 0xec, 0x2e, 0x48,
+	0x11, 0x20, 0x57, 0xa5, 0x0b, 0x52, 0x06, 0x69, 0x52, 0xba, 0xc8, 0x9f, 0x90, 0xe2, 0xca, 0x43,
+	0xaa, 0x54, 0x49, 0x60, 0x17, 0xfe, 0x0f, 0xd2, 0xa4, 0x09, 0xb8, 0x4b, 0x52, 0x12, 0x25, 0xca,
+	0x3e, 0x23, 0x4d, 0x90, 0x46, 0xe0, 0xce, 0xf7, 0xcd, 0xcc, 0xce, 0xec, 0xb7, 0x0f, 0x41, 0x59,
+	0x27, 0x98, 0x52, 0x82, 0x8e, 0x8d, 0x46, 0xf8, 0xd5, 0x38, 0xdd, 0x68, 0xb0, 0xb3, 0xba, 0x4b,
+	0x30, 0xc3, 0xf2, 0x7c, 0x84, 0xd7, 0xc3, 0xaf, 0xfa, 0xe9, 0x46, 0x69, 0x56, 0xb3, 0x2d, 0x07,
+	0x37, 0xf8, 0xaf, 0x60, 0x96, 0x16, 0x75, 0x4c, 0x6d, 0x4c, 0x1b, 0x36, 0x35, 0xfd, 0x08, 0x36,
+	0x35, 0x03, 0xa0, 0x28, 0x00, 0x95, 0x8f, 0x1a, 0x62, 0x10, 0x40, 0xd5, 0xc1, 0xd9, 0x5d, 0x8d,
+	0x68, 0x76, 0xc8, 0x99, 0x33, 0xb1, 0x89, 0x85, 0xaf, 0xff, 0x25, 0xac, 0xd5, 0x9f, 0x25, 0x98,
+	0xde, 0xa3, 0xe6, 0xa1, 0x6b, 0x68, 0x0c, 0xed, 0x73, 0xbe, 0xfc, 0x08, 0xf2, 0x9a, 0xc7, 0x5a,
+	0x98, 0x58, 0xec, 0xbc, 0x20, 0x55, 0xa4, 0x5a, 0x7e, 0xab, 0xf0, 0xcb, 0x4f, 0x1f, 0xcc, 0x05,
+	0x29, 0x9f, 0x1b, 0x06, 0x41, 0x94, 0x1e, 0x30, 0x62, 0x39, 0xa6, 0xd2, 0xa1, 0xca, 0xcf, 0x20,
+	0x23, 0x32, 0x16, 0x46, 0x2b, 0x52, 0x6d, 0x7c, 0x73, 0xb9, 0x3e, 0xb0, 0xe8, 0xba, 0x48, 0xb3,
+	0x95, 0x7f, 0xfd, 0xdb, 0xff, 0x46, 0x7e, 0xbc, 0xbe, 0x58, 0x93, 0x94, 0xc0, 0xaf, 0xf9, 0xf8,
+	0xcb, 0xeb, 0x8b, 0xb5, 0x4e, 0xc4, 0x57, 0xd7, 0x17, 0x6b, 0xef, 0x74, 0x4a, 0x3b, 0xeb, 0x14,
+	0x17, 0x9b, 0x72, 0xb5, 0x08, 0x8b, 0x31, 0x93, 0x82, 0xa8, 0x8b, 0x1d, 0x8a, 0xaa, 0x5f, 0x8f,
+	0xc2, 0xec, 0x1e, 0x35, 0x15, 0x64, 0x5a, 0x94, 0x21, 0xf2, 0x02, 0xdb, 0x9a, 0xe5, 0xc8, 0x9b,
+	0x90, 0xd5, 0x09, 0xd2, 0x18, 0x26, 0x37, 0x56, 0x18, 0x12, 0xe5, 0x25, 0xc8, 0x1b, 0xdc, 0x5b,
+	0xb5, 0x0c, 0x5e, 0x62, 0x5e, 0xc9, 0x09, 0xc3, 0xae, 0x21, 0x17, 0x21, 0xa7, 0xb7, 0x02, 0x2c,
+	0xc5, 0xb1, 0x2c, 0x1f, 0xef, 0x1a, 0xf2, 0xfb, 0x20, 0x9f, 0x6a, 0x6d, 0xcb, 0xf0, 0x83, 0xa8,
+	0x14, 0x31, 0xb5, 0xa5, 0xd1, 0x56, 0x21, 0x5d, 0x91, 0x6a, 0x13, 0xca, 0x4c, 0x84, 0x1c, 0x20,
+	0xb6, 0xa3, 0xd1, 0x96, 0xfc, 0x7f, 0x98, 0xb0, 0x11, 0xd3, 0x0c, 0x8d, 0x69, 0xaa, 0x47, 0xac,
+	0xc2, 0x18, 0x0f, 0x36, 0x1e, 0xda, 0x0e, 0x89, 0x25, 0xda, 0x14, 0x4e, 0xcb, 0x6f, 0xd2, 0x6a,
+	0x52, 0x93, 0x7a, 0xab, 0xae, 0x2e, 0x41, 0xb1, 0xcf, 0x18, 0x35, 0xea, 0xdb, 0x14, 0xcc, 0xed,
+	0x51, 0x73, 0xcb, 0x72, 0x0c, 0x81, 0x6c, 0xb7, 0x34, 0xc7, 0x41, 0xed, 0x3b, 0xf5, 0x6a, 0x15,
+	0xa6, 0xdb, 0x58, 0xd7, 0xda, 0x6a, 0xbc, 0x63, 0x93, 0xdc, 0xfc, 0x22, 0x6c, 0x5b, 0x0d, 0x66,
+	0x08, 0xb2, 0x31, 0x43, 0x5d, 0x44, 0xd1, 0xbe, 0x29, 0x61, 0x8f, 0x98, 0x8b, 0x90, 0x75, 0x31,
+	0x61, 0x3e, 0x21, 0xcd, 0x09, 0x19, 0x7f, 0xb8, 0x6b, 0xc8, 0xcb, 0x00, 0xba, 0x98, 0xa9, 0x8f,
+	0x89, 0x76, 0xe5, 0x03, 0xcb, 0xae, 0xe1, 0xaf, 0x9a, 0xde, 0xb6, 0x90, 0xc3, 0x3d, 0x33, 0x62,
+	0xd5, 0x84, 0x61, 0xd7, 0x90, 0xd7, 0x61, 0x4e, 0xc7, 0x9e, 0xc3, 0x10, 0x71, 0x35, 0xc2, 0xce,
+	0xd5, 0x30, 0x43, 0x96, 0xf3, 0xe4, 0x6e, 0x6c, 0x5f, 0x64, 0x7b, 0x04, 0x8b, 0x3d, 0x1e, 0x5d,
+	0xa9, 0x73, 0xdc, 0x69, 0xbe, 0x1b, 0xde, 0x0e, 0xa7, 0xd1, 0x6c, 0xc6, 0xd7, 0xec, 0xdd, 0xa4,
+	0x35, 0xeb, 0x5b, 0x80, 0x6a, 0x19, 0xee, 0x0f, 0xb2, 0x47, 0x2b, 0xf7, 0x7b, 0x0a, 0xee, 0xed,
+	0x51, 0xf3, 0xc0, 0x3b, 0xb2, 0x2d, 0xb6, 0xdd, 0x42, 0xfa, 0x89, 0x8b, 0x2d, 0x87, 0xfd, 0xf3,
+	0x22, 0x5f, 0x80, 0x4c, 0x0b, 0x59, 0x66, 0x8b, 0xf1, 0x35, 0x4a, 0x2b, 0xc1, 0xc8, 0x5f, 0x82,
+	0xa3, 0x36, 0xd6, 0x4f, 0xba, 0x95, 0x9d, 0xe7, 0x16, 0x2e, 0xe9, 0x22, 0xe4, 0x34, 0xd7, 0x15,
+	0xe0, 0x18, 0x07, 0xb3, 0x9a, 0xeb, 0x72, 0x68, 0xf0, 0xde, 0xc8, 0x24, 0xec, 0x8d, 0x8f, 0xa0,
+	0xe0, 0x12, 0x74, 0x6a, 0x61, 0x8f, 0xaa, 0x7a, 0x54, 0xa7, 0xf0, 0xc9, 0x72, 0x9f, 0x85, 0x10,
+	0xef, 0xb4, 0x81, 0x7b, 0x3e, 0x80, 0xe9, 0xb8, 0x43, 0x8e, 0x3b, 0x4c, 0xe9, 0xbd, 0xc4, 0x0d,
+	0x98, 0x6b, 0x9d, 0xfb, 0xbb, 0x03, 0x51, 0x8b, 0xaa, 0xd4, 0x32, 0x1d, 0x8d, 0x79, 0x04, 0x15,
+	0xf2, 0x9c, 0x7d, 0xaf, 0x83, 0x1d, 0x84, 0x90, 0xaf, 0x75, 0x51, 0x3d, 0xb3, 0x6c, 0xa4, 0x7a,
+	0x8e, 0x75, 0x56, 0x80, 0x8a, 0x54, 0x4b, 0x29, 0x93, 0xdc, 0xfc, 0x99, 0x65, 0xa3, 0x43, 0xc7,
+	0x3a, 0x6b, 0x3e, 0x89, 0x4b, 0xa0, 0x96, 0x24, 0x81, 0xf8, 0x4a, 0x56, 0x3f, 0x81, 0xa5, 0x01,
+	0xe6, 0x50, 0x00, 0x83, 0xaa, 0x93, 0x06, 0x55, 0x57, 0xfd, 0x2b, 0x25, 0x02, 0x21, 0xc7, 0xd8,
+	0xf6, 0xf3, 0x29, 0xe8, 0x18, 0x11, 0xe4, 0xe8, 0x68, 0x5f, 0xd3, 0x4f, 0x10, 0x93, 0xd7, 0x21,
+	0x43, 0x91, 0x63, 0xa0, 0x9b, 0x05, 0x13, 0xf0, 0xfc, 0x0d, 0x4c, 0xb1, 0x47, 0x74, 0xd4, 0xb7,
+	0xd3, 0xa7, 0x84, 0x3d, 0xda, 0xc0, 0x2b, 0x30, 0x19, 0x30, 0x7b, 0x34, 0x34, 0x21, 0x8c, 0x3b,
+	0x42, 0x49, 0x77, 0xdd, 0xe5, 0x0f, 0x60, 0xda, 0xef, 0x3e, 0xf6, 0x98, 0x4a, 0x91, 0x8e, 0x1d,
+	0x83, 0x72, 0x11, 0xa5, 0x95, 0xa9, 0xc0, 0x7c, 0x20, 0xac, 0xfe, 0xfe, 0x0d, 0x66, 0xd1, 0xd5,
+	0x31, 0x97, 0x60, 0x7c, 0x1c, 0x28, 0x68, 0x5e, 0xc0, 0x9d, 0x2e, 0xef, 0xfb, 0xa0, 0xfc, 0x14,
+	0xee, 0x07, 0x7e, 0x9c, 0xac, 0xfa, 0x32, 0xa3, 0x16, 0x76, 0x54, 0xc7, 0xb3, 0x8f, 0x10, 0xe1,
+	0x6a, 0x4a, 0x2b, 0x45, 0xc1, 0xe1, 0x2e, 0x4a, 0xc0, 0xf8, 0x94, 0x13, 0x92, 0x03, 0x04, 0xdd,
+	0xc8, 0x27, 0x06, 0x10, 0xad, 0x69, 0x3e, 0xf3, 0xe5, 0x13, 0xb4, 0xdd, 0x57, 0xcf, 0x7a, 0xa2,
+	0x7a, 0x12, 0x56, 0xb7, 0xfa, 0x1c, 0x56, 0x86, 0xc0, 0x91, 0x9a, 0x4a, 0x90, 0xa3, 0xe8, 0x73,
+	0xcf, 0x47, 0xb8, 0x0c, 0xd2, 0x4a, 0x34, 0xae, 0x7e, 0x9f, 0x86, 0x8a, 0x7f, 0x16, 0x11, 0xac,
+	0x19, 0xba, 0x46, 0xd9, 0xbf, 0x4c, 0x45, 0x4f, 0xa0, 0x88, 0xce, 0xf4, 0xb6, 0x67, 0x20, 0x35,
+	0x7e, 0xed, 0xd0, 0xc2, 0x58, 0x25, 0x55, 0xcb, 0x2b, 0x0b, 0x01, 0x41, 0xe9, 0xb9, 0x7e, 0xe8,
+	0x7f, 0x41, 0x61, 0x1f, 0xc7, 0x14, 0xf6, 0x61, 0xe2, 0x15, 0x35, 0x6c, 0xf9, 0xab, 0x3f, 0x48,
+	0xb0, 0x32, 0x94, 0xa1, 0x20, 0xea, 0xb5, 0xd9, 0xc0, 0xbb, 0x5f, 0xba, 0xe9, 0xee, 0x1f, 0x1d,
+	0x72, 0x2a, 0xa4, 0xe2, 0xa7, 0x42, 0xb7, 0x92, 0xd3, 0x31, 0x25, 0x7f, 0x25, 0x41, 0xed, 0xa6,
+	0x52, 0xa2, 0x2d, 0xf1, 0x12, 0xb2, 0x84, 0x4f, 0x9a, 0x16, 0xa4, 0x4a, 0xaa, 0x36, 0xbe, 0xd9,
+	0x4c, 0x78, 0xdb, 0xde, 0xa2, 0xee, 0xad, 0xb4, 0xff, 0xf0, 0x55, 0xc2, 0x80, 0x9b, 0x7f, 0x8e,
+	0x41, 0x6a, 0x8f, 0x9a, 0xf2, 0x31, 0x4c, 0xf4, 0x3c, 0xc3, 0x57, 0x13, 0x52, 0xc4, 0x1e, 0xba,
+	0xa5, 0xfa, 0xed, 0x78, 0x51, 0x2d, 0x6d, 0x98, 0x8a, 0x3d, 0x86, 0x6b, 0xc9, 0x11, 0x7a, 0x99,
+	0xa5, 0xf5, 0xdb, 0x32, 0xa3, 0x6c, 0x1e, 0xcc, 0xf6, 0xbf, 0x28, 0xdf, 0x4b, 0x0e, 0xd3, 0x47,
+	0x2e, 0x3d, 0x7c, 0x0b, 0x72, 0x94, 0x96, 0xc0, 0x4c, 0xdf, 0x73, 0x68, 0x2d, 0x39, 0x50, 0x9c,
+	0x5b, 0xda, 0xbc, 0x3d, 0x37, 0xca, 0xf9, 0x4a, 0x82, 0x42, 0xe2, 0xcd, 0x3a, 0x2c, 0x60, 0x82,
+	0x4f, 0xa9, 0xf9, 0xf6, 0x3e, 0xd1, 0x64, 0xbe, 0x93, 0x60, 0x79, 0xf8, 0x29, 0xfd, 0x78, 0x48,
+	0x5f, 0x87, 0x39, 0x96, 0x9e, 0xde, 0xd1, 0x31, 0x9c, 0x5b, 0x69, 0xec, 0x0b, 0xff, 0x5f, 0xdf,
+	0xd6, 0xce, 0xeb, 0xcb, 0xb2, 0xf4, 0xe6, 0xb2, 0x2c, 0xfd, 0x71, 0x59, 0x96, 0xbe, 0xb9, 0x2a,
+	0x8f, 0xbc, 0xb9, 0x2a, 0x8f, 0xfc, 0x7a, 0x55, 0x1e, 0x79, 0x59, 0x37, 0x2d, 0xd6, 0xf2, 0x8e,
+	0xea, 0x3a, 0xb6, 0x3b, 0xe7, 0xce, 0xc0, 0xc3, 0x88, 0x9d, 0xbb, 0x88, 0x1e, 0x65, 0xf8, 0x9f,
+	0xd9, 0x87, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0x7c, 0xe4, 0xd2, 0x71, 0x86, 0x0f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -763,6 +1025,7 @@ type MsgClient interface {
 	BindDomainChannel(ctx context.Context, in *MsgBindDomainChannel, opts ...grpc.CallOption) (*MsgBindDomainChannelResponse, error)
 	SubmitCheckpoint(ctx context.Context, in *MsgSubmitCheckpoint, opts ...grpc.CallOption) (*MsgSubmitCheckpointResponse, error)
 	SendCrossReferencePacket(ctx context.Context, in *MsgSendCrossReferencePacket, opts ...grpc.CallOption) (*MsgSendCrossReferencePacketResponse, error)
+	BroadcastCrossReferencePacket(ctx context.Context, in *MsgBroadcastCrossReferencePacket, opts ...grpc.CallOption) (*MsgBroadcastCrossReferencePacketResponse, error)
 }
 
 type msgClient struct {
@@ -818,6 +1081,15 @@ func (c *msgClient) SendCrossReferencePacket(ctx context.Context, in *MsgSendCro
 	return out, nil
 }
 
+func (c *msgClient) BroadcastCrossReferencePacket(ctx context.Context, in *MsgBroadcastCrossReferencePacket, opts ...grpc.CallOption) (*MsgBroadcastCrossReferencePacketResponse, error) {
+	out := new(MsgBroadcastCrossReferencePacketResponse)
+	err := c.cc.Invoke(ctx, "/crossrefd.crossref.v1.Msg/BroadcastCrossReferencePacket", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
@@ -827,6 +1099,7 @@ type MsgServer interface {
 	BindDomainChannel(context.Context, *MsgBindDomainChannel) (*MsgBindDomainChannelResponse, error)
 	SubmitCheckpoint(context.Context, *MsgSubmitCheckpoint) (*MsgSubmitCheckpointResponse, error)
 	SendCrossReferencePacket(context.Context, *MsgSendCrossReferencePacket) (*MsgSendCrossReferencePacketResponse, error)
+	BroadcastCrossReferencePacket(context.Context, *MsgBroadcastCrossReferencePacket) (*MsgBroadcastCrossReferencePacketResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -847,6 +1120,9 @@ func (*UnimplementedMsgServer) SubmitCheckpoint(ctx context.Context, req *MsgSub
 }
 func (*UnimplementedMsgServer) SendCrossReferencePacket(ctx context.Context, req *MsgSendCrossReferencePacket) (*MsgSendCrossReferencePacketResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendCrossReferencePacket not implemented")
+}
+func (*UnimplementedMsgServer) BroadcastCrossReferencePacket(ctx context.Context, req *MsgBroadcastCrossReferencePacket) (*MsgBroadcastCrossReferencePacketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BroadcastCrossReferencePacket not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -943,6 +1219,24 @@ func _Msg_SendCrossReferencePacket_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BroadcastCrossReferencePacket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBroadcastCrossReferencePacket)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BroadcastCrossReferencePacket(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crossrefd.crossref.v1.Msg/BroadcastCrossReferencePacket",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BroadcastCrossReferencePacket(ctx, req.(*MsgBroadcastCrossReferencePacket))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "crossrefd.crossref.v1.Msg",
@@ -967,6 +1261,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendCrossReferencePacket",
 			Handler:    _Msg_SendCrossReferencePacket_Handler,
+		},
+		{
+			MethodName: "BroadcastCrossReferencePacket",
+			Handler:    _Msg_BroadcastCrossReferencePacket_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1358,6 +1656,23 @@ func (m *MsgSendCrossReferencePacket) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
+	if m.SourceProofRevisionHeight != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.SourceProofRevisionHeight))
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.SourceProofRevisionNumber != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.SourceProofRevisionNumber))
+		i--
+		dAtA[i] = 0x40
+	}
+	if len(m.SourceCheckpointProof) > 0 {
+		i -= len(m.SourceCheckpointProof)
+		copy(dAtA[i:], m.SourceCheckpointProof)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SourceCheckpointProof)))
+		i--
+		dAtA[i] = 0x3a
+	}
 	if m.TimeoutSeconds != 0 {
 		i = encodeVarintTx(dAtA, i, uint64(m.TimeoutSeconds))
 		i--
@@ -1423,6 +1738,172 @@ func (m *MsgSendCrossReferencePacketResponse) MarshalToSizedBuffer(dAtA []byte) 
 		i = encodeVarintTx(dAtA, i, uint64(m.Sequence))
 		i--
 		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBroadcastCrossReferencePacket) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBroadcastCrossReferencePacket) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBroadcastCrossReferencePacket) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.SourceProofRevisionHeight != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.SourceProofRevisionHeight))
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.SourceProofRevisionNumber != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.SourceProofRevisionNumber))
+		i--
+		dAtA[i] = 0x40
+	}
+	if len(m.SourceCheckpointProof) > 0 {
+		i -= len(m.SourceCheckpointProof)
+		copy(dAtA[i:], m.SourceCheckpointProof)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SourceCheckpointProof)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if m.TimeoutSeconds != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.TimeoutSeconds))
+		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.ExcludeRemoteDomainIds) > 0 {
+		for iNdEx := len(m.ExcludeRemoteDomainIds) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.ExcludeRemoteDomainIds[iNdEx])
+			copy(dAtA[i:], m.ExcludeRemoteDomainIds[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.ExcludeRemoteDomainIds[iNdEx])))
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.PortId) > 0 {
+		i -= len(m.PortId)
+		copy(dAtA[i:], m.PortId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.PortId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.SourceHeight != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.SourceHeight))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.SourceDomainId) > 0 {
+		i -= len(m.SourceDomainId)
+		copy(dAtA[i:], m.SourceDomainId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SourceDomainId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BroadcastCrossReferencePacketResult) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BroadcastCrossReferencePacketResult) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BroadcastCrossReferencePacketResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sequence != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Sequence))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.ChannelId) > 0 {
+		i -= len(m.ChannelId)
+		copy(dAtA[i:], m.ChannelId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ChannelId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.PortId) > 0 {
+		i -= len(m.PortId)
+		copy(dAtA[i:], m.PortId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.PortId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.RemoteDomainId) > 0 {
+		i -= len(m.RemoteDomainId)
+		copy(dAtA[i:], m.RemoteDomainId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.RemoteDomainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBroadcastCrossReferencePacketResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBroadcastCrossReferencePacketResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBroadcastCrossReferencePacketResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Results) > 0 {
+		for iNdEx := len(m.Results) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Results[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -1638,6 +2119,16 @@ func (m *MsgSendCrossReferencePacket) Size() (n int) {
 	if m.TimeoutSeconds != 0 {
 		n += 1 + sovTx(uint64(m.TimeoutSeconds))
 	}
+	l = len(m.SourceCheckpointProof)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.SourceProofRevisionNumber != 0 {
+		n += 1 + sovTx(uint64(m.SourceProofRevisionNumber))
+	}
+	if m.SourceProofRevisionHeight != 0 {
+		n += 1 + sovTx(uint64(m.SourceProofRevisionHeight))
+	}
 	return n
 }
 
@@ -1649,6 +2140,88 @@ func (m *MsgSendCrossReferencePacketResponse) Size() (n int) {
 	_ = l
 	if m.Sequence != 0 {
 		n += 1 + sovTx(uint64(m.Sequence))
+	}
+	return n
+}
+
+func (m *MsgBroadcastCrossReferencePacket) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.SourceDomainId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.SourceHeight != 0 {
+		n += 1 + sovTx(uint64(m.SourceHeight))
+	}
+	l = len(m.PortId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.ExcludeRemoteDomainIds) > 0 {
+		for _, s := range m.ExcludeRemoteDomainIds {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if m.TimeoutSeconds != 0 {
+		n += 1 + sovTx(uint64(m.TimeoutSeconds))
+	}
+	l = len(m.SourceCheckpointProof)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.SourceProofRevisionNumber != 0 {
+		n += 1 + sovTx(uint64(m.SourceProofRevisionNumber))
+	}
+	if m.SourceProofRevisionHeight != 0 {
+		n += 1 + sovTx(uint64(m.SourceProofRevisionHeight))
+	}
+	return n
+}
+
+func (m *BroadcastCrossReferencePacketResult) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RemoteDomainId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.PortId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ChannelId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Sequence != 0 {
+		n += 1 + sovTx(uint64(m.Sequence))
+	}
+	return n
+}
+
+func (m *MsgBroadcastCrossReferencePacketResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Results) > 0 {
+		for _, e := range m.Results {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	return n
 }
@@ -3077,6 +3650,78 @@ func (m *MsgSendCrossReferencePacket) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceCheckpointProof", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SourceCheckpointProof = append(m.SourceCheckpointProof[:0], dAtA[iNdEx:postIndex]...)
+			if m.SourceCheckpointProof == nil {
+				m.SourceCheckpointProof = []byte{}
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceProofRevisionNumber", wireType)
+			}
+			m.SourceProofRevisionNumber = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourceProofRevisionNumber |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceProofRevisionHeight", wireType)
+			}
+			m.SourceProofRevisionHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourceProofRevisionHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -3146,6 +3791,543 @@ func (m *MsgSendCrossReferencePacketResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBroadcastCrossReferencePacket) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBroadcastCrossReferencePacket: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBroadcastCrossReferencePacket: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceDomainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SourceDomainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceHeight", wireType)
+			}
+			m.SourceHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourceHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PortId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExcludeRemoteDomainIds", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ExcludeRemoteDomainIds = append(m.ExcludeRemoteDomainIds, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutSeconds", wireType)
+			}
+			m.TimeoutSeconds = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TimeoutSeconds |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceCheckpointProof", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SourceCheckpointProof = append(m.SourceCheckpointProof[:0], dAtA[iNdEx:postIndex]...)
+			if m.SourceCheckpointProof == nil {
+				m.SourceCheckpointProof = []byte{}
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceProofRevisionNumber", wireType)
+			}
+			m.SourceProofRevisionNumber = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourceProofRevisionNumber |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceProofRevisionHeight", wireType)
+			}
+			m.SourceProofRevisionHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourceProofRevisionHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BroadcastCrossReferencePacketResult) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BroadcastCrossReferencePacketResult: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BroadcastCrossReferencePacketResult: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoteDomainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemoteDomainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PortId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChannelId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChannelId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
+			}
+			m.Sequence = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sequence |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBroadcastCrossReferencePacketResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBroadcastCrossReferencePacketResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBroadcastCrossReferencePacketResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Results", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Results = append(m.Results, BroadcastCrossReferencePacketResult{})
+			if err := m.Results[len(m.Results)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

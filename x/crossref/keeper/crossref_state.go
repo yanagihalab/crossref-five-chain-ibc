@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sort"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
@@ -61,6 +62,35 @@ func (k Keeper) GetDomainChannelByChannel(ctx context.Context, portID, channelID
 		return types.DomainChannel{}, false, err
 	}
 	return binding, true, nil
+}
+
+func (k Keeper) ListDomainChannelsByLocalDomain(ctx context.Context, localDomainID, portID string) ([]types.DomainChannel, error) {
+	var bindings []types.DomainChannel
+	err := k.DomainChannels.Walk(ctx, nil, func(_ string, binding types.DomainChannel) (bool, error) {
+		if binding.LocalDomainId != localDomainID {
+			return false, nil
+		}
+		if portID != "" && binding.PortId != portID {
+			return false, nil
+		}
+		bindings = append(bindings, binding)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(bindings, func(i, j int) bool {
+		if bindings[i].RemoteDomainId != bindings[j].RemoteDomainId {
+			return bindings[i].RemoteDomainId < bindings[j].RemoteDomainId
+		}
+		if bindings[i].PortId != bindings[j].PortId {
+			return bindings[i].PortId < bindings[j].PortId
+		}
+		return bindings[i].ChannelId < bindings[j].ChannelId
+	})
+
+	return bindings, nil
 }
 
 func (k Keeper) SetCheckpoint(ctx context.Context, checkpoint types.Checkpoint) error {

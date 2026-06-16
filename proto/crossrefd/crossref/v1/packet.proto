@@ -74,6 +74,9 @@ message CrossReferencePacketData {
   bytes checkpoint_hash = 8;
   bytes hysteresis_signature = 9;
   int64 block_time_unix = 10;
+  bytes source_checkpoint_proof = 11;
+  uint64 source_proof_revision_number = 12;
+  uint64 source_proof_revision_height = 13;
 }
 
 message CrossReferencePacketAck {

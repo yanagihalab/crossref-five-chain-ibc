@@ -8,6 +8,7 @@ CHAIN_B_ID="${CHAIN_B_ID:-crossref-b}"
 CHAIN_C_ID="${CHAIN_C_ID:-crossref-c}"
 CHAIN_D_ID="${CHAIN_D_ID:-crossref-d}"
 CHAIN_E_ID="${CHAIN_E_ID:-crossref-e}"
+BLOCK_TIME_UNIX="${BLOCK_TIME_UNIX:-0}"
 
 dc() {
   docker compose -f "${COMPOSE_FILE}" "$@"
@@ -240,6 +241,49 @@ checkpoint_proof_json() {
   query_chain "${domain}" query crossref checkpoint-proof "${domain}" "${checkpoint_height}" --output json
 }
 
+hysteresis_seed() {
+  domain="$1"
+  echo "crossref-five-chain-hysteresis-${domain}"
+}
+
+hysteresis_json() {
+  domain="$1"
+  height="$2"
+  block_hash="$3"
+  app_hash="$4"
+
+  go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "$(hysteresis_seed "${domain}")"
+}
+
+hysteresis_public_key() {
+  domain="$1"
+  json="$(hysteresis_json "${domain}" 1 YmxvY2stdGVtcGxhdGU= YXBwLXRlbXBsYXRl)"
+  printf '%s\n' "${json}" | json_string_field public_key
+}
+
+public_key_for_domain() {
+  domain="$1"
+
+  case "${domain}" in
+    chain-a) echo "${chain_a_public_key}" ;;
+    chain-b) echo "${chain_b_public_key}" ;;
+    chain-c) echo "${chain_c_public_key}" ;;
+    chain-d) echo "${chain_d_public_key}" ;;
+    chain-e) echo "${chain_e_public_key}" ;;
+    *) echo "unknown domain: ${domain}" >&2; return 1 ;;
+  esac
+}
+
+hysteresis_signature() {
+  domain="$1"
+  height="$2"
+  block_hash="$3"
+  app_hash="$4"
+
+  json="$(hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}")"
+  printf '%s\n' "${json}" | json_string_field signature
+}
+
 update_client_to_proof_height() {
   host_domain="$1"
   source_domain="$2"
@@ -267,6 +311,13 @@ require_proof_fields() {
 DOMAINS="chain-a chain-b chain-c chain-d chain-e"
 PAIRS="chain-a:chain-b chain-a:chain-c chain-a:chain-d chain-a:chain-e chain-b:chain-c chain-b:chain-d chain-b:chain-e chain-c:chain-d chain-c:chain-e chain-d:chain-e"
 
+echo "Preparing deterministic Ed25519 hysteresis public keys..."
+chain_a_public_key="$(hysteresis_public_key chain-a)"
+chain_b_public_key="$(hysteresis_public_key chain-b)"
+chain_c_public_key="$(hysteresis_public_key chain-c)"
+chain_d_public_key="$(hysteresis_public_key chain-d)"
+chain_e_public_key="$(hysteresis_public_key chain-e)"
+
 echo "Directed route numbering:"
 for pair in ${PAIRS}; do
   left="${pair%%:*}"
@@ -287,7 +338,9 @@ done
 echo "Registering all domains on all chains..."
 for local_domain in ${DOMAINS}; do
   for remote_domain in ${DOMAINS}; do
-    run_tx "${local_domain}" register-domain validator "${remote_domain}" "$(chain_id "${remote_domain}")"
+    remote_public_key="$(public_key_for_domain "${remote_domain}")"
+    echo "Registering ${remote_domain} on ${local_domain} with hysteresis public key ${remote_public_key}"
+    run_tx "${local_domain}" register-domain validator "${remote_domain}" "$(chain_id "${remote_domain}")" --hysteresis-public-key "${remote_public_key}"
   done
 done
 
@@ -302,11 +355,17 @@ for pair in ${PAIRS}; do
 done
 
 echo "Submitting checkpoints on all five chains..."
-run_tx chain-a submit-checkpoint validator chain-a 1 YmxvY2stYS0x YXBwLWEtMQ==
-run_tx chain-b submit-checkpoint validator chain-b 1 YmxvY2stYi0x YXBwLWItMQ==
-run_tx chain-c submit-checkpoint validator chain-c 1 YmxvY2stYy0x YXBwLWMtMQ==
-run_tx chain-d submit-checkpoint validator chain-d 1 YmxvY2stZC0x YXBwLWQtMQ==
-run_tx chain-e submit-checkpoint validator chain-e 1 YmxvY2stZS0x YXBwLWUtMQ==
+chain_a_signature="$(hysteresis_signature chain-a 1 YmxvY2stYS0x YXBwLWEtMQ==)"
+chain_b_signature="$(hysteresis_signature chain-b 1 YmxvY2stYi0x YXBwLWItMQ==)"
+chain_c_signature="$(hysteresis_signature chain-c 1 YmxvY2stYy0x YXBwLWMtMQ==)"
+chain_d_signature="$(hysteresis_signature chain-d 1 YmxvY2stZC0x YXBwLWQtMQ==)"
+chain_e_signature="$(hysteresis_signature chain-e 1 YmxvY2stZS0x YXBwLWUtMQ==)"
+
+run_tx chain-a submit-checkpoint validator chain-a 1 YmxvY2stYS0x YXBwLWEtMQ== --hysteresis-signature "${chain_a_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+run_tx chain-b submit-checkpoint validator chain-b 1 YmxvY2stYi0x YXBwLWItMQ== --hysteresis-signature "${chain_b_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+run_tx chain-c submit-checkpoint validator chain-c 1 YmxvY2stYy0x YXBwLWMtMQ== --hysteresis-signature "${chain_c_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+run_tx chain-d submit-checkpoint validator chain-d 1 YmxvY2stZC0x YXBwLWQtMQ== --hysteresis-signature "${chain_d_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+run_tx chain-e submit-checkpoint validator chain-e 1 YmxvY2stZS0x YXBwLWUtMQ== --hysteresis-signature "${chain_e_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
 
 echo "Collecting checkpoint ICS23 proofs from source chains..."
 chain_a_proof_json="$(checkpoint_proof_json chain-a 1)"

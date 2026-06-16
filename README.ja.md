@@ -53,6 +53,8 @@ domain は Ed25519 の `hysteresis_public_key` を登録できる。
 
 `hysteresis_public_key` が未登録の domain は、ローカル実験と移行互換性のため従来通り受け入れる。
 
+5 チェーン Docker 実験では全 domain にこの key を登録し、署名付き checkpoint を送信するため、end-to-end の IBC 経路で署名検証が実際に実行される。
+
 ## 必要なもの
 
 - macOS または Linux shell

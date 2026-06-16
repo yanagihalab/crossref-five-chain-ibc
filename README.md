@@ -53,6 +53,9 @@ When a domain has this key, both local checkpoint submission and IBC packet rece
 
 Domains without `hysteresis_public_key` are still accepted for local experiments and migration compatibility.
 
+The five-chain Docker experiment registers these keys for all domains and sends
+signed checkpoints, so the end-to-end IBC path exercises signature verification.
+
 ## Requirements
 
 - macOS or Linux shell

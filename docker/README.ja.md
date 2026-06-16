@@ -114,10 +114,11 @@ docker/scripts/run-crossref-experiment.sh
 3. 5つの domain を全5チェーンに登録する。
 4. すべての directed domain/channel route を bind する。
 5. 各 source chain に checkpoint を1つ登録する。
-6. `query crossref checkpoint-proof` で各 source checkpoint の ICS23 store proof を取得する。
-7. destination 側 light client を source proof height まで更新する。
-8. 各 source checkpoint packet を他の4チェーンへ broadcast する。
-9. 各 destination chain が、他の4つの source chain の cross-reference を保存していることを確認する。
+6. 各 checkpoint に source domain の Ed25519 hysteresis key で署名する。
+7. `query crossref checkpoint-proof` で各 source checkpoint の ICS23 store proof を取得する。
+8. destination 側 light client を source proof height まで更新する。
+9. 各 source checkpoint packet を他の4チェーンへ broadcast する。
+10. 各 destination chain が、他の4つの source chain の cross-reference を保存していることを確認する。
 
 成功時は最後に次のメッセージが表示される。
 
@@ -127,9 +128,7 @@ Five-chain cross-reference experiment passed.
 
 ## Hysteresis Signature 検証
 
-domain は Ed25519 の `hysteresis_public_key` を登録できる。
-この公開鍵が設定されている domain では、`SubmitCheckpoint` と IBC packet 受信の両方で `hysteresis_signature` が必須となり、checkpoint hash に対する署名として検証される。
-公開鍵が未登録の domain は、ローカル実験や移行互換性のため従来通り受け入れる。
+Docker 実験では、全 chain 上の全 domain に Ed25519 の `hysteresis_public_key` を登録する。各 checkpoint は source domain の deterministic test key で署名され、`SubmitCheckpoint` と IBC packet 受信の両方で `hysteresis_signature` が checkpoint hash に対する署名として検証される。module 自体は移行互換性のため公開鍵未登録の domain も受け入れるが、この 5 チェーン実験では署名必須の経路を通す。
 
 ## Query 例
 

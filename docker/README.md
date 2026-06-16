@@ -119,11 +119,12 @@ The script performs these checks:
 3. Registers all five domains on all five chains.
 4. Binds every directed domain/channel route.
 5. Submits one checkpoint on each source chain.
-6. Queries each source checkpoint with an ICS23 store proof using
+6. Signs each checkpoint with the source domain's Ed25519 hysteresis key.
+7. Queries each source checkpoint with an ICS23 store proof using
    `query crossref checkpoint-proof`.
-7. Updates the destination light clients to the source proof heights.
-8. Broadcasts each source checkpoint packet to the other four chains.
-9. Verifies that every destination chain stores cross-references for the other
+8. Updates the destination light clients to the source proof heights.
+9. Broadcasts each source checkpoint packet to the other four chains.
+10. Verifies that every destination chain stores cross-references for the other
    four source chains.
 
 Success ends with:
@@ -134,10 +135,13 @@ Five-chain cross-reference experiment passed.
 
 ## Hysteresis Signature Verification
 
-Domains can register an Ed25519 `hysteresis_public_key`. When this key is set,
-`SubmitCheckpoint` and IBC packet receive both require `hysteresis_signature` to
-verify against the checkpoint hash. Domains without a registered public key are
-accepted for local experiments and migration compatibility.
+The Docker experiment now registers an Ed25519 `hysteresis_public_key` for every
+domain on every chain. Each submitted checkpoint is signed with the source
+domain's deterministic test key, and both `SubmitCheckpoint` and IBC packet
+receive verify `hysteresis_signature` against the checkpoint hash. Domains
+without a registered public key are still accepted by the module for migration
+compatibility, but this five-chain experiment exercises the signature-required
+path.
 
 ## Query Examples
 

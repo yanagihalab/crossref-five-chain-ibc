@@ -1,8 +1,8 @@
 # Crossref Five-Chain IBC
 
-Crossref Five-Chain IBC は、Cosmos SDK を使って cross-reference blockchain system を実験するためのプロトタイプです。独自の `x/crossref` module を実装し、それを IBC application module として動作させ、Docker 上で 5 本の `crossrefd` チェーンと 1 つの Hermes relayer を起動できます。
+Crossref Five-Chain IBC は、Cosmos SDK を使って cross-reference blockchain system を実験するためのプロトタイプである。独自の `x/crossref` module を実装し、それを IBC application module として動作させ、Docker 上で 5 本の `crossrefd` チェーンと 1 つの Hermes relayer を起動できる。
 
-英語版は [README.md](README.md) です。
+英語版は [README.md](README.md) である。
 
 ## このリポジトリに含まれるもの
 
@@ -14,7 +14,7 @@ Crossref Five-Chain IBC は、Cosmos SDK を使って cross-reference blockchain
 
 ## アーキテクチャ
 
-このプロトタイプでは次の 5 domain を扱います。
+このプロトタイプでは次の 5 domain を扱う。
 
 - `chain-a`
 - `chain-b`
@@ -22,9 +22,9 @@ Crossref Five-Chain IBC は、Cosmos SDK を使って cross-reference blockchain
 - `chain-d`
 - `chain-e`
 
-Hermes は全ペアに対して `crossref/crossref` の IBC channel を開きます。これにより、10 本の双方向 channel connection と、20 方向の directed cross-reference route ができます。各 source chain は自身の checkpoint を登録し、それを他の 4 チェーンへ broadcast できます。
+Hermes は全ペアに対して `crossref/crossref` の IBC channel を開く。これにより、10 本の双方向 channel connection と、20 方向の directed cross-reference route ができる。各 source chain は自身の checkpoint を登録し、それを他の 4 チェーンへ broadcast できる。
 
-受信側は次を検証します。
+受信側は次を検証する。
 
 1. packet の source domain が登録済み source chain と一致していること。
 2. packet が許可された local channel から届いていること。
@@ -35,7 +35,7 @@ Hermes は全ペアに対して `crossref/crossref` の IBC channel を開きま
 
 ## Crossref Module
 
-現在の module は次を実装しています。
+現在の module は次を実装している。
 
 - `RegisterDomain`: domain ID、chain ID、validator set hash、metadata URI、任意の Ed25519 hysteresis public key を登録する。
 - `BindDomainChannel`: local domain と remote domain のペアを IBC port/channel に bind する。
@@ -47,11 +47,11 @@ Hermes は全ペアに対して `crossref/crossref` の IBC channel を開きま
 
 ## Hysteresis Signature 検証
 
-domain は Ed25519 の `hysteresis_public_key` を登録できます。
+domain は Ed25519 の `hysteresis_public_key` を登録できる。
 
-この key が登録されている domain では、local checkpoint submission と IBC packet receive の両方で `hysteresis_signature` が必須になります。署名は checkpoint hash に対して検証されます。checkpoint hash は現在の block/app state と previous checkpoint hash に commit するため、checkpoint chain の改ざん検知性を持ちます。
+この key が登録されている domain では、local checkpoint submission と IBC packet receive の両方で `hysteresis_signature` が必須となる。署名は checkpoint hash に対して検証される。checkpoint hash は現在の block/app state と previous checkpoint hash に commit するため、checkpoint chain の改ざん検知性を持つ。
 
-`hysteresis_public_key` が未登録の domain は、ローカル実験と移行互換性のため従来通り受け入れます。
+`hysteresis_public_key` が未登録の domain は、ローカル実験と移行互換性のため従来通り受け入れる。
 
 ## 必要なもの
 
@@ -62,7 +62,7 @@ domain は Ed25519 の `hysteresis_public_key` を登録できます。
 
 ## クイックスタート
 
-リポジトリ root で実行します。
+リポジトリ root で実行する。
 
 ```bash
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
@@ -70,23 +70,23 @@ docker compose -f docker/docker-compose.yml up -d --build
 docker/scripts/run-crossref-experiment.sh
 ```
 
-成功すると最後に次が表示されます。
+成功すると最後に次が表示される。
 
 ```text
 Five-chain cross-reference experiment passed.
 ```
 
-Docker 実験の詳細は [docker/README.ja.md](docker/README.ja.md) を参照してください。
+Docker 実験の詳細は [docker/README.ja.md](docker/README.ja.md) を参照する。
 
 ## Visualizer
 
-crossref の test と 5 チェーン broadcast route map を確認するための browser visualizer を同梱しています。
+crossref の test と 5 チェーン broadcast route map を確認するための browser visualizer を同梱している。
 
 ```bash
 open visualizer/crossref-test-visualizer.html
 ```
 
-visualizer では次を確認できます。
+visualizer では次を確認できる。
 
 - keeper / IBC の behavior test
 - 1 つの relayer に集約された network topology
@@ -94,7 +94,7 @@ visualizer では次を確認できます。
 - source-chain checkpoint proof 検証
 - Hermes relayer を経由する packet の animation
 
-repository root から smoke test を実行できます。
+repository root から smoke test を実行できる。
 
 ```bash
 node visualizer/verify-visualizer.mjs
@@ -144,4 +144,4 @@ docker compose -f docker/docker-compose.yml down -v
 
 ## 現在のプロトタイプ範囲
 
-このリポジトリは実験実装です。cross-reference design、IBC application の動作、proof validation、multi-chain routing をローカルで検証することを目的にしています。実運用に向けては、key management、chain upgrade policy、詳細な threat model、relayer operation、論文定義の `H(S_n-1)` を checkpoint hash から独立した形式で扱う厳密な hysteresis signature format などの追加検討が必要です。
+このリポジトリは実験実装である。cross-reference design、IBC application の動作、proof validation、multi-chain routing をローカルで検証することを目的としている。実運用に向けては、key management、chain upgrade policy、詳細な threat model、relayer operation、論文定義の `H(S_n-1)` を checkpoint hash から独立した形式で扱う厳密な hysteresis signature format などの追加検討が必要である。

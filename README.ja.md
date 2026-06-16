@@ -78,6 +78,28 @@ Five-chain cross-reference experiment passed.
 
 Docker 実験の詳細は [docker/README.ja.md](docker/README.ja.md) を参照してください。
 
+## Visualizer
+
+crossref の test と 5 チェーン broadcast route map を確認するための browser visualizer を同梱しています。
+
+```bash
+open visualizer/crossref-test-visualizer.html
+```
+
+visualizer では次を確認できます。
+
+- keeper / IBC の behavior test
+- 1 つの relayer に集約された network topology
+- `route-00` から `route-19` までの directed packet flow
+- source-chain checkpoint proof 検証
+- Hermes relayer を経由する packet の animation
+
+repository root から smoke test を実行できます。
+
+```bash
+node visualizer/verify-visualizer.mjs
+```
+
 ## よく使うコマンド
 
 Go test を実行する:
@@ -123,4 +145,3 @@ docker compose -f docker/docker-compose.yml down -v
 ## 現在のプロトタイプ範囲
 
 このリポジトリは実験実装です。cross-reference design、IBC application の動作、proof validation、multi-chain routing をローカルで検証することを目的にしています。実運用に向けては、key management、chain upgrade policy、詳細な threat model、relayer operation、論文定義の `H(S_n-1)` を checkpoint hash から独立した形式で扱う厳密な hysteresis signature format などの追加検討が必要です。
-

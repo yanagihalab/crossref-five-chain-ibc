@@ -78,6 +78,29 @@ Five-chain cross-reference experiment passed.
 
 For the detailed Docker experiment guide, see [docker/README.md](docker/README.md).
 
+## Visualizer
+
+The repository includes a browser-based visualizer for the crossref tests and
+the five-chain broadcast route map:
+
+```bash
+open visualizer/crossref-test-visualizer.html
+```
+
+The visualizer shows:
+
+- keeper and IBC behavior tests;
+- the one-relayer network topology;
+- `route-00` to `route-19` directed packet flow;
+- source-chain checkpoint proof verification;
+- animated packet movement through the Hermes relayer.
+
+Run the visualizer smoke test from the repository root:
+
+```bash
+node visualizer/verify-visualizer.mjs
+```
+
 ## Useful Commands
 
 Run Go tests:
@@ -123,4 +146,3 @@ docker compose -f docker/docker-compose.yml down -v
 ## Current Prototype Scope
 
 This repository is an experimental implementation. It is intended for local verification of the cross-reference design, IBC application behavior, proof validation, and multi-chain routing. Production hardening still needs additional work around operational key management, chain upgrade policy, full threat modeling, relayer operations, and a stricter hysteresis signature format if the exact paper definition `H(S_n-1)` must be represented separately from the checkpoint hash.
-

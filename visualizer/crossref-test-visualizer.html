@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crossref Test Visualizer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2933;
+      --muted: #64748b;
+      --line: #d7dee8;
+      --panel: #f7f9fc;
+      --pass: #0f8b6f;
+      --warn: #b7791f;
+      --blue: #2563eb;
+      --red: #c2410c;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--white);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+      padding: 28px 32px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.15;
+      font-weight: 720;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .status {
+      min-width: 168px;
+      padding: 12px 14px;
+      border: 1px solid #b6eadc;
+      background: #effcf7;
+      border-radius: 8px;
+      text-align: right;
+    }
+
+    .status strong {
+      display: block;
+      color: var(--pass);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .status span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) 1fr;
+      gap: 0;
+      min-height: calc(100vh - 100px);
+    }
+
+    aside {
+      border-right: 1px solid var(--line);
+      padding: 24px;
+      background: var(--panel);
+    }
+
+    .test-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    button.test {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: var(--white);
+      color: var(--ink);
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    button.test[aria-pressed="true"] {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: var(--pass);
+    }
+
+    .test-name {
+      font-size: 13px;
+      font-weight: 680;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .test-desc {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .content {
+      padding: 24px 32px 32px;
+      min-width: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .toolbar h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #e9fbf5;
+      color: var(--pass);
+      border: 1px solid #b6eadc;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .stage {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--white);
+    }
+
+    .animation-controls {
+      display: grid;
+      grid-template-columns: auto auto auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .control {
+      min-width: 40px;
+      height: 36px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 760;
+      cursor: pointer;
+    }
+
+    .control:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .progress-track {
+      position: relative;
+      height: 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      border-radius: inherit;
+      background: var(--blue);
+      transition: width 160ms ease;
+    }
+
+    .step-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 380px;
+      background: #fbfdff;
+    }
+
+    .details {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+    }
+
+    .detail {
+      padding: 16px;
+      border-right: 1px solid var(--line);
+      min-width: 0;
+    }
+
+    .detail:last-child {
+      border-right: 0;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 760;
+      letter-spacing: 0.04em;
+    }
+
+    .value {
+      margin-top: 7px;
+      font-size: 14px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .log {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .log-title {
+      padding: 10px 14px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .run-data {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .timeline-step {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .timeline-step[aria-current="step"] {
+      border-color: var(--blue);
+      background: #eff6ff;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    .step-index {
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .timeline-step[aria-current="step"] .step-index {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .step-text {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--white);
+      min-width: 0;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      white-space: pre-wrap;
+      font-size: 12px;
+      line-height: 1.55;
+      overflow: auto;
+    }
+
+    @media (max-width: 860px) {
+      header,
+      main {
+        display: block;
+      }
+
+      .status {
+        margin-top: 16px;
+        text-align: left;
+      }
+
+      aside {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .details {
+        grid-template-columns: 1fr;
+      }
+
+      .animation-controls {
+        grid-template-columns: repeat(3, auto);
+      }
+
+      .progress-track,
+      .step-label {
+        grid-column: 1 / -1;
+      }
+
+      .detail {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .detail:last-child {
+        border-bottom: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Crossref IBC Module Test Visualizer</h1>
+      <div class="subtitle">Cosmos SDK x/crossref の keeper、IBC packet、app wiring、Docker 3-chain IBC 実験の動作結果を確認する画面です。</div>
+    </div>
+    <div class="status" aria-label="test summary" data-testid="summary-status">
+      <strong id="summaryCount">7 / 7 PASS</strong>
+      <span id="summaryCommand">go test + docker broadcast IBC experiment completed</span>
+    </div>
+  </header>
+
+  <main>
+    <aside>
+      <div class="test-list" id="testList"></div>
+    </aside>
+
+    <section class="content">
+      <div class="toolbar">
+        <h2 id="title" data-testid="selected-title"></h2>
+        <span class="badge" id="badge">PASS</span>
+      </div>
+
+      <div class="stage">
+        <div class="animation-controls" aria-label="animation controls">
+          <button class="control" type="button" id="playBtn" data-testid="play-button" title="Play">▶</button>
+          <button class="control" type="button" id="stepBtn" data-testid="step-button" title="Step">→</button>
+          <button class="control" type="button" id="resetBtn" data-testid="reset-button" title="Reset">↺</button>
+          <div class="progress-track" aria-label="animation progress">
+            <div class="progress-fill" id="progressFill" data-testid="progress-fill"></div>
+          </div>
+          <div class="step-label" id="stepLabel" data-testid="step-label">Step 1 / 3</div>
+        </div>
+        <canvas id="flow" width="1100" height="420" aria-label="test flow diagram"></canvas>
+        <div class="details">
+          <div class="detail">
+            <div class="label">検証対象</div>
+            <div class="value" id="target" data-testid="selected-target"></div>
+          </div>
+          <div class="detail">
+            <div class="label">期待される状態</div>
+            <div class="value" id="expected" data-testid="selected-expected"></div>
+          </div>
+          <div class="detail">
+            <div class="label">確認済み</div>
+            <div class="value" id="verified" data-testid="selected-verified"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline" id="timeline" data-testid="timeline"></div>
+
+      <div class="run-data" aria-label="test run data">
+        <div class="metric">
+          <strong id="metricPackage" data-testid="metric-package">keeper</strong>
+          <span>package</span>
+        </div>
+        <div class="metric">
+          <strong id="metricPassed" data-testid="metric-passed">4</strong>
+          <span>passed tests</span>
+        </div>
+        <div class="metric">
+          <strong id="metricFailed" data-testid="metric-failed">0</strong>
+          <span>failed tests</span>
+        </div>
+        <div class="metric">
+          <strong id="metricElapsed" data-testid="metric-elapsed">0.593s</strong>
+          <span>elapsed</span>
+        </div>
+      </div>
+
+      <div class="log">
+        <div class="log-title">Latest test output</div>
+        <pre id="testOutput" data-testid="test-output"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const testRun = {
+      command: "go test ./... && docker/scripts/run-crossref-experiment.sh",
+      package: "crossrefd docker five-chain",
+      passed: 6,
+      failed: 0,
+      elapsed: "broadcast OK"
+    };
+
+    const testOutput = `go test ./...
+ok   github.com/crossref/crossrefd/app                 1.777s
+ok   github.com/crossref/crossrefd/x/crossref/keeper    3.107s
+ok   github.com/crossref/crossrefd/x/crossref/module    0.740s
+ok   github.com/crossref/crossrefd/x/crossref/types     2.380s
+
+=== RUN   TestReceiveCrossReferencePacketVerifiesSourceDomainAndChain
+--- PASS: TestReceiveCrossReferencePacketVerifiesSourceDomainAndChain (0.00s)
+=== RUN   TestReceiveCrossReferencePacketRejectsSourceChainMismatch
+--- PASS: TestReceiveCrossReferencePacketRejectsSourceChainMismatch (0.00s)
+=== RUN   TestReceiveCrossReferencePacketRejectsMissingSourceDomain
+--- PASS: TestReceiveCrossReferencePacketRejectsMissingSourceDomain (0.00s)
+=== RUN   TestReceiveCrossReferencePacketRejectsCheckpointHashMismatch
+--- PASS: TestReceiveCrossReferencePacketRejectsCheckpointHashMismatch (0.00s)
+=== RUN   TestSendCrossReferencePacketRejectsUnboundSourceDomain
+--- PASS: TestSendCrossReferencePacketRejectsUnboundSourceDomain (0.00s)
+PASS
+
+Docker 5-chain broadcast IBC experiment:
+route-00 chain-a/channel-0 -> chain-b/channel-0
+route-01 chain-b/channel-0 -> chain-a/channel-0
+route-02 chain-a/channel-1 -> chain-c/channel-0
+route-03 chain-c/channel-0 -> chain-a/channel-1
+route-04 chain-a/channel-2 -> chain-d/channel-0
+route-05 chain-d/channel-0 -> chain-a/channel-2
+route-06 chain-a/channel-3 -> chain-e/channel-0
+route-07 chain-e/channel-0 -> chain-a/channel-3
+route-08 chain-b/channel-1 -> chain-c/channel-1
+route-09 chain-c/channel-1 -> chain-b/channel-1
+route-10 chain-b/channel-2 -> chain-d/channel-1
+route-11 chain-d/channel-1 -> chain-b/channel-2
+route-12 chain-b/channel-3 -> chain-e/channel-1
+route-13 chain-e/channel-1 -> chain-b/channel-3
+route-14 chain-c/channel-2 -> chain-d/channel-2
+route-15 chain-d/channel-2 -> chain-c/channel-2
+route-16 chain-c/channel-3 -> chain-e/channel-2
+route-17 chain-e/channel-2 -> chain-c/channel-3
+route-18 chain-d/channel-3 -> chain-e/channel-3
+route-19 chain-e/channel-3 -> chain-d/channel-3
+MsgBroadcastCrossReferencePacket(chain-a..chain-e, height=1) emitted 20 directed send_packet paths
+Receive path verifies source_domain_id, source_chain_id, channel binding, required checkpoint fields, checkpoint_hash, and ICS23 checkpoint membership proof
+Missing or invalid source_checkpoint_proof is rejected before CrossReference storage
+All 20 destination/source cross-reference records are stored at height=1.`;
+
+    const tests = [
+      {
+        name: "TestSubmitCheckpointStoresAndRejectsBrokenHistory",
+        desc: "local checkpoint の保存と previous hash 不整合の拒否",
+        target: "MsgSubmitCheckpoint -> ValidateCheckpoint -> SetCheckpoint",
+        expected: "正しい checkpoint は保存され、broken previous_checkpoint_hash は拒否される",
+        verified: "checkpoint_hash の一致、store 保存、broken history error",
+        nodes: [
+          ["MsgServer", "SubmitCheckpoint"],
+          ["Keeper", "ValidateCheckpoint"],
+          ["KVStore", "Checkpoint/domain-a/10"],
+          ["Reject", "broken previous hash"]
+        ],
+        steps: [
+          "MsgSubmitCheckpoint を受け取り checkpoint_hash を再計算する",
+          "検証済み checkpoint を KVStore に保存する",
+          "broken previous_checkpoint_hash を検出して拒否する"
+        ],
+        edges: [[0, 1, "hash check"], [1, 2, "store"], [1, 3, "error path"]]
+      },
+      {
+        name: "TestReceiveCrossReferenceStoresReferenceAndConflictAlert",
+        desc: "IBC受信 packet の保存と conflicting checkpoint の tamper alert",
+        target: "ReceiveCrossReferencePacket -> CrossReference / TamperAlert",
+        expected: "remote checkpoint を local reference として保存し、同一 height の矛盾を alert 化する",
+        verified: "CrossReference(local, remote, 7) と TamperAlert(remote, 7)",
+        nodes: [
+          ["IBC Recv", "remote checkpoint"],
+          ["Binding", "local <- channel-0 -> remote"],
+          ["KVStore", "CrossReference"],
+          ["Safety", "TamperAlert"]
+        ],
+        steps: [
+          "IBC packet の source domain と channel binding を照合する",
+          "remote checkpoint を CrossReference として保存する",
+          "同一 height の矛盾 checkpoint を TamperAlert に変換する"
+        ],
+        edges: [[0, 1, "domain/channel"], [1, 2, "accepted"], [1, 3, "conflict"]]
+      },
+      {
+        name: "TestReceiveCrossReferencePacketVerifiesSourceDomainAndProof",
+        desc: "送られてきた part が source chain の checkpoint store に実在することを ICS23 proof で検証",
+        target: "OnRecvPacket -> VerifySourceCheckpointProof -> ClientKeeper.VerifyMembership",
+        expected: "source_domain_id, source_chain_id, channel binding, checkpoint_hash, Merkle proof が一致しない packet は保存されない",
+        verified: "source chain mismatch, missing source domain, checkpoint hash mismatch, missing/invalid proof を拒否",
+        nodes: [
+          ["IBC Core", "packet commitment proof"],
+          ["Binding", "remote domain"],
+          ["ICS23", "checkpoint membership"],
+          ["Keeper", "store only verified part"]
+        ],
+        steps: [
+          "IBC core が channel commitment に基づき packet の到達を検証する",
+          "crossref module が channel binding と source_domain_id を照合する",
+          "ClientKeeper.VerifyMembership で source chain の checkpoint store proof を検証する",
+          "checkpoint_hash を再計算し、proof も一致した part だけ保存する"
+        ],
+        edges: [[0, 1, "dest channel"], [1, 2, "proof path"], [2, 3, "membership verified"], [3, 1, "reject on mismatch"]]
+      },
+      {
+        name: "TestSendCrossReferencePacketUsesClaimedCapability",
+        desc: "IBC送信時に source domain に bind された channel だけを使用",
+        target: "SendCrossReferencePacket -> binding check -> SendPacket",
+        expected: "source domain と channel binding が一致する場合だけ SendPacket に進む",
+        verified: "unbound source domain は ErrUnauthorizedChannel で送信前に拒否",
+        nodes: [
+          ["Domain", "source checkpoint"],
+          ["Binding", "local domain channel"],
+          ["MsgServer", "SendCrossReferencePacket"],
+          ["IBC", "SendPacket"]
+        ],
+        steps: [
+          "送信対象 checkpoint の source domain を取得する",
+          "port/channel の binding が同じ local domain か確認する",
+          "unbound channel は ErrUnauthorizedChannel で拒否する"
+        ],
+        edges: [[0, 1, "match"], [1, 2, "authorized"], [2, 3, "packet"]]
+      },
+      {
+        name: "TestFullAppWiringSkeleton",
+        desc: "app skeleton の keeper/module/scoped capability 接続",
+        target: "NewCrossrefSkeleton(channelKeeper, scopedKeeper)",
+        expected: "module name、MsgServer、QueryServer、capability claim/get が成立する",
+        verified: "CrossrefKeeper, CrossrefModule, ScopedKeeper wiring",
+        nodes: [
+          ["App", "NewCrossrefSkeleton"],
+          ["Keeper", "channel + scoped"],
+          ["Module", "AppModule"],
+          ["Capability", "claim/get"]
+        ],
+        steps: [
+          "app skeleton が channel keeper と scoped keeper を注入する",
+          "CrossrefKeeper から AppModule を構成する",
+          "wired keeper が capability claim/get を実行する"
+        ],
+        edges: [[0, 1, "inject"], [1, 2, "module"], [1, 3, "scoped"]]
+      },
+      {
+        name: "DockerFiveChainIBCExperiment",
+        desc: "Docker Desktop 上の 5 本の crossrefd と Hermes relayer による broadcast Cross-reference",
+        target: "chain-a から chain-e の 20 directed routes を route-00..route-19 の通し番号で 1 Hermes relayer に集約",
+        expected: "Broadcast tx が登録済み channel binding を列挙し、対象 remote domain へ fan-out する",
+        verified: "5 chains full mesh、20 directed routes、受信側で source chain store proof 検証後に保存",
+        network: true,
+        routes: [
+          { from: "A", to: "B", label: "route-00 A -> B", channel: "A channel-0 / B channel-0", kind: "packet", verify: "ICS23 proof: chain-a checkpoint/1" },
+          { from: "B", to: "A", label: "route-01 B -> A", channel: "B channel-0 / A channel-0", kind: "packet", verify: "ICS23 proof: chain-b checkpoint/1" },
+          { from: "A", to: "C", label: "route-02 A -> C", channel: "A channel-1 / C channel-0", kind: "packet", verify: "ICS23 proof: chain-a checkpoint/1" },
+          { from: "C", to: "A", label: "route-03 C -> A", channel: "C channel-0 / A channel-1", kind: "packet", verify: "ICS23 proof: chain-c checkpoint/1" },
+          { from: "A", to: "D", label: "route-04 A -> D", channel: "A channel-2 / D channel-0", kind: "packet", verify: "ICS23 proof: chain-a checkpoint/1" },
+          { from: "D", to: "A", label: "route-05 D -> A", channel: "D channel-0 / A channel-2", kind: "packet", verify: "ICS23 proof: chain-d checkpoint/1" },
+          { from: "A", to: "E", label: "route-06 A -> E", channel: "A channel-3 / E channel-0", kind: "packet", verify: "ICS23 proof: chain-a checkpoint/1" },
+          { from: "E", to: "A", label: "route-07 E -> A", channel: "E channel-0 / A channel-3", kind: "packet", verify: "ICS23 proof: chain-e checkpoint/1" },
+          { from: "B", to: "C", label: "route-08 B -> C", channel: "B channel-1 / C channel-1", kind: "packet", verify: "ICS23 proof: chain-b checkpoint/1" },
+          { from: "C", to: "B", label: "route-09 C -> B", channel: "C channel-1 / B channel-1", kind: "packet", verify: "ICS23 proof: chain-c checkpoint/1" },
+          { from: "B", to: "D", label: "route-10 B -> D", channel: "B channel-2 / D channel-1", kind: "packet", verify: "ICS23 proof: chain-b checkpoint/1" },
+          { from: "D", to: "B", label: "route-11 D -> B", channel: "D channel-1 / B channel-2", kind: "packet", verify: "ICS23 proof: chain-d checkpoint/1" },
+          { from: "B", to: "E", label: "route-12 B -> E", channel: "B channel-3 / E channel-1", kind: "packet", verify: "ICS23 proof: chain-b checkpoint/1" },
+          { from: "E", to: "B", label: "route-13 E -> B", channel: "E channel-1 / B channel-3", kind: "packet", verify: "ICS23 proof: chain-e checkpoint/1" },
+          { from: "C", to: "D", label: "route-14 C -> D", channel: "C channel-2 / D channel-2", kind: "packet", verify: "ICS23 proof: chain-c checkpoint/1" },
+          { from: "D", to: "C", label: "route-15 D -> C", channel: "D channel-2 / C channel-2", kind: "packet", verify: "ICS23 proof: chain-d checkpoint/1" },
+          { from: "C", to: "E", label: "route-16 C -> E", channel: "C channel-3 / E channel-2", kind: "packet", verify: "ICS23 proof: chain-c checkpoint/1" },
+          { from: "E", to: "C", label: "route-17 E -> C", channel: "E channel-2 / C channel-3", kind: "packet", verify: "ICS23 proof: chain-e checkpoint/1" },
+          { from: "D", to: "E", label: "route-18 D -> E", channel: "D channel-3 / E channel-3", kind: "packet", verify: "ICS23 proof: chain-d checkpoint/1" },
+          { from: "E", to: "D", label: "route-19 E -> D", channel: "E channel-3 / D channel-3", kind: "packet", verify: "ICS23 proof: chain-e checkpoint/1" }
+        ],
+        nodes: [
+          ["chain-a", "Broadcast A/1"],
+          ["chain-b", "Broadcast B/1"],
+          ["chain-c", "Broadcast C/1"],
+          ["chain-d", "Broadcast D/1"],
+          ["chain-e", "Broadcast E/1"]
+        ],
+        steps: [
+          "route-00: chain-a の checkpoint A/1 packet を chain-b へ relay する",
+          "route-01: chain-b の checkpoint B/1 packet を chain-a へ relay する",
+          "route-02: chain-a の checkpoint A/1 packet を chain-c へ relay する",
+          "route-03: chain-c の checkpoint C/1 packet を chain-a へ relay する",
+          "route-04: chain-a の checkpoint A/1 packet を chain-d へ relay する",
+          "route-05: chain-d の checkpoint D/1 packet を chain-a へ relay する",
+          "route-06: chain-a の checkpoint A/1 packet を chain-e へ relay する",
+          "route-07: chain-e の checkpoint E/1 packet を chain-a へ relay する",
+          "route-08: chain-b の checkpoint B/1 packet を chain-c へ relay する",
+          "route-09: chain-c の checkpoint C/1 packet を chain-b へ relay する",
+          "route-10: chain-b の checkpoint B/1 packet を chain-d へ relay する",
+          "route-11: chain-d の checkpoint D/1 packet を chain-b へ relay する",
+          "route-12: chain-b の checkpoint B/1 packet を chain-e へ relay する",
+          "route-13: chain-e の checkpoint E/1 packet を chain-b へ relay する",
+          "route-14: chain-c の checkpoint C/1 packet を chain-d へ relay する",
+          "route-15: chain-d の checkpoint D/1 packet を chain-c へ relay する",
+          "route-16: chain-c の checkpoint C/1 packet を chain-e へ relay する",
+          "route-17: chain-e の checkpoint E/1 packet を chain-c へ relay する",
+          "route-18: chain-d の checkpoint D/1 packet を chain-e へ relay する",
+          "route-19: chain-e の checkpoint E/1 packet を chain-d へ relay する"
+        ],
+        edges: []
+      }
+    ];
+
+    const list = document.getElementById("testList");
+    const canvas = document.getElementById("flow");
+    const ctx = canvas.getContext("2d");
+    const title = document.getElementById("title");
+    const target = document.getElementById("target");
+    const expected = document.getElementById("expected");
+    const verified = document.getElementById("verified");
+    const output = document.getElementById("testOutput");
+    const summaryCount = document.getElementById("summaryCount");
+    const summaryCommand = document.getElementById("summaryCommand");
+    const metricPackage = document.getElementById("metricPackage");
+    const metricPassed = document.getElementById("metricPassed");
+    const metricFailed = document.getElementById("metricFailed");
+    const metricElapsed = document.getElementById("metricElapsed");
+    const playBtn = document.getElementById("playBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const progressFill = document.getElementById("progressFill");
+    const stepLabel = document.getElementById("stepLabel");
+    const timeline = document.getElementById("timeline");
+    const buttons = [];
+    let selectedIndex = 0;
+    let selectedStep = 0;
+    let animationFrame = 0;
+    let playTimer = null;
+
+    summaryCount.textContent = `${testRun.passed} / ${testRun.passed + testRun.failed} PASS`;
+    summaryCommand.textContent = `${testRun.command} completed`;
+    metricPackage.textContent = testRun.package.split("/").slice(-1)[0];
+    metricPassed.textContent = String(testRun.passed);
+    metricFailed.textContent = String(testRun.failed);
+    metricElapsed.textContent = testRun.elapsed;
+    output.textContent = testOutput;
+
+    tests.forEach((test, index) => {
+      const button = document.createElement("button");
+      button.className = "test";
+      button.type = "button";
+      button.dataset.testid = `test-button-${index}`;
+      button.setAttribute("aria-pressed", index === 0 ? "true" : "false");
+      button.innerHTML = `<span class="dot"></span><span><span class="test-name">${test.name}</span><span class="test-desc">${test.desc}</span></span>`;
+      button.addEventListener("click", () => selectTest(index));
+      list.appendChild(button);
+      buttons.push(button);
+    });
+
+    playBtn.addEventListener("click", togglePlay);
+    stepBtn.addEventListener("click", stepForward);
+    resetBtn.addEventListener("click", resetAnimation);
+
+    function selectTest(index) {
+      stopPlayback();
+      selectedIndex = index;
+      selectedStep = 0;
+      animationFrame = 0;
+      buttons.forEach((button, i) => button.setAttribute("aria-pressed", i === index ? "true" : "false"));
+      const test = tests[index];
+      title.textContent = test.name;
+      target.textContent = test.target;
+      expected.textContent = test.expected;
+      verified.textContent = test.verified;
+      renderTimeline(test);
+      draw(test, 0);
+      updateAnimationMeta();
+    }
+
+    function togglePlay() {
+      if (playTimer) {
+        stopPlayback();
+        return;
+      }
+      playBtn.textContent = "Ⅱ";
+      playTimer = setInterval(() => {
+        animationFrame = (animationFrame + 0.08) % 1;
+        draw(tests[selectedIndex], animationFrame);
+        if (animationFrame < 0.08) {
+          selectedStep = (selectedStep + 1) % stepCount(tests[selectedIndex]);
+          updateAnimationMeta();
+        }
+      }, 80);
+    }
+
+    function stopPlayback() {
+      if (playTimer) {
+        clearInterval(playTimer);
+        playTimer = null;
+      }
+      playBtn.textContent = "▶";
+    }
+
+    function stepForward() {
+      stopPlayback();
+      selectedStep = (selectedStep + 1) % stepCount(tests[selectedIndex]);
+      animationFrame = 0.65;
+      draw(tests[selectedIndex], animationFrame);
+      updateAnimationMeta();
+    }
+
+    function resetAnimation() {
+      stopPlayback();
+      selectedStep = 0;
+      animationFrame = 0;
+      draw(tests[selectedIndex], 0);
+      updateAnimationMeta();
+    }
+
+    function draw(test, progress = 0) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (test.network) {
+        drawNetworkDiagram(test, progress);
+        return;
+      }
+
+      const positions = [
+        [135, 110],
+        [415, 110],
+        [695, 110],
+        [965, 110]
+      ];
+
+      ctx.lineWidth = 2;
+      test.edges.forEach(([from, to, label], edgeIndex) => {
+        const [x1, y1] = positions[from];
+        const [x2, y2] = positions[to];
+        drawArrow(x1 + 92, y1 + 38, x2 - 92, y2 + 38, label, edgeIndex === selectedStep);
+      });
+
+      test.nodes.forEach(([kind, value], index) => {
+        const [x, y] = positions[index];
+        drawNode(x, y, kind, value, index, isNodeActive(test, index));
+      });
+
+      drawMovingToken(test, positions, progress);
+      drawStateBand(test);
+    }
+
+    function drawNetworkDiagram(test, progress = 0) {
+      const chains = {
+        A: { x: 170, y: 88, title: "chain-a", value: "A/1", color: "#eff6ff", stroke: "#2563eb" },
+        B: { x: 930, y: 88, title: "chain-b", value: "B/1", color: "#f0fdf4", stroke: "#0f8b6f" },
+        C: { x: 180, y: 292, title: "chain-c", value: "C/1", color: "#fff7ed", stroke: "#c2410c" },
+        D: { x: 920, y: 292, title: "chain-d", value: "D/1", color: "#fdf2f8", stroke: "#be185d" },
+        E: { x: 550, y: 334, title: "chain-e", value: "E/1", color: "#f5f3ff", stroke: "#7c3aed" }
+      };
+      const relayer = { x: 550, y: 168, w: 210, h: 84 };
+      const route = test.routes[selectedStep % test.routes.length];
+
+      ctx.fillStyle = "#fbfdff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawRelayer(relayer, route);
+      Object.entries(chains).forEach(([id, chain]) => {
+        drawChainNode(id, chain, route.from === id || route.to === id);
+      });
+
+      test.routes.forEach((candidate) => {
+        const active = candidate === route;
+        drawAggregatedRoute(chains[candidate.from], relayer, chains[candidate.to], candidate, active);
+      });
+
+      drawRouteToken(chains[route.from], relayer, chains[route.to], route, progress);
+      drawRouteLegend(route);
+      drawNetworkStateBand(test, route);
+    }
+
+    function drawChainNode(id, node, active) {
+      const r = active ? 58 : 52;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = active ? node.color : "#ffffff";
+      ctx.fill();
+      ctx.strokeStyle = active ? node.stroke : "#cbd5e1";
+      ctx.lineWidth = active ? 4 : 2;
+      ctx.stroke();
+
+      ctx.fillStyle = node.stroke;
+      ctx.font = "800 24px system-ui, sans-serif";
+      ctx.fillText(id, node.x - 8, node.y - 16);
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "700 13px system-ui, sans-serif";
+      ctx.fillText(node.title, node.x - 28, node.y + 8);
+      ctx.fillStyle = "#64748b";
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.fillText(node.value, node.x - 10, node.y + 29);
+      ctx.lineWidth = 2;
+    }
+
+    function drawRelayer(relayer, route) {
+      roundedRect(relayer.x - relayer.w / 2, relayer.y - relayer.h / 2, relayer.w, relayer.h, 8, "#f8fafc", "#64748b");
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "800 16px system-ui, sans-serif";
+      ctx.fillText("Hermes relayer", relayer.x - 58, relayer.y - 12);
+      ctx.fillStyle = "#64748b";
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.fillText("one process / broadcast fan-out", relayer.x - 76, relayer.y + 11);
+      ctx.fillStyle = route.kind === "packet" ? "#2563eb" : "#0f8b6f";
+      ctx.font = "700 12px system-ui, sans-serif";
+      ctx.fillText(`active: ${route.label}`, relayer.x - 70, relayer.y + 33);
+    }
+
+    function drawAggregatedRoute(from, relayer, to, route, active) {
+      const color = active ? (route.kind === "packet" ? "#2563eb" : "#0f8b6f") : "#cbd5e1";
+      const width = active ? 4 : 1.5;
+      const relayPoint = { x: relayer.x, y: relayer.y };
+
+      drawSegmentArrow(from.x, from.y, relayPoint.x, relayPoint.y, color, width, false);
+      drawSegmentArrow(relayPoint.x, relayPoint.y, to.x, to.y, color, width, true);
+
+      if (active) {
+        const mx = (from.x + to.x + relayPoint.x) / 3;
+        const my = (from.y + to.y + relayPoint.y) / 3 - 12;
+        roundedRect(mx - 78, my - 17, 156, 30, 8, "#ffffff", color);
+        ctx.fillStyle = color;
+        ctx.font = "700 12px system-ui, sans-serif";
+        ctx.fillText(route.label, mx - 63, my + 3);
+      }
+    }
+
+    function drawSegmentArrow(x1, y1, x2, y2, color, width, arrowHead) {
+      const shrink = 70;
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const sx = x1 + Math.cos(angle) * shrink;
+      const sy = y1 + Math.sin(angle) * shrink;
+      const ex = x2 - Math.cos(angle) * shrink;
+      const ey = y2 - Math.sin(angle) * shrink;
+
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+
+      if (arrowHead) {
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex - 10 * Math.cos(angle - Math.PI / 6), ey - 10 * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(ex - 10 * Math.cos(angle + Math.PI / 6), ey - 10 * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.lineWidth = 2;
+    }
+
+    function drawRouteToken(from, relayer, to, route, progress) {
+      const eased = 0.5 - Math.cos(progress * Math.PI) / 2;
+      const firstHalf = eased < 0.5;
+      const local = firstHalf ? eased * 2 : (eased - 0.5) * 2;
+      const start = firstHalf ? from : relayer;
+      const end = firstHalf ? relayer : to;
+      const x = start.x + (end.x - start.x) * local;
+      const y = start.y + (end.y - start.y) * local;
+      const color = route.kind === "packet" ? "#2563eb" : "#0f8b6f";
+
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.arc(x, y, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 10px system-ui, sans-serif";
+      ctx.fillText(route.kind === "packet" ? "P" : "A", x - 4, y + 4);
+    }
+
+    function drawRouteLegend(route) {
+      const x = 72;
+      const y = 210;
+      roundedRect(x, y, 300, 52, 8, "#ffffff", "#d7dee8");
+      ctx.fillStyle = "#64748b";
+      ctx.font = "700 11px system-ui, sans-serif";
+      ctx.fillText("Aggregated route", x + 14, y + 20);
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "700 13px system-ui, sans-serif";
+      ctx.fillText(route.label, x + 14, y + 38);
+      ctx.fillStyle = "#64748b";
+      ctx.font = "11px system-ui, sans-serif";
+      ctx.fillText(route.channel, x + 14, y + 51);
+
+      roundedRect(728, y, 300, 52, 8, "#ffffff", "#d7dee8");
+      ctx.fillStyle = "#64748b";
+      ctx.font = "700 11px system-ui, sans-serif";
+      ctx.fillText("Receive verification", 742, y + 20);
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "700 14px system-ui, sans-serif";
+      ctx.fillText(route.verify || "domain/channel/hash/proof verified", 742, y + 40);
+    }
+
+    function drawNetworkStateBand(test, route) {
+      const x = 72;
+      const y = 352;
+      const w = 956;
+      const h = 52;
+      roundedRect(x, y, w, h, 8, "#f8fafc", "#d7dee8");
+      ctx.fillStyle = "#64748b";
+      ctx.font = "700 12px system-ui, sans-serif";
+      ctx.fillText("Observed broadcast route and source-chain verification", x + 18, y + 21);
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "14px system-ui, sans-serif";
+      const text = `${route.label}: ${test.steps[selectedStep]}。検証: ${route.verify || "source domain/channel/hash"}。確認: ${test.verified}。`;
+      wrapText(text, x + 260, y + 21, w - 282, 18);
+    }
+
+    function drawNode(x, y, kind, value, index, active) {
+      const w = 184;
+      const h = 76;
+      const color = active ? "#eff6ff" : index === 3 && value.includes("Alert") ? "#fff7ed" : "#ffffff";
+      const stroke = active ? "#2563eb" : index === 3 && value.includes("Alert") ? "#fdba74" : "#cbd5e1";
+
+      roundedRect(x - w / 2, y, w, h, 8, color, stroke);
+      ctx.fillStyle = "#64748b";
+      ctx.font = "700 12px system-ui, sans-serif";
+      ctx.fillText(kind, x - w / 2 + 14, y + 25);
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "700 15px system-ui, sans-serif";
+      wrapText(value, x - w / 2 + 14, y + 51, w - 28, 18);
+    }
+
+    function drawArrow(x1, y1, x2, y2, label, active) {
+      ctx.strokeStyle = active ? "#2563eb" : "#94a3b8";
+      ctx.fillStyle = active ? "#2563eb" : "#94a3b8";
+      ctx.lineWidth = active ? 4 : 2;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - 10 * Math.cos(angle - Math.PI / 6), y2 - 10 * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x2 - 10 * Math.cos(angle + Math.PI / 6), y2 - 10 * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#475569";
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.fillText(label, (x1 + x2) / 2 - 24, y1 - 10);
+      ctx.lineWidth = 2;
+    }
+
+    function drawMovingToken(test, positions, progress) {
+      const edge = test.edges[selectedStep];
+      if (!edge) return;
+      const [from, to] = edge;
+      const [x1, y1] = positions[from];
+      const [x2, y2] = positions[to];
+      const sx = x1 + 92;
+      const sy = y1 + 38;
+      const ex = x2 - 92;
+      const ey = y2 + 38;
+      const eased = 0.5 - Math.cos(progress * Math.PI) / 2;
+      const x = sx + (ex - sx) * eased;
+      const y = sy + (ey - sy) * eased;
+      ctx.beginPath();
+      ctx.fillStyle = "#2563eb";
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 10px system-ui, sans-serif";
+      ctx.fillText(String(selectedStep + 1), x - 3, y + 4);
+    }
+
+    function drawStateBand(test) {
+      const x = 72;
+      const y = 250;
+      const w = 956;
+      const h = 96;
+      roundedRect(x, y, w, h, 8, "#f8fafc", "#d7dee8");
+      ctx.fillStyle = "#64748b";
+      ctx.font = "700 12px system-ui, sans-serif";
+      ctx.fillText("Observed state transition", x + 18, y + 28);
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "15px system-ui, sans-serif";
+      wrapText(test.steps[selectedStep] + "。確認: " + test.verified + "。", x + 18, y + 56, w - 36, 20);
+    }
+
+    function renderTimeline(test) {
+      timeline.innerHTML = "";
+      test.steps.forEach((step, index) => {
+        const item = document.createElement("div");
+        item.className = "timeline-step";
+        item.dataset.testid = `timeline-step-${index}`;
+        item.setAttribute("aria-current", index === selectedStep ? "step" : "false");
+        item.innerHTML = `<span class="step-index">${index + 1}</span><span class="step-text">${step}</span>`;
+        item.addEventListener("click", () => {
+          stopPlayback();
+          selectedStep = index;
+          animationFrame = 0.65;
+          draw(tests[selectedIndex], animationFrame);
+          updateAnimationMeta();
+        });
+        timeline.appendChild(item);
+      });
+    }
+
+    function updateAnimationMeta() {
+      const test = tests[selectedIndex];
+      const total = stepCount(test);
+      progressFill.style.width = `${((selectedStep + 1) / total) * 100}%`;
+      stepLabel.textContent = `Step ${selectedStep + 1} / ${total}`;
+      Array.from(timeline.children).forEach((item, index) => {
+        item.setAttribute("aria-current", index === selectedStep ? "step" : "false");
+      });
+    }
+
+    function stepCount(test) {
+      return test.network ? test.routes.length : test.edges.length;
+    }
+
+    function isNodeActive(test, nodeIndex) {
+      const edge = test.edges[selectedStep];
+      return edge && (edge[0] === nodeIndex || edge[1] === nodeIndex);
+    }
+
+    function roundedRect(x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle = stroke;
+      ctx.stroke();
+    }
+
+    function wrapText(text, x, y, maxWidth, lineHeight) {
+      const words = text.split(" ");
+      let line = "";
+      words.forEach((word, index) => {
+        const testLine = line ? line + " " + word : word;
+        if (ctx.measureText(testLine).width > maxWidth && line) {
+          ctx.fillText(line, x, y);
+          line = word;
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+        if (index === words.length - 1) {
+          ctx.fillText(line, x, y);
+        }
+      });
+    }
+
+    selectTest(0);
+  </script>
+</body>
+</html>

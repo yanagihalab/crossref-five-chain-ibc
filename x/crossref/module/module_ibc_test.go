@@ -2,6 +2,8 @@ package crossref
 
 import (
 	"bytes"
+	"crypto/ed25519"
+	"crypto/rand"
 	"fmt"
 	"testing"
 
@@ -171,10 +173,80 @@ func TestReceiveCrossReferencePacketRejectsInvalidCheckpointProof(t *testing.T) 
 	}
 }
 
+func TestReceiveCrossReferencePacketVerifiesHysteresisSignature(t *testing.T) {
+	f := initIBCFixture(t)
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey failed: %v", err)
+	}
+	requireIBCBindingWithSourceKey(t, f, publicKey)
+	packet := validCrossReferencePacket()
+	packet.HysteresisSignature = ed25519.Sign(privateKey, packet.CheckpointHash)
+
+	if _, err := f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet); err != nil {
+		t.Fatalf("receiveCrossReferencePacket returned error: %v", err)
+	}
+}
+
+func TestReceiveCrossReferencePacketRejectsInvalidHysteresisSignature(t *testing.T) {
+	f := initIBCFixture(t)
+	publicKey, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey failed: %v", err)
+	}
+	requireIBCBindingWithSourceKey(t, f, publicKey)
+	packet := validCrossReferencePacket()
+	packet.HysteresisSignature = []byte("invalid-signature")
+
+	_, err = f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet)
+	if !errorsmod.IsOf(err, types.ErrHysteresisSignatureInvalid) {
+		t.Fatalf("expected ErrHysteresisSignatureInvalid, got %v", err)
+	}
+}
+
+func TestReceiveCrossReferencePacketRequiresHysteresisSignatureWhenDomainHasKey(t *testing.T) {
+	f := initIBCFixture(t)
+	publicKey, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey failed: %v", err)
+	}
+	requireIBCBindingWithSourceKey(t, f, publicKey)
+	packet := validCrossReferencePacket()
+
+	_, err = f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet)
+	if !errorsmod.IsOf(err, types.ErrHysteresisSignatureRequired) {
+		t.Fatalf("expected ErrHysteresisSignatureRequired, got %v", err)
+	}
+}
+
 func requireIBCBinding(t *testing.T, f *ibcFixture) {
 	t.Helper()
 
 	if err := f.keeper.SetDomain(f.ctx, types.DomainInfo{DomainId: "chain-a", ChainId: "crossref-a"}); err != nil {
+		t.Fatalf("SetDomain source failed: %v", err)
+	}
+	if err := f.keeper.SetDomain(f.ctx, types.DomainInfo{DomainId: "chain-b", ChainId: "crossref-b"}); err != nil {
+		t.Fatalf("SetDomain local failed: %v", err)
+	}
+	if err := f.keeper.SetDomainChannel(f.ctx, types.DomainChannel{
+		LocalDomainId:  "chain-b",
+		RemoteDomainId: "chain-a",
+		PortId:         types.PortID,
+		ChannelId:      "channel-0",
+		ClientId:       "client-a",
+	}); err != nil {
+		t.Fatalf("SetDomainChannel failed: %v", err)
+	}
+}
+
+func requireIBCBindingWithSourceKey(t *testing.T, f *ibcFixture, sourceKey []byte) {
+	t.Helper()
+
+	if err := f.keeper.SetDomain(f.ctx, types.DomainInfo{
+		DomainId:            "chain-a",
+		ChainId:             "crossref-a",
+		HysteresisPublicKey: sourceKey,
+	}); err != nil {
 		t.Fatalf("SetDomain source failed: %v", err)
 	}
 	if err := f.keeper.SetDomain(f.ctx, types.DomainInfo{DomainId: "chain-b", ChainId: "crossref-b"}); err != nil {

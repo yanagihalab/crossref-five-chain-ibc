@@ -53,6 +53,7 @@ message MsgRegisterDomain {
   string chain_id = 3;
   bytes validator_set_hash = 4;
   string metadata_uri = 5;
+  bytes hysteresis_public_key = 6;
 }
 
 message MsgRegisterDomainResponse {}

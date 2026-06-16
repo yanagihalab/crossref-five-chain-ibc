@@ -93,6 +93,13 @@ Success ends with:
 Five-chain cross-reference experiment passed.
 ```
 
+## Hysteresis Signature Verification
+
+Domains can register an Ed25519 `hysteresis_public_key`. When this key is set,
+`SubmitCheckpoint` and IBC packet receive both require `hysteresis_signature` to
+verify against the checkpoint hash. Domains without a registered public key are
+accepted for local experiments and migration compatibility.
+
 ## Endpoints
 
 | Chain | RPC | gRPC | REST |

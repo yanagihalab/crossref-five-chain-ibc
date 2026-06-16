@@ -19,6 +19,7 @@ message DomainInfo {
   string chain_id = 2;
   bytes validator_set_hash = 3;
   string metadata_uri = 4;
+  bytes hysteresis_public_key = 5;
 }
 
 message DomainChannel {

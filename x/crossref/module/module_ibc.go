@@ -268,6 +268,9 @@ func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channel
 	if err := im.keeper.ValidateCheckpoint(ctx, checkpoint); err != nil {
 		return nil, err
 	}
+	if err := types.VerifyHysteresisSignature(sourceDomain, checkpoint); err != nil {
+		return nil, err
+	}
 	if err := im.keeper.SetCheckpoint(ctx, checkpoint); err != nil {
 		return nil, err
 	}

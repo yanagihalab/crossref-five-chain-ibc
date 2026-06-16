@@ -26,10 +26,11 @@ func (k msgServer) RegisterDomain(ctx context.Context, req *types.MsgRegisterDom
 	}
 
 	return &types.MsgRegisterDomainResponse{}, k.SetDomain(ctx, types.DomainInfo{
-		DomainId:         req.DomainId,
-		ChainId:          req.ChainId,
-		ValidatorSetHash: req.ValidatorSetHash,
-		MetadataUri:      req.MetadataUri,
+		DomainId:            req.DomainId,
+		ChainId:             req.ChainId,
+		ValidatorSetHash:    req.ValidatorSetHash,
+		MetadataUri:         req.MetadataUri,
+		HysteresisPublicKey: req.HysteresisPublicKey,
 	})
 }
 
@@ -69,7 +70,8 @@ func (k msgServer) SubmitCheckpoint(ctx context.Context, req *types.MsgSubmitChe
 	if req.DomainId == "" || req.Height == 0 || len(req.BlockHash) == 0 || len(req.AppHash) == 0 {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "domain_id, height, block_hash and app_hash are required")
 	}
-	if _, found, err := k.GetDomain(ctx, req.DomainId); err != nil {
+	domain, found, err := k.GetDomain(ctx, req.DomainId)
+	if err != nil {
 		return nil, err
 	} else if !found {
 		return nil, errorsmod.Wrapf(types.ErrDomainNotFound, "domain=%s", req.DomainId)
@@ -93,6 +95,9 @@ func (k msgServer) SubmitCheckpoint(ctx context.Context, req *types.MsgSubmitChe
 		return nil, errorsmod.Wrapf(types.ErrCheckpointHashMismatch, "domain=%s height=%d", req.DomainId, req.Height)
 	}
 	if err := k.ValidateCheckpoint(ctx, checkpoint); err != nil {
+		return nil, err
+	}
+	if err := types.VerifyHysteresisSignature(domain, checkpoint); err != nil {
 		return nil, err
 	}
 	if err := k.SetCheckpoint(ctx, checkpoint); err != nil {

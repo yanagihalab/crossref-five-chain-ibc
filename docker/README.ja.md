@@ -89,6 +89,12 @@ docker/scripts/run-crossref-experiment.sh
 Five-chain cross-reference experiment passed.
 ```
 
+## Hysteresis Signature 検証
+
+domain は Ed25519 の `hysteresis_public_key` を登録できます。
+この公開鍵が設定されているdomainでは、`SubmitCheckpoint` と IBC packet 受信の両方で `hysteresis_signature` が必須になり、checkpoint hash に対する署名として検証されます。
+公開鍵が未登録のdomainは、ローカル実験や移行互換性のため従来通り受け入れます。
+
 ## エンドポイント
 
 | Chain | RPC | gRPC | REST |

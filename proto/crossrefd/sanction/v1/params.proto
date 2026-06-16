@@ -1,0 +1,5 @@
+syntax = "proto3";
+package crossrefd.sanction.v1;
+import "crossrefd/sanction/v1/types.proto";
+option go_package = "github.com/crossref/crossrefd/x/sanction/types";
+message Params { uint32 watch_threshold = 1; uint32 block_threshold = 2; uint32 freeze_threshold = 3; uint32 revert_threshold = 4; uint32 quorum_threshold = 5; bool unanimous_required_for_revert = 6; uint64 evidence_ttl_blocks = 7; uint64 voting_period_blocks = 8; repeated string accepted_risk_sources = 9; repeated string high_risk_categories = 10; repeated SanctionAction allowed_actions = 11; }

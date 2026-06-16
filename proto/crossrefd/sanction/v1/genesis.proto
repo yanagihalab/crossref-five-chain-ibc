@@ -1,0 +1,7 @@
+syntax = "proto3";
+package crossrefd.sanction.v1;
+import "gogoproto/gogo.proto";
+import "crossrefd/sanction/v1/params.proto";
+import "crossrefd/sanction/v1/types.proto";
+option go_package = "github.com/crossref/crossrefd/x/sanction/types";
+message GenesisState { Params params = 1 [(gogoproto.nullable) = false]; repeated AgentInfo agents = 2 [(gogoproto.nullable) = false]; repeated RiskReport risk_reports = 3 [(gogoproto.nullable) = false]; repeated SanctionCase sanction_cases = 4 [(gogoproto.nullable) = false]; repeated SanctionVote sanction_votes = 5 [(gogoproto.nullable) = false]; repeated ActiveSanction active_sanctions = 6 [(gogoproto.nullable) = false]; repeated FreezeRecord frozen_addresses = 7 [(gogoproto.nullable) = false]; repeated ExecutionRecord execution_records = 8 [(gogoproto.nullable) = false]; }

@@ -1,0 +1,5 @@
+syntax = "proto3";
+package crossrefd.sanction.module.v1;
+import "cosmos/app/v1alpha1/module.proto";
+option go_package = "github.com/crossref/crossrefd/x/sanction/types";
+message Module { option (cosmos.app.v1alpha1.module) = {go_import: "github.com/crossref/crossrefd/x/sanction/module"}; string authority = 1; }

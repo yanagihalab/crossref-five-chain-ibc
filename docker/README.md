@@ -139,6 +139,28 @@ Run the end-to-end five-chain experiment:
 docker/scripts/run-crossref-experiment.sh
 ```
 
+`run-crossref-experiment.sh` reads `TOPOLOGY_FILE` and dynamically derives
+domains, routes, channel IDs, client IDs, proof collection, broadcasts, and
+verification loops from that topology. If `TOPOLOGY_FILE` is omitted, the script
+uses `docker/generated/topology-${CHAIN_COUNT}c-${RELAYER_WORKER_COUNT}r.json`
+and generates it when missing.
+
+Run a generated 3-chain / 2-relayer experiment:
+
+```bash
+node docker/scripts/generate-topology.mjs 3 2
+docker compose -f docker/generated/docker-compose-3c-2r.yml up -d --build
+COMPOSE_FILE=docker/generated/docker-compose-3c-2r.yml \
+TOPOLOGY_FILE=docker/generated/topology-3c-2r.json \
+docker/scripts/run-crossref-experiment.sh
+```
+
+Check topology parsing without contacting Docker:
+
+```bash
+DRY_RUN=1 TOPOLOGY_FILE=docker/generated/topology-3c-2r.json docker/scripts/run-crossref-experiment.sh
+```
+
 When multiple relayer workers are running, the experiment script sends manual
 Hermes `update client` commands through worker index `1` by default. Select a
 different worker with:

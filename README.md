@@ -160,6 +160,21 @@ Run the full experiment:
 docker/scripts/run-crossref-experiment.sh
 ```
 
+Run the experiment from a generated topology:
+
+```bash
+node docker/scripts/generate-topology.mjs 3 2
+COMPOSE_FILE=docker/generated/docker-compose-3c-2r.yml \
+TOPOLOGY_FILE=docker/generated/topology-3c-2r.json \
+docker/scripts/run-crossref-experiment.sh
+```
+
+Check topology parsing without touching Docker:
+
+```bash
+DRY_RUN=1 TOPOLOGY_FILE=docker/generated/topology-3c-2r.json docker/scripts/run-crossref-experiment.sh
+```
+
 Stop and remove chain state:
 
 ```bash

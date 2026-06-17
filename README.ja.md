@@ -158,6 +158,21 @@ full experiment を実行する:
 docker/scripts/run-crossref-experiment.sh
 ```
 
+生成済み topology から実験を実行する:
+
+```bash
+node docker/scripts/generate-topology.mjs 3 2
+COMPOSE_FILE=docker/generated/docker-compose-3c-2r.yml \
+TOPOLOGY_FILE=docker/generated/topology-3c-2r.json \
+docker/scripts/run-crossref-experiment.sh
+```
+
+Docker に接続せず topology の読み込みだけを確認する:
+
+```bash
+DRY_RUN=1 TOPOLOGY_FILE=docker/generated/topology-3c-2r.json docker/scripts/run-crossref-experiment.sh
+```
+
 停止して chain state を削除する:
 
 ```bash

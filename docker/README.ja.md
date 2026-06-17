@@ -128,6 +128,24 @@ docker compose -f docker/docker-compose.yml logs relayer-init
 docker/scripts/run-crossref-experiment.sh
 ```
 
+`run-crossref-experiment.sh` は `TOPOLOGY_FILE` を読み、domain、route、channel ID、client ID、proof collect、broadcast、verification loop を topology から動的に決定する。`TOPOLOGY_FILE` を省略した場合は `docker/generated/topology-${CHAIN_COUNT}c-${RELAYER_WORKER_COUNT}r.json` を使い、存在しなければ生成する。
+
+生成済み 3 チェーン / 2 relayer 実験を実行する:
+
+```bash
+node docker/scripts/generate-topology.mjs 3 2
+docker compose -f docker/generated/docker-compose-3c-2r.yml up -d --build
+COMPOSE_FILE=docker/generated/docker-compose-3c-2r.yml \
+TOPOLOGY_FILE=docker/generated/topology-3c-2r.json \
+docker/scripts/run-crossref-experiment.sh
+```
+
+Docker に接続せず topology parsing だけを確認する:
+
+```bash
+DRY_RUN=1 TOPOLOGY_FILE=docker/generated/topology-3c-2r.json docker/scripts/run-crossref-experiment.sh
+```
+
 複数の relayer worker が起動している場合、実験スクリプトは手動の Hermes `update client` command を worker index `1` に送る。別の worker を使う場合は次のように指定する。
 
 ```bash

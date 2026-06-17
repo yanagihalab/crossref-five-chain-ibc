@@ -1,74 +1,124 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+CHAIN_COUNT="${CHAIN_COUNT:-5}"
+RELAYER_WORKER_COUNT="${RELAYER_WORKER_COUNT:-1}"
+TOPOLOGY_FILE="${TOPOLOGY_FILE:-docker/generated/topology-${CHAIN_COUNT}c-${RELAYER_WORKER_COUNT}r.json}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker/docker-compose.yml}"
 RELAYER_SERVICE="${RELAYER_SERVICE:-relayer}"
 RELAYER_INDEX="${RELAYER_INDEX:-1}"
 DENOM="${DENOM:-stake}"
-CHAIN_A_ID="${CHAIN_A_ID:-crossref-a}"
-CHAIN_B_ID="${CHAIN_B_ID:-crossref-b}"
-CHAIN_C_ID="${CHAIN_C_ID:-crossref-c}"
-CHAIN_D_ID="${CHAIN_D_ID:-crossref-d}"
-CHAIN_E_ID="${CHAIN_E_ID:-crossref-e}"
 BLOCK_TIME_UNIX="${BLOCK_TIME_UNIX:-0}"
+CHECKPOINT_HEIGHT="${CHECKPOINT_HEIGHT:-1}"
+DRY_RUN="${DRY_RUN:-0}"
+
+if [ ! -f "${TOPOLOGY_FILE}" ]; then
+  echo "Topology ${TOPOLOGY_FILE} not found; generating ${CHAIN_COUNT} chains / ${RELAYER_WORKER_COUNT} relayers..."
+  node docker/scripts/generate-topology.mjs "${CHAIN_COUNT}" "${RELAYER_WORKER_COUNT}" >/dev/null
+fi
+
+if [ ! -f "${TOPOLOGY_FILE}" ]; then
+  echo "Topology file not found after generation: ${TOPOLOGY_FILE}" >&2
+  exit 1
+fi
 
 dc() {
   docker compose -f "${COMPOSE_FILE}" "$@"
 }
 
-chain_a() {
-  dc exec -T chain-a crossrefd --home /var/crossref "$@"
+topology_query() {
+  node -e '
+    const fs = require("fs");
+    const topology = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    const query = process.argv[2];
+    const a = process.argv[3];
+    const b = process.argv[4];
+    const route = (from, to) => topology.routes.find((r) => r.from === from && r.to === to);
+    const chain = (domain) => topology.chains.find((c) => c.domain === domain);
+    if (query === "domains") console.log(topology.chains.map((c) => c.domain).join(" "));
+    else if (query === "pairs") console.log(topology.pairs.map((p) => `${p.left}:${p.right}`).join(" "));
+    else if (query === "routes") console.log(topology.routes.map((r) => `${r.from}:${r.to}`).join(" "));
+    else if (query === "chain-id") console.log(chain(a)?.chainId || "");
+    else if (query === "service") console.log(chain(a)?.service || a);
+    else if (query === "route-id") console.log(route(a, b)?.id || "");
+    else if (query === "channel") console.log(route(a, b)?.fromChannel || "");
+    else if (query === "counterparty-channel") console.log(route(a, b)?.toChannel || "");
+    else if (query === "worker") console.log(route(a, b)?.relayerWorker || 1);
+    else if (query === "route-count") console.log(topology.routes.length);
+    else if (query === "chain-count") console.log(topology.chains.length);
+    else {
+      console.error(`unknown topology query: ${query}`);
+      process.exit(2);
+    }
+  ' "${TOPOLOGY_FILE}" "$@"
 }
 
-chain_b() {
-  dc exec -T chain-b crossrefd --home /var/crossref "$@"
-}
-
-chain_c() {
-  dc exec -T chain-c crossrefd --home /var/crossref "$@"
-}
-
-chain_d() {
-  dc exec -T chain-d crossrefd --home /var/crossref "$@"
-}
-
-chain_e() {
-  dc exec -T chain-e crossrefd --home /var/crossref "$@"
-}
-
-relayer() {
-  dc exec -T --index "${RELAYER_INDEX}" "${RELAYER_SERVICE}" hermes "$@"
-}
+DOMAINS="$(topology_query domains)"
+PAIRS="$(topology_query pairs)"
+ROUTES="$(topology_query routes)"
+ROUTE_COUNT="$(topology_query route-count)"
+ACTUAL_CHAIN_COUNT="$(topology_query chain-count)"
 
 chain_id() {
-  case "$1" in
-    chain-a) printf '%s\n' "${CHAIN_A_ID}" ;;
-    chain-b) printf '%s\n' "${CHAIN_B_ID}" ;;
-    chain-c) printf '%s\n' "${CHAIN_C_ID}" ;;
-    chain-d) printf '%s\n' "${CHAIN_D_ID}" ;;
-    chain-e) printf '%s\n' "${CHAIN_E_ID}" ;;
-    *) echo "unknown domain: $1" >&2; return 1 ;;
+  topology_query chain-id "$1"
+}
+
+service_for_domain() {
+  topology_query service "$1"
+}
+
+channel_id() {
+  topology_query channel "$1" "$2"
+}
+
+counterparty_channel_id() {
+  topology_query counterparty-channel "$1" "$2"
+}
+
+route_id() {
+  topology_query route-id "$1" "$2"
+}
+
+route_worker() {
+  topology_query worker "$1" "$2"
+}
+
+client_for_source() {
+  host_domain="$1"
+  source_domain="$2"
+  host_channel="$(channel_id "${host_domain}" "${source_domain}")"
+  case "${host_channel}" in
+    channel-*) printf '07-tendermint-%s\n' "${host_channel#channel-}" ;;
+    *) echo "unknown host channel for ${host_domain}<-${source_domain}" >&2; return 1 ;;
   esac
 }
 
 query_chain() {
   domain="$1"
   shift
+  dc exec -T "$(service_for_domain "${domain}")" crossrefd --home /var/crossref "$@"
+}
 
-  case "${domain}" in
-    chain-a) chain_a "$@" ;;
-    chain-b) chain_b "$@" ;;
-    chain-c) chain_c "$@" ;;
-    chain-d) chain_d "$@" ;;
-    chain-e) chain_e "$@" ;;
-    *) echo "unknown domain: ${domain}" >&2; return 1 ;;
-  esac
+relayer_service_exists() {
+  dc config --services | grep -qx "$1"
+}
+
+relayer_for_route() {
+  source_domain="$1"
+  host_domain="$2"
+  worker="$(route_worker "${source_domain}" "${host_domain}")"
+  if relayer_service_exists "${RELAYER_SERVICE}"; then
+    dc exec -T --index "${worker}" "${RELAYER_SERVICE}" hermes "${@:3}"
+  elif relayer_service_exists "relayer-${worker}"; then
+    dc exec -T "relayer-${worker}" hermes "${@:3}"
+  else
+    dc exec -T --index "${RELAYER_INDEX}" "${RELAYER_SERVICE}" hermes "${@:3}"
+  fi
 }
 
 tx_chain() {
   domain="$1"
   shift
-
   query_chain "${domain}" tx crossref "$@" --from validator --chain-id "$(chain_id "${domain}")" --keyring-backend test --yes --fees "0${DENOM}"
 }
 
@@ -86,7 +136,6 @@ wait_tx() {
       echo "Transaction ${txhash} on ${domain} was included with a non-zero code." >&2
       return 1
     fi
-
     sleep 2
     attempt=$((attempt + 1))
   done
@@ -98,7 +147,6 @@ wait_tx() {
 run_tx() {
   domain="$1"
   shift
-
   out="$(tx_chain "${domain}" "$@" --output json 2>&1)"
   printf '%s\n' "${out}"
   txhash="$(printf '%s\n' "${out}" | sed -n 's/.*"txhash"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | tail -1)"
@@ -107,93 +155,6 @@ run_tx() {
     return 1
   fi
   wait_tx "${domain}" "${txhash}"
-}
-
-channel_id() {
-  local_domain="$1"
-  remote_domain="$2"
-
-  case "${local_domain}:${remote_domain}" in
-    chain-a:chain-b) echo channel-0 ;;
-    chain-a:chain-c) echo channel-1 ;;
-    chain-a:chain-d) echo channel-2 ;;
-    chain-a:chain-e) echo channel-3 ;;
-    chain-b:chain-a) echo channel-0 ;;
-    chain-b:chain-c) echo channel-1 ;;
-    chain-b:chain-d) echo channel-2 ;;
-    chain-b:chain-e) echo channel-3 ;;
-    chain-c:chain-a) echo channel-0 ;;
-    chain-c:chain-b) echo channel-1 ;;
-    chain-c:chain-d) echo channel-2 ;;
-    chain-c:chain-e) echo channel-3 ;;
-    chain-d:chain-a) echo channel-0 ;;
-    chain-d:chain-b) echo channel-1 ;;
-    chain-d:chain-c) echo channel-2 ;;
-    chain-d:chain-e) echo channel-3 ;;
-    chain-e:chain-a) echo channel-0 ;;
-    chain-e:chain-b) echo channel-1 ;;
-    chain-e:chain-c) echo channel-2 ;;
-    chain-e:chain-d) echo channel-3 ;;
-    *) echo "unknown channel pair: ${local_domain}:${remote_domain}" >&2; return 1 ;;
-  esac
-}
-
-route_id() {
-  local_domain="$1"
-  remote_domain="$2"
-
-  case "${local_domain}:${remote_domain}" in
-    chain-a:chain-b) echo route-00 ;;
-    chain-b:chain-a) echo route-01 ;;
-    chain-a:chain-c) echo route-02 ;;
-    chain-c:chain-a) echo route-03 ;;
-    chain-a:chain-d) echo route-04 ;;
-    chain-d:chain-a) echo route-05 ;;
-    chain-a:chain-e) echo route-06 ;;
-    chain-e:chain-a) echo route-07 ;;
-    chain-b:chain-c) echo route-08 ;;
-    chain-c:chain-b) echo route-09 ;;
-    chain-b:chain-d) echo route-10 ;;
-    chain-d:chain-b) echo route-11 ;;
-    chain-b:chain-e) echo route-12 ;;
-    chain-e:chain-b) echo route-13 ;;
-    chain-c:chain-d) echo route-14 ;;
-    chain-d:chain-c) echo route-15 ;;
-    chain-c:chain-e) echo route-16 ;;
-    chain-e:chain-c) echo route-17 ;;
-    chain-d:chain-e) echo route-18 ;;
-    chain-e:chain-d) echo route-19 ;;
-    *) echo "unknown route pair: ${local_domain}:${remote_domain}" >&2; return 1 ;;
-  esac
-}
-
-client_for_source() {
-  host_domain="$1"
-  source_domain="$2"
-
-  case "${host_domain}:${source_domain}" in
-    chain-a:chain-b) echo 07-tendermint-0 ;;
-    chain-a:chain-c) echo 07-tendermint-1 ;;
-    chain-a:chain-d) echo 07-tendermint-2 ;;
-    chain-a:chain-e) echo 07-tendermint-3 ;;
-    chain-b:chain-a) echo 07-tendermint-0 ;;
-    chain-b:chain-c) echo 07-tendermint-1 ;;
-    chain-b:chain-d) echo 07-tendermint-2 ;;
-    chain-b:chain-e) echo 07-tendermint-3 ;;
-    chain-c:chain-a) echo 07-tendermint-0 ;;
-    chain-c:chain-b) echo 07-tendermint-1 ;;
-    chain-c:chain-d) echo 07-tendermint-2 ;;
-    chain-c:chain-e) echo 07-tendermint-3 ;;
-    chain-d:chain-a) echo 07-tendermint-0 ;;
-    chain-d:chain-b) echo 07-tendermint-1 ;;
-    chain-d:chain-c) echo 07-tendermint-2 ;;
-    chain-d:chain-e) echo 07-tendermint-3 ;;
-    chain-e:chain-a) echo 07-tendermint-0 ;;
-    chain-e:chain-b) echo 07-tendermint-1 ;;
-    chain-e:chain-c) echo 07-tendermint-2 ;;
-    chain-e:chain-d) echo 07-tendermint-3 ;;
-    *) echo "unknown client pair: ${host_domain}:${source_domain}" >&2; return 1 ;;
-  esac
 }
 
 wait_channel() {
@@ -239,13 +200,28 @@ json_number_field() {
 checkpoint_proof_json() {
   domain="$1"
   checkpoint_height="$2"
-
   query_chain "${domain}" query crossref checkpoint-proof "${domain}" "${checkpoint_height}" --output json
+}
+
+b64() {
+  printf '%s' "$1" | base64 | tr -d '\n'
+}
+
+domain_suffix() {
+  printf '%s\n' "${1#chain-}"
+}
+
+block_hash_for_domain() {
+  b64 "block-$(domain_suffix "$1")-${CHECKPOINT_HEIGHT}"
+}
+
+app_hash_for_domain() {
+  b64 "app-$(domain_suffix "$1")-${CHECKPOINT_HEIGHT}"
 }
 
 hysteresis_seed() {
   domain="$1"
-  echo "crossref-five-chain-hysteresis-${domain}"
+  echo "crossref-topology-hysteresis-${domain}"
 }
 
 hysteresis_json() {
@@ -253,27 +229,19 @@ hysteresis_json() {
   height="$2"
   block_hash="$3"
   app_hash="$4"
-
-  go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "$(hysteresis_seed "${domain}")"
+  cache_dir="${TMPDIR:-/tmp}/crossref-hysteresis-${ACTUAL_CHAIN_COUNT}c"
+  mkdir -p "${cache_dir}"
+  cache_file="${cache_dir}/${domain}-${height}-${block_hash}-${app_hash}-${BLOCK_TIME_UNIX}.json"
+  if [ ! -f "${cache_file}" ]; then
+    go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "$(hysteresis_seed "${domain}")" >"${cache_file}"
+  fi
+  cat "${cache_file}"
 }
 
 hysteresis_public_key() {
   domain="$1"
-  json="$(hysteresis_json "${domain}" 1 YmxvY2stdGVtcGxhdGU= YXBwLXRlbXBsYXRl)"
+  json="$(hysteresis_json "${domain}" "${CHECKPOINT_HEIGHT}" "$(b64 block-template)" "$(b64 app-template)")"
   printf '%s\n' "${json}" | json_string_field public_key
-}
-
-public_key_for_domain() {
-  domain="$1"
-
-  case "${domain}" in
-    chain-a) echo "${chain_a_public_key}" ;;
-    chain-b) echo "${chain_b_public_key}" ;;
-    chain-c) echo "${chain_c_public_key}" ;;
-    chain-d) echo "${chain_d_public_key}" ;;
-    chain-e) echo "${chain_e_public_key}" ;;
-    *) echo "unknown domain: ${domain}" >&2; return 1 ;;
-  esac
 }
 
 hysteresis_signature() {
@@ -281,9 +249,24 @@ hysteresis_signature() {
   height="$2"
   block_hash="$3"
   app_hash="$4"
-
   json="$(hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}")"
   printf '%s\n' "${json}" | json_string_field signature
+}
+
+proof_file() {
+  printf '%s/crossref-proof-%s-%s.json\n' "${TMPDIR:-/tmp}" "${ACTUAL_CHAIN_COUNT}c" "$1"
+}
+
+proof_value() {
+  domain="$1"
+  field="$2"
+  json_string_field "${field}" <"$(proof_file "${domain}")"
+}
+
+proof_number() {
+  domain="$1"
+  field="$2"
+  json_number_field "${field}" <"$(proof_file "${domain}")"
 }
 
 update_client_to_proof_height() {
@@ -295,7 +278,7 @@ update_client_to_proof_height() {
   route="$(route_id "${source_domain}" "${host_domain}")"
 
   echo "Updating ${route} ${source_domain} -> ${host_domain} light client ${client_id} on ${host_chain_id} to proof height ${revision_height}..."
-  relayer update client --host-chain "${host_chain_id}" --client "${client_id}" --height "${revision_height}"
+  relayer_for_route "${source_domain}" "${host_domain}" update client --host-chain "${host_chain_id}" --client "${client_id}" --height "${revision_height}"
 }
 
 require_proof_fields() {
@@ -310,148 +293,86 @@ require_proof_fields() {
   fi
 }
 
-DOMAINS="chain-a chain-b chain-c chain-d chain-e"
-PAIRS="chain-a:chain-b chain-a:chain-c chain-a:chain-d chain-a:chain-e chain-b:chain-c chain-b:chain-d chain-b:chain-e chain-c:chain-d chain-c:chain-e chain-d:chain-e"
+echo "Using topology ${TOPOLOGY_FILE}: ${ACTUAL_CHAIN_COUNT} chains, ${ROUTE_COUNT} directed routes."
+echo "Compose file: ${COMPOSE_FILE}"
 
 echo "Preparing deterministic Ed25519 hysteresis public keys..."
-chain_a_public_key="$(hysteresis_public_key chain-a)"
-chain_b_public_key="$(hysteresis_public_key chain-b)"
-chain_c_public_key="$(hysteresis_public_key chain-c)"
-chain_d_public_key="$(hysteresis_public_key chain-d)"
-chain_e_public_key="$(hysteresis_public_key chain-e)"
-
-echo "Directed route numbering:"
-for pair in ${PAIRS}; do
-  left="${pair%%:*}"
-  right="${pair##*:}"
-  left_channel="$(channel_id "${left}" "${right}")"
-  right_channel="$(channel_id "${right}" "${left}")"
-  echo "  $(route_id "${left}" "${right}") ${left}/${left_channel} -> ${right}/${right_channel}"
-  echo "  $(route_id "${right}" "${left}") ${right}/${right_channel} -> ${left}/${left_channel}"
+for domain in ${DOMAINS}; do
+  public_key="$(hysteresis_public_key "${domain}")"
+  echo "  ${domain}: ${public_key}"
 done
 
-for pair in ${PAIRS}; do
-  left="${pair%%:*}"
-  right="${pair##*:}"
-  wait_channel "${left}" "$(channel_id "${left}" "${right}")" "$(route_id "${left}" "${right}")" "${left} -> ${right} channel"
-  wait_channel "${right}" "$(channel_id "${right}" "${left}")" "$(route_id "${right}" "${left}")" "${right} -> ${left} channel"
+echo "Directed route numbering:"
+for route_pair in ${ROUTES}; do
+  source="${route_pair%%:*}"
+  dest="${route_pair##*:}"
+  echo "  $(route_id "${source}" "${dest}") ${source}/$(channel_id "${source}" "${dest}") -> ${dest}/$(counterparty_channel_id "${source}" "${dest}") relayer-worker=$(route_worker "${source}" "${dest}")"
+done
+
+if [ "${DRY_RUN}" = "1" ]; then
+  echo "Dry run complete; topology was parsed without contacting Docker."
+  exit 0
+fi
+
+for route_pair in ${ROUTES}; do
+  source="${route_pair%%:*}"
+  dest="${route_pair##*:}"
+  wait_channel "${source}" "$(channel_id "${source}" "${dest}")" "$(route_id "${source}" "${dest}")" "${source} -> ${dest} channel"
 done
 
 echo "Registering all domains on all chains..."
 for local_domain in ${DOMAINS}; do
   for remote_domain in ${DOMAINS}; do
-    remote_public_key="$(public_key_for_domain "${remote_domain}")"
+    remote_public_key="$(hysteresis_public_key "${remote_domain}")"
     echo "Registering ${remote_domain} on ${local_domain} with hysteresis public key ${remote_public_key}"
     run_tx "${local_domain}" register-domain validator "${remote_domain}" "$(chain_id "${remote_domain}")" --hysteresis-public-key "${remote_public_key}"
   done
 done
 
-echo "Binding crossref domains to five-chain IBC channels..."
-for pair in ${PAIRS}; do
-  left="${pair%%:*}"
-  right="${pair##*:}"
-  echo "Binding $(route_id "${left}" "${right}") ${left} -> ${right} actual=${left}/$(channel_id "${left}" "${right}")"
-  run_tx "${left}" bind-domain-channel validator "${left}" "${right}" crossref "$(channel_id "${left}" "${right}")"
-  echo "Binding $(route_id "${right}" "${left}") ${right} -> ${left} actual=${right}/$(channel_id "${right}" "${left}")"
-  run_tx "${right}" bind-domain-channel validator "${right}" "${left}" crossref "$(channel_id "${right}" "${left}")"
+echo "Binding crossref domains to topology IBC channels..."
+for route_pair in ${ROUTES}; do
+  source="${route_pair%%:*}"
+  dest="${route_pair##*:}"
+  echo "Binding $(route_id "${source}" "${dest}") ${source} -> ${dest} actual=${source}/$(channel_id "${source}" "${dest}")"
+  run_tx "${source}" bind-domain-channel validator "${source}" "${dest}" crossref "$(channel_id "${source}" "${dest}")"
 done
 
-echo "Submitting checkpoints on all five chains..."
-chain_a_signature="$(hysteresis_signature chain-a 1 YmxvY2stYS0x YXBwLWEtMQ==)"
-chain_b_signature="$(hysteresis_signature chain-b 1 YmxvY2stYi0x YXBwLWItMQ==)"
-chain_c_signature="$(hysteresis_signature chain-c 1 YmxvY2stYy0x YXBwLWMtMQ==)"
-chain_d_signature="$(hysteresis_signature chain-d 1 YmxvY2stZC0x YXBwLWQtMQ==)"
-chain_e_signature="$(hysteresis_signature chain-e 1 YmxvY2stZS0x YXBwLWUtMQ==)"
-
-run_tx chain-a submit-checkpoint validator chain-a 1 YmxvY2stYS0x YXBwLWEtMQ== --hysteresis-signature "${chain_a_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
-run_tx chain-b submit-checkpoint validator chain-b 1 YmxvY2stYi0x YXBwLWItMQ== --hysteresis-signature "${chain_b_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
-run_tx chain-c submit-checkpoint validator chain-c 1 YmxvY2stYy0x YXBwLWMtMQ== --hysteresis-signature "${chain_c_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
-run_tx chain-d submit-checkpoint validator chain-d 1 YmxvY2stZC0x YXBwLWQtMQ== --hysteresis-signature "${chain_d_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
-run_tx chain-e submit-checkpoint validator chain-e 1 YmxvY2stZS0x YXBwLWUtMQ== --hysteresis-signature "${chain_e_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+echo "Submitting checkpoints on all ${ACTUAL_CHAIN_COUNT} chains..."
+for domain in ${DOMAINS}; do
+  block_hash="$(block_hash_for_domain "${domain}")"
+  app_hash="$(app_hash_for_domain "${domain}")"
+  signature="$(hysteresis_signature "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}")"
+  run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+done
 
 echo "Collecting checkpoint ICS23 proofs from source chains..."
-chain_a_proof_json="$(checkpoint_proof_json chain-a 1)"
-printf '%s\n' "${chain_a_proof_json}"
-chain_a_proof="$(printf '%s\n' "${chain_a_proof_json}" | json_string_field source_checkpoint_proof)"
-chain_a_proof_revision_number="$(printf '%s\n' "${chain_a_proof_json}" | json_number_field source_proof_revision_number)"
-chain_a_proof_revision_height="$(printf '%s\n' "${chain_a_proof_json}" | json_number_field source_proof_revision_height)"
-require_proof_fields chain-a "${chain_a_proof}" "${chain_a_proof_revision_number}" "${chain_a_proof_revision_height}"
-
-chain_b_proof_json="$(checkpoint_proof_json chain-b 1)"
-printf '%s\n' "${chain_b_proof_json}"
-chain_b_proof="$(printf '%s\n' "${chain_b_proof_json}" | json_string_field source_checkpoint_proof)"
-chain_b_proof_revision_number="$(printf '%s\n' "${chain_b_proof_json}" | json_number_field source_proof_revision_number)"
-chain_b_proof_revision_height="$(printf '%s\n' "${chain_b_proof_json}" | json_number_field source_proof_revision_height)"
-require_proof_fields chain-b "${chain_b_proof}" "${chain_b_proof_revision_number}" "${chain_b_proof_revision_height}"
-
-chain_c_proof_json="$(checkpoint_proof_json chain-c 1)"
-printf '%s\n' "${chain_c_proof_json}"
-chain_c_proof="$(printf '%s\n' "${chain_c_proof_json}" | json_string_field source_checkpoint_proof)"
-chain_c_proof_revision_number="$(printf '%s\n' "${chain_c_proof_json}" | json_number_field source_proof_revision_number)"
-chain_c_proof_revision_height="$(printf '%s\n' "${chain_c_proof_json}" | json_number_field source_proof_revision_height)"
-require_proof_fields chain-c "${chain_c_proof}" "${chain_c_proof_revision_number}" "${chain_c_proof_revision_height}"
-
-chain_d_proof_json="$(checkpoint_proof_json chain-d 1)"
-printf '%s\n' "${chain_d_proof_json}"
-chain_d_proof="$(printf '%s\n' "${chain_d_proof_json}" | json_string_field source_checkpoint_proof)"
-chain_d_proof_revision_number="$(printf '%s\n' "${chain_d_proof_json}" | json_number_field source_proof_revision_number)"
-chain_d_proof_revision_height="$(printf '%s\n' "${chain_d_proof_json}" | json_number_field source_proof_revision_height)"
-require_proof_fields chain-d "${chain_d_proof}" "${chain_d_proof_revision_number}" "${chain_d_proof_revision_height}"
-
-chain_e_proof_json="$(checkpoint_proof_json chain-e 1)"
-printf '%s\n' "${chain_e_proof_json}"
-chain_e_proof="$(printf '%s\n' "${chain_e_proof_json}" | json_string_field source_checkpoint_proof)"
-chain_e_proof_revision_number="$(printf '%s\n' "${chain_e_proof_json}" | json_number_field source_proof_revision_number)"
-chain_e_proof_revision_height="$(printf '%s\n' "${chain_e_proof_json}" | json_number_field source_proof_revision_height)"
-require_proof_fields chain-e "${chain_e_proof}" "${chain_e_proof_revision_number}" "${chain_e_proof_revision_height}"
+for domain in ${DOMAINS}; do
+  checkpoint_proof_json "${domain}" "${CHECKPOINT_HEIGHT}" >"$(proof_file "${domain}")"
+  cat "$(proof_file "${domain}")"
+  require_proof_fields \
+    "${domain}" \
+    "$(proof_value "${domain}" source_checkpoint_proof)" \
+    "$(proof_number "${domain}" source_proof_revision_number)" \
+    "$(proof_number "${domain}" source_proof_revision_height)"
+done
 
 echo "Updating destination light clients to source proof heights..."
-update_client_to_proof_height chain-b chain-a "${chain_a_proof_revision_height}"
-update_client_to_proof_height chain-c chain-a "${chain_a_proof_revision_height}"
-update_client_to_proof_height chain-d chain-a "${chain_a_proof_revision_height}"
-update_client_to_proof_height chain-e chain-a "${chain_a_proof_revision_height}"
+for source_domain in ${DOMAINS}; do
+  revision_height="$(proof_number "${source_domain}" source_proof_revision_height)"
+  for host_domain in ${DOMAINS}; do
+    if [ "${host_domain}" != "${source_domain}" ]; then
+      update_client_to_proof_height "${host_domain}" "${source_domain}" "${revision_height}"
+    fi
+  done
+done
 
-update_client_to_proof_height chain-a chain-b "${chain_b_proof_revision_height}"
-update_client_to_proof_height chain-c chain-b "${chain_b_proof_revision_height}"
-update_client_to_proof_height chain-d chain-b "${chain_b_proof_revision_height}"
-update_client_to_proof_height chain-e chain-b "${chain_b_proof_revision_height}"
-
-update_client_to_proof_height chain-a chain-c "${chain_c_proof_revision_height}"
-update_client_to_proof_height chain-b chain-c "${chain_c_proof_revision_height}"
-update_client_to_proof_height chain-d chain-c "${chain_c_proof_revision_height}"
-update_client_to_proof_height chain-e chain-c "${chain_c_proof_revision_height}"
-
-update_client_to_proof_height chain-a chain-d "${chain_d_proof_revision_height}"
-update_client_to_proof_height chain-b chain-d "${chain_d_proof_revision_height}"
-update_client_to_proof_height chain-c chain-d "${chain_d_proof_revision_height}"
-update_client_to_proof_height chain-e chain-d "${chain_d_proof_revision_height}"
-
-update_client_to_proof_height chain-a chain-e "${chain_e_proof_revision_height}"
-update_client_to_proof_height chain-b chain-e "${chain_e_proof_revision_height}"
-update_client_to_proof_height chain-c chain-e "${chain_e_proof_revision_height}"
-update_client_to_proof_height chain-d chain-e "${chain_e_proof_revision_height}"
-
-echo "Broadcasting cross-reference packets from all five chains..."
-run_tx chain-a broadcast-cross-reference-packet validator chain-a 1 \
-  --source-checkpoint-proof "${chain_a_proof}" \
-  --source-proof-revision-number "${chain_a_proof_revision_number}" \
-  --source-proof-revision-height "${chain_a_proof_revision_height}"
-run_tx chain-b broadcast-cross-reference-packet validator chain-b 1 \
-  --source-checkpoint-proof "${chain_b_proof}" \
-  --source-proof-revision-number "${chain_b_proof_revision_number}" \
-  --source-proof-revision-height "${chain_b_proof_revision_height}"
-run_tx chain-c broadcast-cross-reference-packet validator chain-c 1 \
-  --source-checkpoint-proof "${chain_c_proof}" \
-  --source-proof-revision-number "${chain_c_proof_revision_number}" \
-  --source-proof-revision-height "${chain_c_proof_revision_height}"
-run_tx chain-d broadcast-cross-reference-packet validator chain-d 1 \
-  --source-checkpoint-proof "${chain_d_proof}" \
-  --source-proof-revision-number "${chain_d_proof_revision_number}" \
-  --source-proof-revision-height "${chain_d_proof_revision_height}"
-run_tx chain-e broadcast-cross-reference-packet validator chain-e 1 \
-  --source-checkpoint-proof "${chain_e_proof}" \
-  --source-proof-revision-number "${chain_e_proof_revision_number}" \
-  --source-proof-revision-height "${chain_e_proof_revision_height}"
+echo "Broadcasting cross-reference packets from all ${ACTUAL_CHAIN_COUNT} chains..."
+for source_domain in ${DOMAINS}; do
+  run_tx "${source_domain}" broadcast-cross-reference-packet validator "${source_domain}" "${CHECKPOINT_HEIGHT}" \
+    --source-checkpoint-proof "$(proof_value "${source_domain}" source_checkpoint_proof)" \
+    --source-proof-revision-number "$(proof_number "${source_domain}" source_proof_revision_number)" \
+    --source-proof-revision-height "$(proof_number "${source_domain}" source_proof_revision_height)"
+done
 
 sleep 20
 
@@ -459,9 +380,9 @@ echo "Verifying directed cross-references on all destination chains..."
 for local_domain in ${DOMAINS}; do
   for remote_domain in ${DOMAINS}; do
     if [ "${local_domain}" != "${remote_domain}" ]; then
-      wait_reference "${local_domain}" "${remote_domain}" 1
+      wait_reference "${local_domain}" "${remote_domain}" "${CHECKPOINT_HEIGHT}"
     fi
   done
 done
 
-echo "Five-chain cross-reference experiment passed."
+echo "${ACTUAL_CHAIN_COUNT}-chain cross-reference experiment passed."

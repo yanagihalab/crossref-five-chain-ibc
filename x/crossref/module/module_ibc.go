@@ -271,6 +271,11 @@ func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channel
 	if err := types.VerifyHysteresisSignature(sourceDomain, checkpoint); err != nil {
 		return nil, err
 	}
+	if existing, found, err := im.keeper.GetCrossReference(ctx, binding.LocalDomainId, data.SourceDomainId, data.SourceHeight); err != nil {
+		return nil, err
+	} else if found {
+		return nil, errorsmod.Wrapf(types.ErrReplayPacket, "local=%s remote=%s height=%d existing_hash=%X packet_hash=%X", binding.LocalDomainId, data.SourceDomainId, data.SourceHeight, existing.RemoteCheckpointHash, data.CheckpointHash)
+	}
 	if err := im.keeper.SetCheckpoint(ctx, checkpoint); err != nil {
 		return nil, err
 	}

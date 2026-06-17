@@ -125,6 +125,107 @@ func TestSubmitCheckpointRequiresHysteresisSignatureWhenDomainHasKey(t *testing.
 	}
 }
 
+func TestSubmitCheckpointVerifiesThresholdHysteresisSignature(t *testing.T) {
+	f := initFixture(t)
+	ms := keeper.NewMsgServerImpl(f.keeper)
+	creator, err := f.addressCodec.BytesToString(sdk.AccAddress(bytes.Repeat([]byte{1}, 20)))
+	if err != nil {
+		t.Fatalf("failed to encode creator: %v", err)
+	}
+	publicKey1, privateKey1, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey 1 failed: %v", err)
+	}
+	publicKey2, privateKey2, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey 2 failed: %v", err)
+	}
+	publicKey3, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey 3 failed: %v", err)
+	}
+	if err := f.keeper.SetDomain(f.ctx, types.DomainInfo{
+		DomainId:            "chain-a",
+		ChainId:             "crossref-a",
+		HysteresisPublicKey: types.EncodeThresholdHysteresisPublicKey(2, publicKey1, publicKey2, publicKey3),
+	}); err != nil {
+		t.Fatalf("SetDomain failed: %v", err)
+	}
+
+	checkpoint := types.Checkpoint{
+		DomainId:      "chain-a",
+		Height:        1,
+		BlockHash:     []byte("block-a-1"),
+		AppHash:       []byte("app-a-1"),
+		BlockTimeUnix: 1700000000,
+	}
+	checkpoint.CheckpointHash = types.ComputeCheckpointHash(checkpoint)
+	checkpoint.HysteresisSignature = types.EncodeThresholdHysteresisSignature(map[uint8][]byte{
+		0: ed25519.Sign(privateKey1, types.HysteresisSignBytes(checkpoint)),
+		1: ed25519.Sign(privateKey2, types.HysteresisSignBytes(checkpoint)),
+	})
+
+	if _, err := ms.SubmitCheckpoint(f.ctx, &types.MsgSubmitCheckpoint{
+		Creator:             creator,
+		DomainId:            checkpoint.DomainId,
+		Height:              checkpoint.Height,
+		BlockHash:           checkpoint.BlockHash,
+		AppHash:             checkpoint.AppHash,
+		CheckpointHash:      checkpoint.CheckpointHash,
+		HysteresisSignature: checkpoint.HysteresisSignature,
+		BlockTimeUnix:       checkpoint.BlockTimeUnix,
+	}); err != nil {
+		t.Fatalf("SubmitCheckpoint returned error: %v", err)
+	}
+}
+
+func TestRegisterDomainRotatesHysteresisKey(t *testing.T) {
+	f := initFixture(t)
+	ms := keeper.NewMsgServerImpl(f.keeper)
+	creator, err := f.addressCodec.BytesToString(sdk.AccAddress(bytes.Repeat([]byte{1}, 20)))
+	if err != nil {
+		t.Fatalf("failed to encode creator: %v", err)
+	}
+	oldKey, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey old failed: %v", err)
+	}
+	newKey, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey new failed: %v", err)
+	}
+	if _, err := ms.RegisterDomain(f.ctx, &types.MsgRegisterDomain{
+		Creator:             creator,
+		DomainId:            "chain-a",
+		ChainId:             "crossref-a",
+		MetadataUri:         "ipfs://old",
+		HysteresisPublicKey: oldKey,
+	}); err != nil {
+		t.Fatalf("initial RegisterDomain returned error: %v", err)
+	}
+	if _, err := ms.RegisterDomain(f.ctx, &types.MsgRegisterDomain{
+		Creator:             creator,
+		DomainId:            "chain-a",
+		ChainId:             "crossref-a",
+		HysteresisPublicKey: newKey,
+	}); err != nil {
+		t.Fatalf("rotation RegisterDomain returned error: %v", err)
+	}
+	domain, found, err := f.keeper.GetDomain(f.ctx, "chain-a")
+	if err != nil {
+		t.Fatalf("GetDomain returned error: %v", err)
+	}
+	if !found {
+		t.Fatal("domain not found")
+	}
+	if !bytes.Equal(domain.HysteresisPublicKey, newKey) {
+		t.Fatalf("hysteresis key was not rotated")
+	}
+	if domain.MetadataUri != "ipfs://old" {
+		t.Fatalf("metadata should be preserved when omitted: %s", domain.MetadataUri)
+	}
+}
+
 func TestSendCrossReferencePacketRejectsUnboundSourceDomain(t *testing.T) {
 	f := initFixture(t)
 	ms := keeper.NewMsgServerImpl(f.keeper)

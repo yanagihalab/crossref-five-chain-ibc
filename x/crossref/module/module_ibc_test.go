@@ -219,6 +219,32 @@ func TestReceiveCrossReferencePacketRequiresHysteresisSignatureWhenDomainHasKey(
 	}
 }
 
+func TestReceiveCrossReferencePacketRejectsReplay(t *testing.T) {
+	f := initIBCFixture(t)
+	requireIBCBinding(t, f)
+	packet := validCrossReferencePacket()
+
+	if _, err := f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet); err != nil {
+		t.Fatalf("initial receiveCrossReferencePacket returned error: %v", err)
+	}
+	_, err := f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet)
+	if !errorsmod.IsOf(err, types.ErrReplayPacket) {
+		t.Fatalf("expected ErrReplayPacket, got %v", err)
+	}
+}
+
+func TestReceiveCrossReferencePacketRejectsStaleCheckpointProof(t *testing.T) {
+	f := initIBCFixture(t)
+	f.ctx = f.ctx.WithBlockHeight(20050)
+	requireIBCBinding(t, f)
+	packet := validCrossReferencePacket()
+
+	_, err := f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet)
+	if !errorsmod.IsOf(err, types.ErrCheckpointProofStale) {
+		t.Fatalf("expected ErrCheckpointProofStale, got %v", err)
+	}
+}
+
 func requireIBCBinding(t *testing.T, f *ibcFixture) {
 	t.Helper()
 

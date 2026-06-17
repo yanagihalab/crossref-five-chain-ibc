@@ -11,9 +11,15 @@ import (
 	"github.com/crossref/crossrefd/x/crossref/types"
 )
 
+const maxCheckpointProofLag = uint64(10000)
+
 func (k Keeper) VerifySourceCheckpointProof(ctx context.Context, binding types.DomainChannel, checkpoint types.Checkpoint, proof []byte, revisionNumber, revisionHeight uint64) error {
 	if len(proof) == 0 || revisionHeight == 0 {
 		return errorsmod.Wrap(types.ErrCheckpointProofRequired, "source_checkpoint_proof and source_proof_revision_height are required")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if currentHeight := uint64(sdkCtx.BlockHeight()); currentHeight > revisionHeight+maxCheckpointProofLag {
+		return errorsmod.Wrapf(types.ErrCheckpointProofStale, "current_height=%d proof_height=%d max_lag=%d", currentHeight, revisionHeight, maxCheckpointProofLag)
 	}
 
 	key, err := types.CheckpointStorageKey(checkpoint.DomainId, checkpoint.Height)
@@ -26,7 +32,6 @@ func (k Keeper) VerifySourceCheckpointProof(ctx context.Context, binding types.D
 	}
 	path := commitmenttypes.NewMerklePath([]byte(types.StoreKey), key)
 	height := clienttypes.NewHeight(revisionNumber, revisionHeight)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	clientID, err := k.sourceClientID(sdkCtx, binding)
 	if err != nil {

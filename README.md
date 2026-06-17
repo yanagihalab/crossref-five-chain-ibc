@@ -11,6 +11,8 @@ Japanese documentation is available in [README.ja.md](README.ja.md).
 - `app`: application wiring for the `crossrefd` chain.
 - `docker`: five isolated `crossrefd` chains plus one Hermes relayer.
 - `docker/scripts/run-crossref-experiment.sh`: end-to-end experiment that opens a five-chain full mesh, submits checkpoints, collects ICS23 proofs, broadcasts packets, and verifies received cross-references.
+- `docker/scripts/generate-topology.mjs`: generator for `N` chains and `M` relayer workers, including per-worker Hermes packet filters.
+- `docker/scripts/run-matrix-test.sh`: static matrix test for 3-chain, 5-chain, and arbitrary `N/M` generated topologies.
 
 ## Architecture
 
@@ -55,6 +57,8 @@ Domains without `hysteresis_public_key` are still accepted for local experiments
 
 The five-chain Docker experiment registers these keys for all domains and sends
 signed checkpoints, so the end-to-end IBC path exercises signature verification.
+
+The module also supports an experimental threshold signature encoding in the existing `hysteresis_public_key` and `hysteresis_signature` byte fields. This keeps the wire format compatible while allowing `t-of-n` Ed25519 verification. `RegisterDomain` may be called again with the same `domain_id` and `chain_id` to rotate the hysteresis key. Receivers also reject replayed cross-reference records and stale checkpoint proofs.
 
 ## Requirements
 
@@ -104,6 +108,13 @@ Run the visualizer smoke test from the repository root:
 node visualizer/verify-visualizer.mjs
 ```
 
+Generate visualizer JSON from an experiment log:
+
+```bash
+docker/scripts/run-crossref-experiment.sh | tee /tmp/crossref-experiment.log
+node visualizer/generate-from-log.mjs /tmp/crossref-experiment.log visualizer/test-results.json
+```
+
 ## Useful Commands
 
 Run Go tests:
@@ -130,6 +141,19 @@ Start the same network with multiple relayer workers:
 docker compose -f docker/docker-compose.yml up -d --build --scale relayer=3
 ```
 
+Generate an arbitrary topology with route assignment across relayer workers:
+
+```bash
+node docker/scripts/generate-topology.mjs 6 4
+docker compose -f docker/generated/docker-compose-6c-4r.yml config --quiet
+```
+
+Run the topology matrix smoke test:
+
+```bash
+RUN_DOCKER_MATRIX=0 MATRIX="3:2 5:3 6:4" docker/scripts/run-matrix-test.sh
+```
+
 Run the full experiment:
 
 ```bash
@@ -154,4 +178,4 @@ docker compose -f docker/docker-compose.yml down -v
 
 ## Current Prototype Scope
 
-This repository is an experimental implementation. It is intended for local verification of the cross-reference design, IBC application behavior, proof validation, and multi-chain routing. Production hardening still needs additional work around operational key management, chain upgrade policy, full threat modeling, relayer operations, and a stricter hysteresis signature format if the exact paper definition `H(S_n-1)` must be represented separately from the checkpoint hash.
+This repository is an experimental implementation. It is intended for local verification of the cross-reference design, IBC application behavior, proof validation, and multi-chain routing. The current hardening layer covers ICS23 proof membership, proof freshness, replay rejection, key rotation, and experimental threshold signatures. Production work still needs operational key management, chain upgrade policy, full threat modeling, relayer operations, and a stricter hysteresis signature format if the exact paper definition `H(S_n-1)` must be represented separately from the checkpoint hash.

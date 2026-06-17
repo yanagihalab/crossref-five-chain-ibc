@@ -24,4 +24,6 @@ var (
 	ErrCheckpointProofInvalid      = errors.Register(ModuleName, 1512, "checkpoint membership proof is invalid")
 	ErrHysteresisSignatureRequired = errors.Register(ModuleName, 1513, "hysteresis signature is required")
 	ErrHysteresisSignatureInvalid  = errors.Register(ModuleName, 1514, "hysteresis signature is invalid")
+	ErrReplayPacket                = errors.Register(ModuleName, 1515, "cross-reference packet replay detected")
+	ErrCheckpointProofStale        = errors.Register(ModuleName, 1516, "checkpoint membership proof is stale")
 )

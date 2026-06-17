@@ -11,6 +11,8 @@ Crossref Five-Chain IBC は、Cosmos SDK を使って cross-reference blockchain
 - `app`: `crossrefd` chain への module wiring。
 - `docker`: 5 本の独立した `crossrefd` chain と 1 つの Hermes relayer。
 - `docker/scripts/run-crossref-experiment.sh`: 5 チェーン full mesh の channel 作成確認、checkpoint 登録、ICS23 proof 取得、packet broadcast、cross-reference 保存確認まで行う end-to-end 実験スクリプト。
+- `docker/scripts/generate-topology.mjs`: `N` チェーンと `M` relayer worker の topology、worker 別 Hermes packet filter を生成するスクリプトである。
+- `docker/scripts/run-matrix-test.sh`: 3 チェーン、5 チェーン、任意 `N/M` topology の静的 matrix test を行うスクリプトである。
 
 ## アーキテクチャ
 
@@ -54,6 +56,8 @@ domain は Ed25519 の `hysteresis_public_key` を登録できる。
 `hysteresis_public_key` が未登録の domain は、ローカル実験と移行互換性のため従来通り受け入れる。
 
 5 チェーン Docker 実験では全 domain にこの key を登録し、署名付き checkpoint を送信するため、end-to-end の IBC 経路で署名検証が実際に実行される。
+
+また、既存の `hysteresis_public_key` と `hysteresis_signature` の byte field を用いた実験的 threshold signature encoding を実装している。これにより wire format を変えずに `t-of-n` Ed25519 検証を行える。`RegisterDomain` は同じ `domain_id` と `chain_id` で再実行することで hysteresis key rotation として扱われる。受信側では replay packet と stale checkpoint proof も拒否する。
 
 ## 必要なもの
 
@@ -102,6 +106,13 @@ repository root から smoke test を実行できる。
 node visualizer/verify-visualizer.mjs
 ```
 
+実験ログから visualizer JSON を生成する:
+
+```bash
+docker/scripts/run-crossref-experiment.sh | tee /tmp/crossref-experiment.log
+node visualizer/generate-from-log.mjs /tmp/crossref-experiment.log visualizer/test-results.json
+```
+
 ## よく使うコマンド
 
 Go test を実行する:
@@ -128,6 +139,19 @@ docker compose -f docker/docker-compose.yml up -d --build
 docker compose -f docker/docker-compose.yml up -d --build --scale relayer=3
 ```
 
+任意 topology を生成し、route を relayer worker に分配する:
+
+```bash
+node docker/scripts/generate-topology.mjs 6 4
+docker compose -f docker/generated/docker-compose-6c-4r.yml config --quiet
+```
+
+topology matrix smoke test を実行する:
+
+```bash
+RUN_DOCKER_MATRIX=0 MATRIX="3:2 5:3 6:4" docker/scripts/run-matrix-test.sh
+```
+
 full experiment を実行する:
 
 ```bash
@@ -152,4 +176,4 @@ docker compose -f docker/docker-compose.yml down -v
 
 ## 現在のプロトタイプ範囲
 
-このリポジトリは実験実装である。cross-reference design、IBC application の動作、proof validation、multi-chain routing をローカルで検証することを目的としている。実運用に向けては、key management、chain upgrade policy、詳細な threat model、relayer operation、論文定義の `H(S_n-1)` を checkpoint hash から独立した形式で扱う厳密な hysteresis signature format などの追加検討が必要である。
+このリポジトリは実験実装である。cross-reference design、IBC application の動作、proof validation、multi-chain routing をローカルで検証することを目的としている。現在の hardening layer は ICS23 proof membership、proof freshness、replay rejection、key rotation、実験的 threshold signature を含む。実運用に向けては、key management、chain upgrade policy、詳細な threat model、relayer operation、論文定義の `H(S_n-1)` を checkpoint hash から独立した形式で扱う厳密な hysteresis signature format などの追加検討が必要である。

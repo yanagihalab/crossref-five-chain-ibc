@@ -19,10 +19,19 @@ func (k msgServer) RegisterDomain(ctx context.Context, req *types.MsgRegisterDom
 	if req.DomainId == "" || req.ChainId == "" {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "domain_id and chain_id are required")
 	}
-	if _, found, err := k.GetDomain(ctx, req.DomainId); err != nil {
+	if existing, found, err := k.GetDomain(ctx, req.DomainId); err != nil {
 		return nil, err
 	} else if found {
-		return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "domain already registered: %s", req.DomainId)
+		if existing.ChainId != req.ChainId {
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "domain already registered with different chain_id: %s", req.DomainId)
+		}
+		return &types.MsgRegisterDomainResponse{}, k.SetDomain(ctx, types.DomainInfo{
+			DomainId:            req.DomainId,
+			ChainId:             req.ChainId,
+			ValidatorSetHash:    firstNonEmptyBytes(req.ValidatorSetHash, existing.ValidatorSetHash),
+			MetadataUri:         firstNonEmptyString(req.MetadataUri, existing.MetadataUri),
+			HysteresisPublicKey: firstNonEmptyBytes(req.HysteresisPublicKey, existing.HysteresisPublicKey),
+		})
 	}
 
 	return &types.MsgRegisterDomainResponse{}, k.SetDomain(ctx, types.DomainInfo{
@@ -32,6 +41,20 @@ func (k msgServer) RegisterDomain(ctx context.Context, req *types.MsgRegisterDom
 		MetadataUri:         req.MetadataUri,
 		HysteresisPublicKey: req.HysteresisPublicKey,
 	})
+}
+
+func firstNonEmptyString(next, current string) string {
+	if next != "" {
+		return next
+	}
+	return current
+}
+
+func firstNonEmptyBytes(next, current []byte) []byte {
+	if len(next) != 0 {
+		return next
+	}
+	return current
 }
 
 func (k msgServer) BindDomainChannel(ctx context.Context, req *types.MsgBindDomainChannel) (*types.MsgBindDomainChannelResponse, error) {

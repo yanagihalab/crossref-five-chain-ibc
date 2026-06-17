@@ -5,6 +5,8 @@ CONFIG="${HERMES_CONFIG:-/root/.hermes/config.toml}"
 RELAYER_MODE="${RELAYER_MODE:-init-and-start}"
 RELAYER_MNEMONIC="${RELAYER_MNEMONIC:?RELAYER_MNEMONIC is required}"
 MNEMONIC_FILE="/tmp/crossref-relayer-mnemonic"
+CHAIN_IDS="${CROSSREF_CHAIN_IDS:-crossref-a crossref-b crossref-c crossref-d crossref-e}"
+CHANNEL_PAIRS="${CROSSREF_CHANNEL_PAIRS:-crossref-a:crossref-b crossref-a:crossref-c crossref-a:crossref-d crossref-a:crossref-e crossref-b:crossref-c crossref-b:crossref-d crossref-b:crossref-e crossref-c:crossref-d crossref-c:crossref-e crossref-d:crossref-e}"
 
 printf '%s\n' "${RELAYER_MNEMONIC}" > "${MNEMONIC_FILE}"
 
@@ -17,11 +19,9 @@ done
 echo "Waiting for first blocks to settle..."
 sleep "${FIRST_BLOCK_DELAY_SECONDS:-10}"
 
-hermes --config "${CONFIG}" keys add --chain crossref-a --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
-hermes --config "${CONFIG}" keys add --chain crossref-b --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
-hermes --config "${CONFIG}" keys add --chain crossref-c --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
-hermes --config "${CONFIG}" keys add --chain crossref-d --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
-hermes --config "${CONFIG}" keys add --chain crossref-e --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
+for chain_id in ${CHAIN_IDS}; do
+  hermes --config "${CONFIG}" keys add --chain "${chain_id}" --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
+done
 
 if [ "${RELAYER_MODE}" = "start" ]; then
   echo "Starting Hermes relayer worker..."
@@ -42,16 +42,9 @@ create_crossref_channel() {
     --yes || true
 }
 
-create_crossref_channel crossref-a crossref-b
-create_crossref_channel crossref-a crossref-c
-create_crossref_channel crossref-a crossref-d
-create_crossref_channel crossref-a crossref-e
-create_crossref_channel crossref-b crossref-c
-create_crossref_channel crossref-b crossref-d
-create_crossref_channel crossref-b crossref-e
-create_crossref_channel crossref-c crossref-d
-create_crossref_channel crossref-c crossref-e
-create_crossref_channel crossref-d crossref-e
+for pair in ${CHANNEL_PAIRS}; do
+  create_crossref_channel "${pair%%:*}" "${pair##*:}"
+done
 
 if [ "${RELAYER_MODE}" = "init" ]; then
   echo "IBC channel initialization complete."

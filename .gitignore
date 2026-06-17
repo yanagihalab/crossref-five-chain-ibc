@@ -2,6 +2,7 @@ vue/node_modules
 vue/dist
 release/
 build/
+docker/generated/
 crossrefdd
 .tmp-home/
 .gocache/

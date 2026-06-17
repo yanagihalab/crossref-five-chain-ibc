@@ -1,7 +1,8 @@
 # Crossref Five-Chain Docker Experiment
 
-This directory starts five isolated `crossrefd` chains and one Hermes relayer.
-Hermes opens a full mesh of `crossref` IBC channels between:
+This directory starts five isolated `crossrefd` chains, one Hermes
+initialization container, and one or more Hermes relayer workers. The init
+container opens a full mesh of `crossref` IBC channels between:
 
 - `chain-a <-> chain-b`
 - `chain-a <-> chain-c`
@@ -31,15 +32,16 @@ cross-reference paths.
 At a high level, the experiment does the following:
 
 1. Start five independent single-validator chains.
-2. Start one Hermes relayer container.
+2. Start one Hermes init container.
 3. Create a full mesh of `crossref/crossref` IBC channels.
-4. Register every domain on every chain.
-5. Bind each directed domain pair to its local IBC channel.
-6. Submit one checkpoint per source chain.
-7. Export source-chain checkpoint proofs as ICS23 proofs.
-8. Update destination light clients to the proof heights.
-9. Broadcast each checkpoint to the other four chains.
-10. Query destination chains to confirm the received cross-references.
+4. Start one or more Hermes relayer worker containers.
+5. Register every domain on every chain.
+6. Bind each directed domain pair to its local IBC channel.
+7. Submit one checkpoint per source chain.
+8. Export source-chain checkpoint proofs as ICS23 proofs.
+9. Update destination light clients to the proof heights.
+10. Broadcast each checkpoint to the other four chains.
+11. Query destination chains to confirm the received cross-references.
 
 ## Directed Route Numbers
 
@@ -83,14 +85,33 @@ Dockerfile or output path accordingly.
 
 ## Start
 
-Start all five chains and the relayer:
+Start all five chains and one relayer worker:
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d --build
 ```
 
-The relayer container runs `setup-ibc.sh`, which waits for all chains, imports
-Hermes keys, and creates the full mesh of `crossref` channels.
+The `relayer-init` container runs `setup-ibc.sh` in init mode, waits for all
+chains, imports Hermes keys, creates the full mesh of `crossref` channels, and
+then exits. The `relayer` service starts Hermes in worker mode after
+initialization has completed.
+
+Start with more relayer workers by scaling the `relayer` service:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build --scale relayer=3
+```
+
+Increase or decrease the worker count later:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --scale relayer=5
+docker compose -f docker/docker-compose.yml up -d --scale relayer=1
+```
+
+All worker containers use the same local experiment mnemonic. This is useful for
+local fan-out and failover testing, but production deployments should give each
+relayer its own funded key and operational policy.
 
 Check container status:
 
@@ -104,12 +125,26 @@ Watch relayer logs:
 docker compose -f docker/docker-compose.yml logs -f relayer
 ```
 
+Watch the channel initialization logs:
+
+```bash
+docker compose -f docker/docker-compose.yml logs relayer-init
+```
+
 ## Run the Experiment
 
 Run the end-to-end five-chain experiment:
 
 ```bash
 docker/scripts/run-crossref-experiment.sh
+```
+
+When multiple relayer workers are running, the experiment script sends manual
+Hermes `update client` commands through worker index `1` by default. Select a
+different worker with:
+
+```bash
+RELAYER_INDEX=2 docker/scripts/run-crossref-experiment.sh
 ```
 
 The script performs these checks:

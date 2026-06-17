@@ -2,6 +2,7 @@
 set -eu
 
 CONFIG="${HERMES_CONFIG:-/root/.hermes/config.toml}"
+RELAYER_MODE="${RELAYER_MODE:-init-and-start}"
 RELAYER_MNEMONIC="${RELAYER_MNEMONIC:?RELAYER_MNEMONIC is required}"
 MNEMONIC_FILE="/tmp/crossref-relayer-mnemonic"
 
@@ -21,6 +22,11 @@ hermes --config "${CONFIG}" keys add --chain crossref-b --key-name relayer --mne
 hermes --config "${CONFIG}" keys add --chain crossref-c --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
 hermes --config "${CONFIG}" keys add --chain crossref-d --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
 hermes --config "${CONFIG}" keys add --chain crossref-e --key-name relayer --mnemonic-file "${MNEMONIC_FILE}" || true
+
+if [ "${RELAYER_MODE}" = "start" ]; then
+  echo "Starting Hermes relayer worker..."
+  exec hermes --config "${CONFIG}" start
+fi
 
 create_crossref_channel() {
   a_chain="$1"
@@ -46,5 +52,10 @@ create_crossref_channel crossref-b crossref-e
 create_crossref_channel crossref-c crossref-d
 create_crossref_channel crossref-c crossref-e
 create_crossref_channel crossref-d crossref-e
+
+if [ "${RELAYER_MODE}" = "init" ]; then
+  echo "IBC channel initialization complete."
+  exit 0
+fi
 
 exec hermes --config "${CONFIG}" start

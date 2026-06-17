@@ -124,6 +124,12 @@ Start the five-chain Docker network:
 docker compose -f docker/docker-compose.yml up -d --build
 ```
 
+Start the same network with multiple relayer workers:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build --scale relayer=3
+```
+
 Run the full experiment:
 
 ```bash

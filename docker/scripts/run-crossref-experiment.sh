@@ -2,6 +2,8 @@
 set -euo pipefail
 
 COMPOSE_FILE="${COMPOSE_FILE:-docker/docker-compose.yml}"
+RELAYER_SERVICE="${RELAYER_SERVICE:-relayer}"
+RELAYER_INDEX="${RELAYER_INDEX:-1}"
 DENOM="${DENOM:-stake}"
 CHAIN_A_ID="${CHAIN_A_ID:-crossref-a}"
 CHAIN_B_ID="${CHAIN_B_ID:-crossref-b}"
@@ -35,7 +37,7 @@ chain_e() {
 }
 
 relayer() {
-  dc exec -T relayer hermes "$@"
+  dc exec -T --index "${RELAYER_INDEX}" "${RELAYER_SERVICE}" hermes "$@"
 }
 
 chain_id() {

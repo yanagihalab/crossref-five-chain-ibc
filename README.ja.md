@@ -122,6 +122,12 @@ make proto-gen
 docker compose -f docker/docker-compose.yml up -d --build
 ```
 
+複数の relayer worker を起動する:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build --scale relayer=3
+```
+
 full experiment を実行する:
 
 ```bash

@@ -119,9 +119,9 @@ services:
       timeout: 3s
       retries: 30
 
-  relayer:
+  relayer-init:
     image: ghcr.io/informalsystems/hermes:1.10.5
-    container_name: crossref-hermes
+    container_name: crossref-hermes-init
     user: root
     depends_on:
       chain-a:
@@ -137,11 +137,26 @@ services:
     environment:
       RELAYER_MNEMONIC: "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit"
       HERMES_CONFIG: /root/.hermes/config.toml
+      RELAYER_MODE: init
     entrypoint: ["/bin/sh", "/opt/crossref/scripts/setup-ibc.sh"]
     volumes:
       - ./hermes/config.toml:/root/.hermes/config.toml:ro
       - ./scripts:/opt/crossref/scripts:ro
-      - hermes-keys:/root/.hermes/keys
+
+  relayer:
+    image: ghcr.io/informalsystems/hermes:1.10.5
+    user: root
+    depends_on:
+      relayer-init:
+        condition: service_completed_successfully
+    environment:
+      RELAYER_MNEMONIC: "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit"
+      HERMES_CONFIG: /root/.hermes/config.toml
+      RELAYER_MODE: start
+    entrypoint: ["/bin/sh", "/opt/crossref/scripts/setup-ibc.sh"]
+    volumes:
+      - ./hermes/config.toml:/root/.hermes/config.toml:ro
+      - ./scripts:/opt/crossref/scripts:ro
 
 volumes:
   chain-a-data:
@@ -149,4 +164,3 @@ volumes:
   chain-c-data:
   chain-d-data:
   chain-e-data:
-  hermes-keys:

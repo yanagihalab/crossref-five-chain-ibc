@@ -3,8 +3,6 @@ module github.com/crossref/crossrefd
 go 1.25.10
 
 replace (
-	// cosmossdk.io/x/tx tests still import the removed group generated API package.
-	cosmossdk.io/api/cosmos/group => ./internal/compat/cosmos-api-group
 	// support for go 1.26 (remove when cosmossdk.io/log is updated)
 	github.com/bytedance/sonic => github.com/bytedance/sonic v1.15.0
 	// fix upstream GHSA-h395-qcrw-5vmq vulnerability.
@@ -17,7 +15,6 @@ replace (
 
 require (
 	cosmossdk.io/api v1.0.0
-	cosmossdk.io/client/v2 v2.0.0-beta.11
 	cosmossdk.io/collections v1.4.0
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/depinject v1.2.1
@@ -72,9 +69,7 @@ require (
 	cloud.google.com/go/storage v1.62.1 // indirect
 	connectrpc.com/connect v1.20.0 // indirect
 	connectrpc.com/otelconnect v0.9.0 // indirect
-	cosmossdk.io/api/cosmos/group v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/x/tx v0.14.0 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/4meepo/tagalign v1.4.2 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

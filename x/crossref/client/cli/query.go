@@ -37,8 +37,113 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdCheckpointProof())
+	cmd.AddCommand(
+		CmdDomain(),
+		CmdCheckpoint(),
+		CmdLatestCheckpoint(),
+		CmdCrossReference(),
+		CmdCheckpointProof(),
+	)
 
+	return cmd
+}
+
+func CmdDomain() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "domain [domain-id]",
+		Short: "Shows a registered crossref domain",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			res, err := types.NewQueryClient(clientCtx).Domain(cmd.Context(), &types.QueryDomainRequest{DomainId: args[0]})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdCheckpoint() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "checkpoint [domain-id] [checkpoint-height]",
+		Short: "Shows a checkpoint by domain and height",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			height, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid checkpoint height: %w", err)
+			}
+			res, err := types.NewQueryClient(clientCtx).Checkpoint(cmd.Context(), &types.QueryCheckpointRequest{
+				DomainId: args[0],
+				Height:   height,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdLatestCheckpoint() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "latest-checkpoint [domain-id]",
+		Short: "Shows the latest checkpoint for a domain",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			res, err := types.NewQueryClient(clientCtx).LatestCheckpoint(cmd.Context(), &types.QueryLatestCheckpointRequest{DomainId: args[0]})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdCrossReference() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cross-reference [local-domain-id] [remote-domain-id] [remote-height]",
+		Short: "Shows an accepted cross-reference",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			height, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid remote height: %w", err)
+			}
+			res, err := types.NewQueryClient(clientCtx).CrossReference(cmd.Context(), &types.QueryCrossReferenceRequest{
+				LocalDomainId:  args[0],
+				RemoteDomainId: args[1],
+				RemoteHeight:   height,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 

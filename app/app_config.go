@@ -117,6 +117,7 @@ var (
 						crossrefmoduletypes.ModuleName},
 					EndBlockers: []string{
 						govtypes.ModuleName,
+						banktypes.ModuleName,
 						stakingtypes.ModuleName,
 						feegrant.ModuleName,
 						// chain modules

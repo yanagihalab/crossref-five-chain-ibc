@@ -3,9 +3,8 @@ package cmd
 import (
 	"os"
 
-	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	log "cosmossdk.io/log/v2"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,7 +22,6 @@ import (
 // NewRootCmd creates a new root command for crossrefdd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
-		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
 		clientCtx          client.Context
 	)
@@ -35,7 +33,6 @@ func NewRootCmd() *cobra.Command {
 				ProvideClientContext,
 			),
 		),
-		&autoCliOpts,
 		&moduleBasicManager,
 		&clientCtx,
 	); err != nil {
@@ -79,14 +76,9 @@ func NewRootCmd() *cobra.Command {
 	ibcModules := app.RegisterIBC(clientCtx.Codec)
 	for name, mod := range ibcModules {
 		moduleBasicManager[name] = module.CoreAppModuleBasicAdaptor(name, mod)
-		autoCliOpts.Modules[name] = mod
 	}
 
 	initRootCmd(rootCmd, clientCtx.TxConfig, moduleBasicManager)
-
-	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
-		panic(err)
-	}
 
 	return rootCmd
 }

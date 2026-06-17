@@ -147,8 +147,8 @@ function composeOverride(stem, suffix, workers) {
   for (const worker of workers) {
     lines.push(`  relayer-${worker}:`);
     lines.push("    volumes:");
-    lines.push(`      - ./generated/hermes-${stem}-${suffix}-worker-${worker}.toml:/root/.hermes/config.toml:ro`);
-    lines.push("      - ./scripts:/opt/crossref/scripts:ro");
+    lines.push(`      - ./hermes-${stem}-${suffix}-worker-${worker}.toml:/root/.hermes/config.toml:ro`);
+    lines.push("      - ../scripts:/opt/crossref/scripts:ro");
   }
   return `${lines.join("\n")}\n`;
 }

@@ -5,6 +5,7 @@ import path from "node:path";
 const root = process.cwd();
 const chainCount = positiveInt(process.env.CHAIN_COUNT ?? process.argv[2] ?? "5", "CHAIN_COUNT");
 const relayerCount = positiveInt(process.env.RELAYER_COUNT ?? process.argv[3] ?? "1", "RELAYER_COUNT");
+const hostPortOffset = nonNegativeInt(process.env.HOST_PORT_OFFSET ?? "0", "HOST_PORT_OFFSET");
 const outDir = path.join(root, "docker", "generated");
 
 if (chainCount < 2) {
@@ -26,9 +27,9 @@ const chains = Array.from({ length: chainCount }, (_, index) => {
     service: `chain-${suffix}`,
     domain: `chain-${suffix}`,
     chainId: `crossref-${suffix}`,
-    rpcPort: 26657 + index * 10,
-    grpcPort: 9090 + index,
-    apiPort: 1317 + index,
+    rpcPort: 26657 + index * 10 + hostPortOffset,
+    grpcPort: 9090 + index + hostPortOffset,
+    apiPort: 1317 + index + hostPortOffset,
   };
 });
 
@@ -81,6 +82,7 @@ console.log(JSON.stringify({
   chainCount,
   relayerCount,
   routeCount: routes.length,
+  hostPortOffset,
 }, null, 2));
 
 function route(from, to, fromChannel, toChannel, index, relayerCount) {
@@ -176,9 +178,9 @@ function compose(topology, stem) {
   for (const chain of topology.chains) {
     lines.push(`  ${chain.service}:`);
     lines.push("    build:");
-    lines.push("      context: ..");
+    lines.push("      context: ../..");
     lines.push("      dockerfile: docker/crossrefd.Dockerfile");
-    lines.push(`    container_name: crossref-${chain.service}`);
+    lines.push(`    container_name: crossref-${stem}-${chain.service}`);
     lines.push("    environment:");
     lines.push(`      CHAIN_ID: ${chain.chainId}`);
     lines.push(`      MONIKER: ${chain.service}`);
@@ -216,8 +218,8 @@ function compose(topology, stem) {
   lines.push(`      CROSSREF_CHANNEL_PAIRS: "${topology.channelPairs.join(" ")}"`);
   lines.push('    entrypoint: ["/bin/sh", "/opt/crossref/scripts/setup-ibc.sh"]');
   lines.push("    volumes:");
-  lines.push(`      - ./generated/hermes-${stem}.toml:/root/.hermes/config.toml:ro`);
-  lines.push("      - ./scripts:/opt/crossref/scripts:ro");
+  lines.push(`      - ./hermes-${stem}.toml:/root/.hermes/config.toml:ro`);
+  lines.push("      - ../scripts:/opt/crossref/scripts:ro");
   lines.push("");
   for (let worker = 1; worker <= topology.relayerCount; worker++) {
     lines.push(`  relayer-${worker}:`);
@@ -235,8 +237,8 @@ function compose(topology, stem) {
     lines.push(`      CROSSREF_CHAIN_IDS: "${topology.chains.map((c) => c.chainId).join(" ")}"`);
     lines.push('    entrypoint: ["/bin/sh", "/opt/crossref/scripts/setup-ibc.sh"]');
     lines.push("    volumes:");
-    lines.push(`      - ./generated/hermes-${stem}-worker-${worker}.toml:/root/.hermes/config.toml:ro`);
-    lines.push("      - ./scripts:/opt/crossref/scripts:ro");
+    lines.push(`      - ./hermes-${stem}-worker-${worker}.toml:/root/.hermes/config.toml:ro`);
+    lines.push("      - ../scripts:/opt/crossref/scripts:ro");
     lines.push("");
   }
   lines.push("volumes:");
@@ -256,6 +258,14 @@ function positiveInt(value, name) {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
     throw new Error(`${name} must be a positive integer`);
+  }
+  return parsed;
+}
+
+function nonNegativeInt(value, name) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${name} must be a non-negative integer`);
   }
   return parsed;
 }

@@ -232,7 +232,8 @@ hysteresis_json() {
   previous_hash="${5:-}"
   cache_dir="${TMPDIR:-/tmp}/crossref-hysteresis-${ACTUAL_CHAIN_COUNT}c"
   mkdir -p "${cache_dir}"
-  cache_file="${cache_dir}/${domain}-${height}-${block_hash}-${app_hash}-${previous_hash:-genesis}-${BLOCK_TIME_UNIX}.json"
+  cache_key="$(printf '%s-%s-%s-%s-%s-%s' "${domain}" "${height}" "${block_hash}" "${app_hash}" "${previous_hash:-genesis}" "${BLOCK_TIME_UNIX}" | tr -c 'A-Za-z0-9_.=-' '_')"
+  cache_file="${cache_dir}/${cache_key}.json"
   if [ ! -f "${cache_file}" ]; then
     go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "$(hysteresis_seed "${domain}")" "${previous_hash}" >"${cache_file}"
   fi
@@ -355,11 +356,11 @@ for domain in ${DOMAINS}; do
   app_hash="$(app_hash_for_domain "${domain}")"
   previous_hash="$(previous_checkpoint_hash "${domain}" "${CHECKPOINT_HEIGHT}")"
   signature="$(hysteresis_signature "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" "${previous_hash}")"
-  previous_args=()
   if [ -n "${previous_hash}" ]; then
-    previous_args=(--previous-checkpoint-hash "${previous_hash}")
+    run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" --previous-checkpoint-hash "${previous_hash}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+  else
+    run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
   fi
-  run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" "${previous_args[@]}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
 done
 
 echo "Collecting checkpoint ICS23 proofs from source chains..."

@@ -39,7 +39,7 @@ docker compose -f "${compose_file}" stop "relayer-${FAILED_WORKER}"
 
 echo "Applying failover Hermes configs to active workers..."
 for worker in $(node -e 'const fs=require("fs"); const t=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log((t.activeRelayerWorkers||[]).join(" "))' "${failover_topology}"); do
-  docker compose -f "${compose_file}" -f "${failover_override}" up -d --force-recreate "relayer-${worker}"
+  docker compose -f "${compose_file}" -f "${failover_override}" up -d --no-deps --force-recreate "relayer-${worker}"
 done
 
 cat <<EOF

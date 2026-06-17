@@ -224,6 +224,15 @@ Run the Docker-backed failover flow:
 RUN_DOCKER_FAILOVER=1 FAILED_WORKER=1 CHAIN_COUNT=5 RELAYER_COUNT=3 docker/scripts/run-relayer-failover-test.sh
 ```
 
+If another experiment is already using the default host ports, offset generated
+host ports without changing in-container chain addresses:
+
+```bash
+HOST_PORT_OFFSET=1000 RUN_DOCKER_FAILOVER=1 \
+  FAILED_WORKER=1 CHAIN_COUNT=3 RELAYER_COUNT=2 \
+  docker/scripts/run-relayer-failover-test.sh
+```
+
 After a worker stop and rebalance, run the next checkpoint height against the
 failover topology:
 
@@ -233,6 +242,9 @@ TOPOLOGY_FILE=docker/generated/topology-5c-3r-failover-1.json \
 CHECKPOINT_HEIGHT=2 \
 docker/scripts/run-crossref-experiment.sh
 ```
+
+The failover helper recreates active workers with `--no-deps` so that the
+already completed `relayer-init` channel setup is not re-run.
 
 When multiple relayer workers are running, the experiment script sends manual
 Hermes `update client` commands through worker index `1` by default. Select a

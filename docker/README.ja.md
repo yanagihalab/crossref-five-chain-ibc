@@ -203,6 +203,14 @@ Docker を使った failover flow を実行する:
 RUN_DOCKER_FAILOVER=1 FAILED_WORKER=1 CHAIN_COUNT=5 RELAYER_COUNT=3 docker/scripts/run-relayer-failover-test.sh
 ```
 
+別の実験が default host port を使用している場合は、container 内の chain address は変えずに、生成される host port だけを offset できる。
+
+```bash
+HOST_PORT_OFFSET=1000 RUN_DOCKER_FAILOVER=1 \
+  FAILED_WORKER=1 CHAIN_COUNT=3 RELAYER_COUNT=2 \
+  docker/scripts/run-relayer-failover-test.sh
+```
+
 worker 停止と rebalance 後は、failover topology に対して次の checkpoint height を実行する。
 
 ```bash
@@ -211,6 +219,8 @@ TOPOLOGY_FILE=docker/generated/topology-5c-3r-failover-1.json \
 CHECKPOINT_HEIGHT=2 \
 docker/scripts/run-crossref-experiment.sh
 ```
+
+failover helper は active worker を `--no-deps` 付きで再作成するため、完了済みの `relayer-init` channel setup は再実行されない。
 
 複数の relayer worker が起動している場合、実験スクリプトは手動の Hermes `update client` command を worker index `1` に送る。別の worker を使う場合は次のように指定する。
 

@@ -9,8 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	channeltypes "github.com/cosmos/ibc-go/v11/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v11/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v11/modules/core/exported"
 	"github.com/crossref/crossrefd/x/crossref/keeper"
 	"github.com/crossref/crossrefd/x/crossref/types"
 )
@@ -28,6 +29,9 @@ func NewIBCModule(cdc codec.Codec, k keeper.Keeper) IBCModule {
 		keeper: k,
 	}
 }
+
+// SetICS4Wrapper implements the IBCModule interface for ibc-go v11 middleware stacks.
+func (im IBCModule) SetICS4Wrapper(porttypes.ICS4Wrapper) {}
 
 // OnChanOpenInit implements the IBCModule interface
 func (im IBCModule) OnChanOpenInit(

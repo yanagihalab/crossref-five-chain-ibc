@@ -1,6 +1,6 @@
 package types
 
-import host "github.com/cosmos/ibc-go/v10/modules/core/24-host"
+import host "github.com/cosmos/ibc-go/v11/modules/core/24-host"
 
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {

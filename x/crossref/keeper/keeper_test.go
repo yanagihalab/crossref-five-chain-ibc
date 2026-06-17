@@ -5,19 +5,17 @@ import (
 	"testing"
 
 	"cosmossdk.io/core/address"
-	storetypes "cosmossdk.io/store/types"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
-	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
-	ibctypes "github.com/cosmos/ibc-go/v10/modules/core/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	clienttypes "github.com/cosmos/ibc-go/v11/modules/core/02-client/types"
+	ibckeeper "github.com/cosmos/ibc-go/v11/modules/core/keeper"
 
 	"github.com/crossref/crossrefd/x/crossref/keeper"
 	module "github.com/crossref/crossrefd/x/crossref/module"
@@ -49,7 +47,7 @@ func initFixture(t *testing.T) *fixture {
 		addressCodec,
 		authority,
 		func() *ibckeeper.Keeper {
-			return ibckeeper.NewKeeper(encCfg.Codec, storeService, newMockParams(), mockUpgradeKeeper, authority.String())
+			return ibckeeper.NewKeeper(encCfg.Codec, storeService, mockUpgradeKeeper, authority.String())
 		},
 		nil,
 	)
@@ -78,17 +76,4 @@ func (m mockUpgradeKeeper) GetUpgradePlan(ctx context.Context) (upgradetypes.Pla
 
 func newMockUpgradeKeeper() *mockUpgradeKeeper {
 	return &mockUpgradeKeeper{initialized: true}
-}
-
-type mockParams struct {
-	ibctypes.ParamSubspace
-
-	initialized bool
-}
-
-func newMockParams() *mockParams {
-	return &mockParams{initialized: true}
-}
-
-func (mockParams) GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet) {
 }

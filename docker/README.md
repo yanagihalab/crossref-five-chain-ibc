@@ -161,6 +161,79 @@ Check topology parsing without contacting Docker:
 DRY_RUN=1 TOPOLOGY_FILE=docker/generated/topology-3c-2r.json docker/scripts/run-crossref-experiment.sh
 ```
 
+## Relayer Assignment, Rebalancing, and Failover
+
+Generated topologies assign each directed route to a relayer worker. Each
+worker gets a dedicated Hermes config with `packet_filter` entries for its
+assigned route channels.
+
+Verify route assignment against worker Hermes configs:
+
+```bash
+node docker/scripts/generate-topology.mjs 5 3
+node docker/scripts/verify-relayer-assignment.mjs \
+  docker/generated/topology-5c-3r.json \
+  'docker/generated/hermes-5c-3r-worker-{worker}.toml'
+```
+
+If `RELAYER_COUNT` is larger than the directed route count, extra workers are
+reported as `idleWorkers` and are treated as valid. Set
+`STRICT_NONEMPTY_WORKERS=1` when every active worker must own at least one route.
+
+Rebalance routes based on demand:
+
+```bash
+cat >/tmp/crossref-demand.json <<'JSON'
+{
+  "routes": {
+    "route-00": 10,
+    "route-01": 8
+  },
+  "domains": {
+    "chain-e": 3
+  }
+}
+JSON
+
+DEMAND_FILE=/tmp/crossref-demand.json \
+RELAYER_COUNT=3 \
+TOPOLOGY_FILE=docker/generated/topology-5c-3r.json \
+node docker/scripts/rebalance-relayers.mjs
+```
+
+The rebalance command writes a new topology, new worker Hermes configs, and a
+Compose override file. Apply the new config by recreating workers with both the
+base Compose file and the generated override:
+
+```bash
+docker compose \
+  -f docker/generated/docker-compose-5c-3r.yml \
+  -f docker/generated/docker-compose-5c-3r-rebalance.override.yml \
+  up -d --force-recreate relayer-1 relayer-2 relayer-3
+```
+
+Run a dry failover check for worker 1:
+
+```bash
+FAILED_WORKER=1 CHAIN_COUNT=5 RELAYER_COUNT=3 docker/scripts/run-relayer-failover-test.sh
+```
+
+Run the Docker-backed failover flow:
+
+```bash
+RUN_DOCKER_FAILOVER=1 FAILED_WORKER=1 CHAIN_COUNT=5 RELAYER_COUNT=3 docker/scripts/run-relayer-failover-test.sh
+```
+
+After a worker stop and rebalance, run the next checkpoint height against the
+failover topology:
+
+```bash
+COMPOSE_FILE=docker/generated/docker-compose-5c-3r.yml \
+TOPOLOGY_FILE=docker/generated/topology-5c-3r-failover-1.json \
+CHECKPOINT_HEIGHT=2 \
+docker/scripts/run-crossref-experiment.sh
+```
+
 When multiple relayer workers are running, the experiment script sends manual
 Hermes `update client` commands through worker index `1` by default. Select a
 different worker with:

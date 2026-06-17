@@ -18,8 +18,8 @@ type result struct {
 }
 
 func main() {
-	if len(os.Args) != 7 {
-		fatalf("usage: go run docker/scripts/hysteresis-sign.go <domain-id> <height> <block-hash-b64> <app-hash-b64> <block-time-unix> <seed>")
+	if len(os.Args) != 7 && len(os.Args) != 8 {
+		fatalf("usage: go run docker/scripts/hysteresis-sign.go <domain-id> <height> <block-hash-b64> <app-hash-b64> <block-time-unix> <seed> [previous-checkpoint-hash-b64]")
 	}
 
 	domainID := os.Args[1]
@@ -41,9 +41,16 @@ func main() {
 	}
 
 	seed := sha256.Sum256([]byte(os.Args[6]))
+	var previousCheckpointHash []byte
+	if len(os.Args) == 8 && os.Args[7] != "" {
+		previousCheckpointHash, err = base64.StdEncoding.DecodeString(os.Args[7])
+		if err != nil {
+			fatalf("invalid previous checkpoint hash base64: %v", err)
+		}
+	}
 	privateKey := ed25519.NewKeyFromSeed(seed[:])
 	publicKey := privateKey.Public().(ed25519.PublicKey)
-	checkpointHash := computeCheckpointHash(domainID, height, blockHash, appHash, nil, nil, blockTimeUnix)
+	checkpointHash := computeCheckpointHash(domainID, height, blockHash, appHash, nil, previousCheckpointHash, blockTimeUnix)
 	signature := ed25519.Sign(privateKey, checkpointHash)
 
 	enc := json.NewEncoder(os.Stdout)

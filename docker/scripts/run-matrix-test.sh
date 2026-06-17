@@ -30,6 +30,14 @@ for item in ${MATRIX}; do
     console.log(JSON.stringify({ chains: topology.chainCount, relayers: topology.relayerCount, routes: topology.routes.length, distribution: Object.fromEntries(counts) }));
   ' "${topology_file}"
 
+  echo "Verifying worker packet filters for ${topology_file}..."
+  node docker/scripts/verify-relayer-assignment.mjs "${topology_file}" "docker/generated/hermes-${chains}c-${relayers}r-worker-{worker}.toml"
+
+  if [ "${relayers}" -gt 1 ]; then
+    echo "Checking failover rebalance for worker 1..."
+    FAILED_WORKER=1 CHAIN_COUNT="${chains}" RELAYER_COUNT="${relayers}" docker/scripts/run-relayer-failover-test.sh
+  fi
+
   if [ "${RUN_DOCKER_MATRIX}" = "1" ]; then
     echo "Starting Docker matrix topology ${chains}c/${relayers}r..."
     docker compose -f "${compose_file}" up -d --build

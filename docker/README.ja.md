@@ -146,6 +146,72 @@ Docker に接続せず topology parsing だけを確認する:
 DRY_RUN=1 TOPOLOGY_FILE=docker/generated/topology-3c-2r.json docker/scripts/run-crossref-experiment.sh
 ```
 
+## Relayer 分配、再分配、failover
+
+生成された topology は、各 directed route を relayer worker に割り当てる。各 worker には、担当 route の channel を許可する Hermes `packet_filter` 付き config が生成される。
+
+route assignment と worker Hermes config の整合を確認する:
+
+```bash
+node docker/scripts/generate-topology.mjs 5 3
+node docker/scripts/verify-relayer-assignment.mjs \
+  docker/generated/topology-5c-3r.json \
+  'docker/generated/hermes-5c-3r-worker-{worker}.toml'
+```
+
+`RELAYER_COUNT` が directed route 数より大きい場合、余った worker は `idleWorkers` として報告され、正常な状態として扱われる。すべての active worker が少なくとも 1 route を担当する必要がある場合は、`STRICT_NONEMPTY_WORKERS=1` を指定する。
+
+需要に基づいて route を再分配する:
+
+```bash
+cat >/tmp/crossref-demand.json <<'JSON'
+{
+  "routes": {
+    "route-00": 10,
+    "route-01": 8
+  },
+  "domains": {
+    "chain-e": 3
+  }
+}
+JSON
+
+DEMAND_FILE=/tmp/crossref-demand.json \
+RELAYER_COUNT=3 \
+TOPOLOGY_FILE=docker/generated/topology-5c-3r.json \
+node docker/scripts/rebalance-relayers.mjs
+```
+
+rebalance command は新しい topology、worker 別 Hermes config、Compose override file を生成する。新しい config を適用するには、base Compose file と生成済み override を同時に指定して worker を再作成する。
+
+```bash
+docker compose \
+  -f docker/generated/docker-compose-5c-3r.yml \
+  -f docker/generated/docker-compose-5c-3r-rebalance.override.yml \
+  up -d --force-recreate relayer-1 relayer-2 relayer-3
+```
+
+worker 1 の failover dry-run を実行する:
+
+```bash
+FAILED_WORKER=1 CHAIN_COUNT=5 RELAYER_COUNT=3 docker/scripts/run-relayer-failover-test.sh
+```
+
+Docker を使った failover flow を実行する:
+
+```bash
+RUN_DOCKER_FAILOVER=1 FAILED_WORKER=1 CHAIN_COUNT=5 RELAYER_COUNT=3 docker/scripts/run-relayer-failover-test.sh
+```
+
+worker 停止と rebalance 後は、failover topology に対して次の checkpoint height を実行する。
+
+```bash
+COMPOSE_FILE=docker/generated/docker-compose-5c-3r.yml \
+TOPOLOGY_FILE=docker/generated/topology-5c-3r-failover-1.json \
+CHECKPOINT_HEIGHT=2 \
+docker/scripts/run-crossref-experiment.sh
+```
+
 複数の relayer worker が起動している場合、実験スクリプトは手動の Hermes `update client` command を worker index `1` に送る。別の worker を使う場合は次のように指定する。
 
 ```bash

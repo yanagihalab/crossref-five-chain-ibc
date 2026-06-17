@@ -229,11 +229,12 @@ hysteresis_json() {
   height="$2"
   block_hash="$3"
   app_hash="$4"
+  previous_hash="${5:-}"
   cache_dir="${TMPDIR:-/tmp}/crossref-hysteresis-${ACTUAL_CHAIN_COUNT}c"
   mkdir -p "${cache_dir}"
-  cache_file="${cache_dir}/${domain}-${height}-${block_hash}-${app_hash}-${BLOCK_TIME_UNIX}.json"
+  cache_file="${cache_dir}/${domain}-${height}-${block_hash}-${app_hash}-${previous_hash:-genesis}-${BLOCK_TIME_UNIX}.json"
   if [ ! -f "${cache_file}" ]; then
-    go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "$(hysteresis_seed "${domain}")" >"${cache_file}"
+    go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "$(hysteresis_seed "${domain}")" "${previous_hash}" >"${cache_file}"
   fi
   cat "${cache_file}"
 }
@@ -249,8 +250,19 @@ hysteresis_signature() {
   height="$2"
   block_hash="$3"
   app_hash="$4"
-  json="$(hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}")"
+  previous_hash="${5:-}"
+  json="$(hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${previous_hash}")"
   printf '%s\n' "${json}" | json_string_field signature
+}
+
+previous_checkpoint_hash() {
+  domain="$1"
+  height="$2"
+  if [ "${height}" -le 1 ]; then
+    return 0
+  fi
+  previous_height=$((height - 1))
+  query_chain "${domain}" query crossref checkpoint "${domain}" "${previous_height}" --output json | json_string_field checkpoint_hash
 }
 
 proof_file() {
@@ -341,8 +353,13 @@ echo "Submitting checkpoints on all ${ACTUAL_CHAIN_COUNT} chains..."
 for domain in ${DOMAINS}; do
   block_hash="$(block_hash_for_domain "${domain}")"
   app_hash="$(app_hash_for_domain "${domain}")"
-  signature="$(hysteresis_signature "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}")"
-  run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+  previous_hash="$(previous_checkpoint_hash "${domain}" "${CHECKPOINT_HEIGHT}")"
+  signature="$(hysteresis_signature "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" "${previous_hash}")"
+  previous_args=()
+  if [ -n "${previous_hash}" ]; then
+    previous_args=(--previous-checkpoint-hash "${previous_hash}")
+  fi
+  run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" "${previous_args[@]}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
 done
 
 echo "Collecting checkpoint ICS23 proofs from source chains..."

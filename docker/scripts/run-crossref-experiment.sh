@@ -11,6 +11,8 @@ DENOM="${DENOM:-stake}"
 BLOCK_TIME_UNIX="${BLOCK_TIME_UNIX:-0}"
 CHECKPOINT_HEIGHT="${CHECKPOINT_HEIGHT:-1}"
 DRY_RUN="${DRY_RUN:-0}"
+SKIP_REGISTER="${SKIP_REGISTER:-0}"
+SKIP_BIND="${SKIP_BIND:-0}"
 
 if [ ! -f "${TOPOLOGY_FILE}" ]; then
   echo "Topology ${TOPOLOGY_FILE} not found; generating ${CHAIN_COUNT} chains / ${RELAYER_WORKER_COUNT} relayers..."
@@ -106,13 +108,18 @@ relayer_service_exists() {
 relayer_for_route() {
   source_domain="$1"
   host_domain="$2"
-  worker="$(route_worker "${source_domain}" "${host_domain}")"
-  if relayer_service_exists "${RELAYER_SERVICE}"; then
-    dc exec -T --index "${worker}" "${RELAYER_SERVICE}" hermes "${@:3}"
-  elif relayer_service_exists "relayer-${worker}"; then
+  worker="$(route_worker "${source_domain}" "${host_domain}" | tr -cd '0-9')"
+  if [ -z "${worker}" ]; then
+    echo "Could not resolve relayer worker for ${source_domain}->${host_domain}." >&2
+    return 1
+  fi
+  if [ "${RELAYER_WORKER_COUNT}" -gt 1 ]; then
     dc exec -T "relayer-${worker}" hermes "${@:3}"
+  elif [ "${RELAYER_WORKER_COUNT}" -le 1 ] && relayer_service_exists "${RELAYER_SERVICE}"; then
+    dc exec -T --index "${worker}" "${RELAYER_SERVICE}" hermes "${@:3}"
   else
-    dc exec -T --index "${RELAYER_INDEX}" "${RELAYER_SERVICE}" hermes "${@:3}"
+    echo "Relayer worker service relayer-${worker} is not available for ${source_domain}->${host_domain}." >&2
+    return 1
   fi
 }
 
@@ -333,22 +340,30 @@ for route_pair in ${ROUTES}; do
   wait_channel "${source}" "$(channel_id "${source}" "${dest}")" "$(route_id "${source}" "${dest}")" "${source} -> ${dest} channel"
 done
 
-echo "Registering all domains on all chains..."
-for local_domain in ${DOMAINS}; do
-  for remote_domain in ${DOMAINS}; do
-    remote_public_key="$(hysteresis_public_key "${remote_domain}")"
-    echo "Registering ${remote_domain} on ${local_domain} with hysteresis public key ${remote_public_key}"
-    run_tx "${local_domain}" register-domain validator "${remote_domain}" "$(chain_id "${remote_domain}")" --hysteresis-public-key "${remote_public_key}"
+if [ "${SKIP_REGISTER}" = "1" ]; then
+  echo "Skipping domain registration because SKIP_REGISTER=1."
+else
+  echo "Registering all domains on all chains..."
+  for local_domain in ${DOMAINS}; do
+    for remote_domain in ${DOMAINS}; do
+      remote_public_key="$(hysteresis_public_key "${remote_domain}")"
+      echo "Registering ${remote_domain} on ${local_domain} with hysteresis public key ${remote_public_key}"
+      run_tx "${local_domain}" register-domain validator "${remote_domain}" "$(chain_id "${remote_domain}")" --hysteresis-public-key "${remote_public_key}"
+    done
   done
-done
+fi
 
-echo "Binding crossref domains to topology IBC channels..."
-for route_pair in ${ROUTES}; do
-  source="${route_pair%%:*}"
-  dest="${route_pair##*:}"
-  echo "Binding $(route_id "${source}" "${dest}") ${source} -> ${dest} actual=${source}/$(channel_id "${source}" "${dest}")"
-  run_tx "${source}" bind-domain-channel validator "${source}" "${dest}" crossref "$(channel_id "${source}" "${dest}")"
-done
+if [ "${SKIP_BIND}" = "1" ]; then
+  echo "Skipping channel binding because SKIP_BIND=1."
+else
+  echo "Binding crossref domains to topology IBC channels..."
+  for route_pair in ${ROUTES}; do
+    source="${route_pair%%:*}"
+    dest="${route_pair##*:}"
+    echo "Binding $(route_id "${source}" "${dest}") ${source} -> ${dest} actual=${source}/$(channel_id "${source}" "${dest}")"
+    run_tx "${source}" bind-domain-channel validator "${source}" "${dest}" crossref "$(channel_id "${source}" "${dest}")"
+  done
+fi
 
 echo "Submitting checkpoints on all ${ACTUAL_CHAIN_COUNT} chains..."
 for domain in ${DOMAINS}; do

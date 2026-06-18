@@ -188,6 +188,56 @@ func TestReceiveCrossReferencePacketVerifiesHysteresisSignature(t *testing.T) {
 	}
 }
 
+func TestReceiveCrossReferencePacketVerifiesThresholdHysteresisSignature(t *testing.T) {
+	f := initIBCFixture(t)
+	publicKey1, privateKey1, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey 1 failed: %v", err)
+	}
+	publicKey2, privateKey2, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey 2 failed: %v", err)
+	}
+	publicKey3, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey 3 failed: %v", err)
+	}
+	requireIBCBindingWithSourceKey(t, f, types.EncodeThresholdHysteresisPublicKey(2, publicKey1, publicKey2, publicKey3))
+	packet := validCrossReferencePacket()
+	checkpoint := packetCheckpoint(packet)
+	packet.HysteresisSignature = types.EncodeThresholdHysteresisSignature(map[uint8][]byte{
+		0: ed25519.Sign(privateKey1, types.HysteresisSignBytes(checkpoint)),
+		1: ed25519.Sign(privateKey2, types.HysteresisSignBytes(checkpoint)),
+	})
+
+	if _, err := f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet); err != nil {
+		t.Fatalf("receiveCrossReferencePacket returned error: %v", err)
+	}
+}
+
+func TestReceiveCrossReferencePacketRejectsBelowThresholdHysteresisSignature(t *testing.T) {
+	f := initIBCFixture(t)
+	publicKey1, privateKey1, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey 1 failed: %v", err)
+	}
+	publicKey2, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey 2 failed: %v", err)
+	}
+	requireIBCBindingWithSourceKey(t, f, types.EncodeThresholdHysteresisPublicKey(2, publicKey1, publicKey2))
+	packet := validCrossReferencePacket()
+	checkpoint := packetCheckpoint(packet)
+	packet.HysteresisSignature = types.EncodeThresholdHysteresisSignature(map[uint8][]byte{
+		0: ed25519.Sign(privateKey1, types.HysteresisSignBytes(checkpoint)),
+	})
+
+	_, err = f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet)
+	if !errorsmod.IsOf(err, types.ErrHysteresisSignatureInvalid) {
+		t.Fatalf("expected ErrHysteresisSignatureInvalid, got %v", err)
+	}
+}
+
 func TestReceiveCrossReferencePacketRejectsInvalidHysteresisSignature(t *testing.T) {
 	f := initIBCFixture(t)
 	publicKey, _, err := ed25519.GenerateKey(rand.Reader)
@@ -314,5 +364,19 @@ func validCrossReferencePacket() *types.CrossReferencePacketData {
 		SourceCheckpointProof:     []byte("proof-a-1"),
 		SourceProofRevisionNumber: 1,
 		SourceProofRevisionHeight: 10,
+	}
+}
+
+func packetCheckpoint(packet *types.CrossReferencePacketData) types.Checkpoint {
+	return types.Checkpoint{
+		DomainId:               packet.SourceDomainId,
+		Height:                 packet.SourceHeight,
+		BlockHash:              packet.BlockHash,
+		AppHash:                packet.AppHash,
+		ValidatorSetHash:       packet.ValidatorSetHash,
+		PreviousCheckpointHash: packet.PreviousCheckpointHash,
+		CheckpointHash:         packet.CheckpointHash,
+		HysteresisSignature:    packet.HysteresisSignature,
+		BlockTimeUnix:          packet.BlockTimeUnix,
 	}
 }

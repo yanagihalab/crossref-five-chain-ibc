@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: crossrefd-cometbft
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - validator-a-1.example.net:26660
+          - validator-a-2.example.net:26660
+
+  - job_name: crossrefd-api
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - validator-a-1.example.net:1317
+          - validator-a-2.example.net:1317
+
+  - job_name: relayer-controller
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - relayer-1.example.net:3001

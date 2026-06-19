@@ -10,4 +10,24 @@ option go_package = "github.com/crossref/crossrefd/x/crossref/types";
 message Params {
   option (amino.name) = "crossrefd/x/crossref/Params";
   option (gogoproto.equal) = true;
+
+  // require_strict_hysteresis_signature makes checkpoint signatures commit to
+  // H(S_n-1) separately from the checkpoint hash.
+  bool require_strict_hysteresis_signature = 1;
+
+  // checkpoint_proof_max_lag is the maximum destination-chain block lag accepted
+  // between the current block and the source checkpoint proof height.
+  uint64 checkpoint_proof_max_lag = 2;
+
+  // require_consensus_proof requires packets to carry consensus-level checkpoint
+  // evidence in addition to the source store proof.
+  bool require_consensus_proof = 3;
+
+  // proof_spam_window_blocks is the local accounting window used by relayer /
+  // source-domain abuse detectors.
+  uint64 proof_spam_window_blocks = 4;
+
+  // proof_spam_max_failures is the number of failed proof/accountability events
+  // allowed in the spam window before an operator should quarantine a domain.
+  uint64 proof_spam_max_failures = 5;
 }

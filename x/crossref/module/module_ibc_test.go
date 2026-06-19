@@ -181,7 +181,7 @@ func TestReceiveCrossReferencePacketVerifiesHysteresisSignature(t *testing.T) {
 	}
 	requireIBCBindingWithSourceKey(t, f, publicKey)
 	packet := validCrossReferencePacket()
-	packet.HysteresisSignature = ed25519.Sign(privateKey, packet.CheckpointHash)
+	packet.HysteresisSignature = ed25519.Sign(privateKey, types.HysteresisSignBytes(packetCheckpoint(packet)))
 
 	if _, err := f.ibcModule.receiveCrossReferencePacket(f.ctx, types.PortID, "channel-0", "relayer", packet); err != nil {
 		t.Fatalf("receiveCrossReferencePacket returned error: %v", err)

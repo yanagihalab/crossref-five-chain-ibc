@@ -1,0 +1,30 @@
+services:
+  crossrefd:
+    image: crossrefd:0.1.0
+    restart: unless-stopped
+    environment:
+      CHAIN_ID: "${CHAIN_ID:?set CHAIN_ID}"
+      MONIKER: "${MONIKER:?set MONIKER}"
+      HOME_DIR: /var/lib/crossrefd
+    command:
+      - crossrefdd
+      - start
+      - --home
+      - /var/lib/crossrefd
+      - --x-crisis-skip-assert-invariants
+    ports:
+      - "${P2P_PORT:-26656}:26656"
+      - "${RPC_PORT:-26657}:26657"
+      - "${GRPC_PORT:-9090}:9090"
+      - "${API_PORT:-1317}:1317"
+    volumes:
+      - crossrefd-home:/var/lib/crossrefd
+      - ./secrets:/run/crossrefd/secrets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:26657/status >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  crossrefd-home:

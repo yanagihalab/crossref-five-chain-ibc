@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/crossref/crossrefd/x/crossref/types"
 )
 
@@ -29,6 +30,10 @@ func crossReferenceKey(localDomainID, remoteDomainID string, remoteHeight uint64
 
 func outgoingPacketKey(portID, channelID string, sequence uint64) string {
 	return fmt.Sprintf("%s/%s/%020d", portID, channelID, sequence)
+}
+
+func accountabilityEventKey(event types.AccountabilityEvent) string {
+	return fmt.Sprintf("%s/%s/%020d/%s", event.DomainId, event.EventType, event.Height, event.EventId)
 }
 
 func (k Keeper) SetDomain(ctx context.Context, domain types.DomainInfo) error {
@@ -94,6 +99,9 @@ func (k Keeper) ListDomainChannelsByLocalDomain(ctx context.Context, localDomain
 }
 
 func (k Keeper) SetCheckpoint(ctx context.Context, checkpoint types.Checkpoint) error {
+	if err := types.NormalizeCheckpointHashes(&checkpoint); err != nil {
+		return err
+	}
 	if err := k.Checkpoints.Set(ctx, checkpointKey(checkpoint.DomainId, checkpoint.Height), checkpoint); err != nil {
 		return err
 	}
@@ -123,12 +131,8 @@ func (k Keeper) GetLatestCheckpoint(ctx context.Context, domainID string) (types
 }
 
 func (k Keeper) ValidateCheckpoint(ctx context.Context, checkpoint types.Checkpoint) error {
-	expectedHash := types.ComputeCheckpointHash(checkpoint)
-	if len(checkpoint.CheckpointHash) == 0 {
-		checkpoint.CheckpointHash = expectedHash
-	}
-	if !bytes.Equal(expectedHash, checkpoint.CheckpointHash) {
-		return errorsmod.Wrapf(types.ErrCheckpointHashMismatch, "domain=%s height=%d", checkpoint.DomainId, checkpoint.Height)
+	if err := types.NormalizeCheckpointHashes(&checkpoint); err != nil {
+		return errorsmod.Wrapf(err, "domain=%s height=%d", checkpoint.DomainId, checkpoint.Height)
 	}
 
 	if existing, found, err := k.GetCheckpoint(ctx, checkpoint.DomainId, checkpoint.Height); err != nil {
@@ -136,6 +140,9 @@ func (k Keeper) ValidateCheckpoint(ctx context.Context, checkpoint types.Checkpo
 	} else if found {
 		if !bytes.Equal(existing.CheckpointHash, checkpoint.CheckpointHash) {
 			return errorsmod.Wrapf(types.ErrCheckpointConflict, "domain=%s height=%d", checkpoint.DomainId, checkpoint.Height)
+		}
+		if !bytes.Equal(existing.StateHash, checkpoint.StateHash) {
+			return errorsmod.Wrapf(types.ErrCheckpointConflict, "domain=%s height=%d state hash differs", checkpoint.DomainId, checkpoint.Height)
 		}
 		return nil
 	}
@@ -148,6 +155,9 @@ func (k Keeper) ValidateCheckpoint(ctx context.Context, checkpoint types.Checkpo
 		}
 		if !bytes.Equal(checkpoint.PreviousCheckpointHash, latest.CheckpointHash) {
 			return errorsmod.Wrapf(types.ErrPreviousCheckpointBroken, "domain=%s height=%d latest=%d", checkpoint.DomainId, checkpoint.Height, latest.Height)
+		}
+		if !bytes.Equal(checkpoint.PreviousStateHash, latest.StateHash) {
+			return errorsmod.Wrapf(types.ErrPreviousStateBroken, "domain=%s height=%d latest=%d", checkpoint.DomainId, checkpoint.Height, latest.Height)
 		}
 	}
 
@@ -171,4 +181,54 @@ func (k Keeper) GetCrossReference(ctx context.Context, localDomainID, remoteDoma
 
 func (k Keeper) SetOutgoingPacket(ctx context.Context, portID, channelID string, sequence uint64, checkpointHash []byte) error {
 	return k.OutgoingPackets.Set(ctx, outgoingPacketKey(portID, channelID, sequence), checkpointHash)
+}
+
+func (k Keeper) RecordAccountabilityEvent(ctx context.Context, event types.AccountabilityEvent) error {
+	if event.EventId == "" {
+		event.EventId = fmt.Sprintf("%s/%s/%020d/%s", event.DomainId, event.EventType, event.Height, event.Actor)
+	}
+	if event.DetectedTimeUnix == 0 {
+		if sdkCtx := sdk.UnwrapSDKContext(ctx); !sdkCtx.BlockTime().IsZero() {
+			event.DetectedTimeUnix = sdkCtx.BlockTime().Unix()
+		}
+	}
+	return k.AccountabilityEvents.Set(ctx, accountabilityEventKey(event), event)
+}
+
+func (k Keeper) GetAccountabilityEvent(ctx context.Context, eventID string) (types.AccountabilityEvent, bool, error) {
+	var foundEvent types.AccountabilityEvent
+	found := false
+	err := k.AccountabilityEvents.Walk(ctx, nil, func(_ string, event types.AccountabilityEvent) (bool, error) {
+		if event.EventId != eventID {
+			return false, nil
+		}
+		foundEvent = event
+		found = true
+		return true, nil
+	})
+	if err != nil {
+		return types.AccountabilityEvent{}, false, err
+	}
+	return foundEvent, found, nil
+}
+
+func (k Keeper) ListAccountabilityEvents(ctx context.Context, domainID string) ([]types.AccountabilityEvent, error) {
+	var events []types.AccountabilityEvent
+	err := k.AccountabilityEvents.Walk(ctx, nil, func(_ string, event types.AccountabilityEvent) (bool, error) {
+		if domainID != "" && event.DomainId != domainID {
+			return false, nil
+		}
+		events = append(events, event)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(events, func(i, j int) bool {
+		if events[i].DetectedTimeUnix != events[j].DetectedTimeUnix {
+			return events[i].DetectedTimeUnix < events[j].DetectedTimeUnix
+		}
+		return events[i].EventId < events[j].EventId
+	})
+	return events, nil
 }

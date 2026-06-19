@@ -9,14 +9,27 @@ import (
 
 var hysteresisThresholdMagic = []byte("crxmsig1")
 
-// HysteresisSignBytes returns the canonical bytes signed by a domain CCN for a
-// checkpoint. The checkpoint hash already commits to the previous checkpoint
-// hash and current block state while intentionally excluding the signature.
+// HysteresisSignBytes returns the paper-strict canonical bytes signed by a
+// domain CCN. It commits to H(S_n-1) separately from checkpoint_hash and to the
+// current H(S_n), which keeps the hysteresis signature chain independent from
+// the store key/hash used for IBC membership proofs.
 func HysteresisSignBytes(checkpoint Checkpoint) []byte {
-	if len(checkpoint.CheckpointHash) > 0 {
-		return checkpoint.CheckpointHash
+	stateHash := checkpoint.StateHash
+	if len(stateHash) == 0 {
+		stateHash = ComputeCheckpointStateHash(checkpoint)
 	}
-	return ComputeCheckpointHash(checkpoint)
+
+	out := make([]byte, 0, 128+len(checkpoint.DomainId)+len(checkpoint.PreviousStateHash)+len(stateHash))
+	out = append(out, []byte("crossref-hysteresis-v1")...)
+	out = append(out, uint64ToBigEndian(uint64(len(checkpoint.DomainId)))...)
+	out = append(out, []byte(checkpoint.DomainId)...)
+	out = append(out, uint64ToBigEndian(checkpoint.Height)...)
+	out = append(out, uint64ToBigEndian(checkpoint.KeyEpoch)...)
+	out = append(out, uint64ToBigEndian(uint64(len(checkpoint.PreviousStateHash)))...)
+	out = append(out, checkpoint.PreviousStateHash...)
+	out = append(out, uint64ToBigEndian(uint64(len(stateHash)))...)
+	out = append(out, stateHash...)
+	return out
 }
 
 // VerifyHysteresisSignature validates a checkpoint signature when the domain
@@ -25,6 +38,9 @@ func HysteresisSignBytes(checkpoint Checkpoint) []byte {
 func VerifyHysteresisSignature(domain DomainInfo, checkpoint Checkpoint) error {
 	if len(domain.HysteresisPublicKey) == 0 {
 		return nil
+	}
+	if domain.KeyEpoch != 0 && checkpoint.KeyEpoch != domain.KeyEpoch {
+		return errorsmod.Wrapf(ErrHysteresisSignatureInvalid, "domain=%s checkpoint_key_epoch=%d domain_key_epoch=%d", checkpoint.DomainId, checkpoint.KeyEpoch, domain.KeyEpoch)
 	}
 	if len(checkpoint.HysteresisSignature) == 0 {
 		return errorsmod.Wrapf(ErrHysteresisSignatureRequired, "domain=%s height=%d", checkpoint.DomainId, checkpoint.Height)

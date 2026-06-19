@@ -28,6 +28,12 @@ service Query {
   rpc CrossReference(QueryCrossReferenceRequest) returns (QueryCrossReferenceResponse) {
     option (google.api.http).get = "/crossref/crossrefd/crossref/v1/references/{local_domain_id}/{remote_domain_id}/{remote_height}";
   }
+  rpc AccountabilityEvent(QueryAccountabilityEventRequest) returns (QueryAccountabilityEventResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/accountability/events/{event_id}";
+  }
+  rpc AccountabilityEvents(QueryAccountabilityEventsRequest) returns (QueryAccountabilityEventsResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/accountability/events";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -75,4 +81,22 @@ message QueryCrossReferenceRequest {
 
 message QueryCrossReferenceResponse {
   CrossReference cross_reference = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAccountabilityEventRequest {
+  string event_id = 1;
+}
+
+message QueryAccountabilityEventResponse {
+  AccountabilityEvent event = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAccountabilityEventsRequest {
+  string domain_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAccountabilityEventsResponse {
+  repeated AccountabilityEvent events = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

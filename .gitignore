@@ -6,6 +6,8 @@ docker/generated/
 crossrefdd
 .tmp-home/
 .gocache/
+.gomodcache/
+.bufcache/
 .idea/
 .vscode/
 .DS_Store

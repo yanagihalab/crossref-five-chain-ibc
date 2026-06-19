@@ -187,6 +187,9 @@ function compose(topology, stem) {
     lines.push("      HOME_DIR: /var/crossref");
     lines.push(`      VALIDATOR_MNEMONIC: "${mnemonic}"`);
     lines.push(`      RELAYER_MNEMONIC: "${relayerMnemonic}"`);
+    lines.push(`      RELAYER_WORKER_COUNT: "${topology.relayerCount}"`);
+    lines.push('      CROSSREF_MAX_CHECKPOINT_PROOF_LAG: "${CROSSREF_MAX_CHECKPOINT_PROOF_LAG:-10000}"');
+    lines.push('      CROSSREF_REQUIRE_CONSENSUS_PROOF: "${CROSSREF_REQUIRE_CONSENSUS_PROOF:-false}"');
     lines.push('    command: ["/opt/crossref/scripts/start-chain.sh"]');
     lines.push("    ports:");
     lines.push(`      - "${chain.rpcPort}:26657"`);

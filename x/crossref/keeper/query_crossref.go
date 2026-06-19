@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -63,4 +64,56 @@ func (q queryServer) CrossReference(ctx context.Context, req *types.QueryCrossRe
 		return nil, status.Error(codes.NotFound, "cross reference not found")
 	}
 	return &types.QueryCrossReferenceResponse{CrossReference: reference}, nil
+}
+
+func (q queryServer) AccountabilityEvent(ctx context.Context, req *types.QueryAccountabilityEventRequest) (*types.QueryAccountabilityEventResponse, error) {
+	if req == nil || req.EventId == "" {
+		return nil, status.Error(codes.InvalidArgument, "event_id is required")
+	}
+	event, found, err := q.k.GetAccountabilityEvent(ctx, req.EventId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if !found {
+		return nil, status.Error(codes.NotFound, "accountability event not found")
+	}
+	return &types.QueryAccountabilityEventResponse{Event: event}, nil
+}
+
+func (q queryServer) AccountabilityEvents(ctx context.Context, req *types.QueryAccountabilityEventsRequest) (*types.QueryAccountabilityEventsResponse, error) {
+	if req == nil {
+		req = &types.QueryAccountabilityEventsRequest{}
+	}
+	events, err := q.k.ListAccountabilityEvents(ctx, req.DomainId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	paged, pageRes := paginateAccountabilityEvents(events, req.Pagination)
+	return &types.QueryAccountabilityEventsResponse{Events: paged, Pagination: pageRes}, nil
+}
+
+func paginateAccountabilityEvents(events []types.AccountabilityEvent, pageReq *querytypes.PageRequest) ([]types.AccountabilityEvent, *querytypes.PageResponse) {
+	if pageReq == nil {
+		return events, &querytypes.PageResponse{Total: uint64(len(events))}
+	}
+	offset := int(pageReq.Offset)
+	limit := int(pageReq.Limit)
+	if offset > len(events) {
+		offset = len(events)
+	}
+	if limit == 0 {
+		limit = len(events) - offset
+	}
+	end := offset + limit
+	if end > len(events) {
+		end = len(events)
+	}
+	var nextKey []byte
+	if end < len(events) {
+		nextKey = []byte(events[end].EventId)
+	}
+	return events[offset:end], &querytypes.PageResponse{
+		NextKey: nextKey,
+		Total:   uint64(len(events)),
+	}
 }

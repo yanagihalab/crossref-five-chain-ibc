@@ -25,21 +25,35 @@ func (k msgServer) RegisterDomain(ctx context.Context, req *types.MsgRegisterDom
 		if existing.ChainId != req.ChainId {
 			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "domain already registered with different chain_id: %s", req.DomainId)
 		}
+		if existing.Admin != "" && req.Creator != existing.Admin {
+			return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "domain=%s admin=%s signer=%s", req.DomainId, existing.Admin, req.Creator)
+		}
+		if req.KeyEpoch != 0 && req.KeyEpoch < existing.KeyEpoch {
+			return nil, errorsmod.Wrapf(types.ErrKeyEpochRollback, "domain=%s current=%d next=%d", req.DomainId, existing.KeyEpoch, req.KeyEpoch)
+		}
 		return &types.MsgRegisterDomainResponse{}, k.SetDomain(ctx, types.DomainInfo{
 			DomainId:            req.DomainId,
 			ChainId:             req.ChainId,
 			ValidatorSetHash:    firstNonEmptyBytes(req.ValidatorSetHash, existing.ValidatorSetHash),
 			MetadataUri:         firstNonEmptyString(req.MetadataUri, existing.MetadataUri),
 			HysteresisPublicKey: firstNonEmptyBytes(req.HysteresisPublicKey, existing.HysteresisPublicKey),
+			KeyEpoch:            firstNonZeroUint64(req.KeyEpoch, existing.KeyEpoch),
+			Admin:               firstNonEmptyString(req.Admin, existing.Admin),
 		})
 	}
 
+	admin := req.Admin
+	if admin == "" {
+		admin = req.Creator
+	}
 	return &types.MsgRegisterDomainResponse{}, k.SetDomain(ctx, types.DomainInfo{
 		DomainId:            req.DomainId,
 		ChainId:             req.ChainId,
 		ValidatorSetHash:    req.ValidatorSetHash,
 		MetadataUri:         req.MetadataUri,
 		HysteresisPublicKey: req.HysteresisPublicKey,
+		KeyEpoch:            firstNonZeroUint64(req.KeyEpoch, 1),
+		Admin:               admin,
 	})
 }
 
@@ -52,6 +66,13 @@ func firstNonEmptyString(next, current string) string {
 
 func firstNonEmptyBytes(next, current []byte) []byte {
 	if len(next) != 0 {
+		return next
+	}
+	return current
+}
+
+func firstNonZeroUint64(next, current uint64) uint64 {
+	if next != 0 {
 		return next
 	}
 	return current
@@ -101,21 +122,30 @@ func (k msgServer) SubmitCheckpoint(ctx context.Context, req *types.MsgSubmitChe
 	}
 
 	checkpoint := types.Checkpoint{
-		DomainId:               req.DomainId,
-		Height:                 req.Height,
-		BlockHash:              req.BlockHash,
-		AppHash:                req.AppHash,
-		ValidatorSetHash:       req.ValidatorSetHash,
-		PreviousCheckpointHash: req.PreviousCheckpointHash,
-		CheckpointHash:         req.CheckpointHash,
-		HysteresisSignature:    req.HysteresisSignature,
-		BlockTimeUnix:          req.BlockTimeUnix,
+		DomainId:                     req.DomainId,
+		Height:                       req.Height,
+		BlockHash:                    req.BlockHash,
+		AppHash:                      req.AppHash,
+		ValidatorSetHash:             req.ValidatorSetHash,
+		PreviousCheckpointHash:       req.PreviousCheckpointHash,
+		CheckpointHash:               req.CheckpointHash,
+		HysteresisSignature:          req.HysteresisSignature,
+		BlockTimeUnix:                req.BlockTimeUnix,
+		StateHash:                    req.StateHash,
+		PreviousStateHash:            req.PreviousStateHash,
+		ConsensusProof:               req.ConsensusProof,
+		ConsensusProofRevisionNumber: req.ConsensusProofRevisionNumber,
+		ConsensusProofRevisionHeight: req.ConsensusProofRevisionHeight,
+		KeyEpoch:                     req.KeyEpoch,
 	}
-	expectedHash := types.ComputeCheckpointHash(checkpoint)
-	if len(checkpoint.CheckpointHash) == 0 {
-		checkpoint.CheckpointHash = expectedHash
-	} else if !bytes.Equal(checkpoint.CheckpointHash, expectedHash) {
-		return nil, errorsmod.Wrapf(types.ErrCheckpointHashMismatch, "domain=%s height=%d", req.DomainId, req.Height)
+	if checkpoint.KeyEpoch == 0 {
+		checkpoint.KeyEpoch = domain.KeyEpoch
+	}
+	if err := types.NormalizeCheckpointHashes(&checkpoint); err != nil {
+		return nil, errorsmod.Wrapf(err, "domain=%s height=%d", req.DomainId, req.Height)
+	}
+	if err := k.VerifyConsensusProof(ctx, checkpoint); err != nil {
+		return nil, err
 	}
 	if err := k.ValidateCheckpoint(ctx, checkpoint); err != nil {
 		return nil, err
@@ -137,7 +167,7 @@ func (k msgServer) SendCrossReferencePacket(ctx context.Context, req *types.MsgS
 	if req.SourceDomainId == "" || req.SourceHeight == 0 || req.PortId == "" || req.ChannelId == "" {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "source_domain_id, source_height, port_id and channel_id are required")
 	}
-	sequence, err := k.sendCrossReferencePacket(ctx, req.SourceDomainId, req.SourceHeight, req.PortId, req.ChannelId, req.TimeoutSeconds, req.SourceCheckpointProof, req.SourceProofRevisionNumber, req.SourceProofRevisionHeight)
+	sequence, err := k.sendCrossReferencePacket(ctx, req.SourceDomainId, req.SourceHeight, req.PortId, req.ChannelId, req.TimeoutSeconds, req.SourceCheckpointProof, req.SourceProofRevisionNumber, req.SourceProofRevisionHeight, req.ConsensusProof, req.ConsensusProofRevisionNumber, req.ConsensusProofRevisionHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +204,7 @@ func (k msgServer) BroadcastCrossReferencePacket(ctx context.Context, req *types
 		if _, skip := excluded[binding.RemoteDomainId]; skip {
 			continue
 		}
-		sequence, err := k.sendCrossReferencePacket(ctx, req.SourceDomainId, req.SourceHeight, binding.PortId, binding.ChannelId, req.TimeoutSeconds, req.SourceCheckpointProof, req.SourceProofRevisionNumber, req.SourceProofRevisionHeight)
+		sequence, err := k.sendCrossReferencePacket(ctx, req.SourceDomainId, req.SourceHeight, binding.PortId, binding.ChannelId, req.TimeoutSeconds, req.SourceCheckpointProof, req.SourceProofRevisionNumber, req.SourceProofRevisionHeight, req.ConsensusProof, req.ConsensusProofRevisionNumber, req.ConsensusProofRevisionHeight)
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "remote domain=%s port=%s channel=%s", binding.RemoteDomainId, binding.PortId, binding.ChannelId)
 		}
@@ -192,7 +222,7 @@ func (k msgServer) BroadcastCrossReferencePacket(ctx context.Context, req *types
 	return &types.MsgBroadcastCrossReferencePacketResponse{Results: results}, nil
 }
 
-func (k msgServer) sendCrossReferencePacket(ctx context.Context, sourceDomainID string, sourceHeight uint64, portID, channelID string, timeoutSeconds uint64, sourceCheckpointProof []byte, sourceProofRevisionNumber, sourceProofRevisionHeight uint64) (uint64, error) {
+func (k msgServer) sendCrossReferencePacket(ctx context.Context, sourceDomainID string, sourceHeight uint64, portID, channelID string, timeoutSeconds uint64, sourceCheckpointProof []byte, sourceProofRevisionNumber, sourceProofRevisionHeight uint64, consensusProof []byte, consensusProofRevisionNumber, consensusProofRevisionHeight uint64) (uint64, error) {
 	domain, found, err := k.GetDomain(ctx, sourceDomainID)
 	if err != nil {
 		return 0, err
@@ -217,6 +247,14 @@ func (k msgServer) sendCrossReferencePacket(ctx context.Context, sourceDomainID 
 	if !found {
 		return 0, errorsmod.Wrapf(types.ErrCheckpointNotFound, "domain=%s height=%d", sourceDomainID, sourceHeight)
 	}
+	if len(consensusProof) > 0 {
+		checkpoint.ConsensusProof = consensusProof
+		checkpoint.ConsensusProofRevisionNumber = consensusProofRevisionNumber
+		checkpoint.ConsensusProofRevisionHeight = consensusProofRevisionHeight
+	}
+	if err := k.VerifyConsensusProof(ctx, checkpoint); err != nil {
+		return 0, err
+	}
 	ibcKeeper := k.ibcKeeperFn()
 	if ibcKeeper == nil {
 		return 0, errorsmod.Wrap(types.ErrInvalidRequest, "IBC keeper is not configured")
@@ -225,19 +263,25 @@ func (k msgServer) sendCrossReferencePacket(ctx context.Context, sourceDomainID 
 	packet := types.CrossrefPacketData{
 		Packet: &types.CrossrefPacketData_CrossReference{
 			CrossReference: &types.CrossReferencePacketData{
-				SourceDomainId:            checkpoint.DomainId,
-				SourceChainId:             domain.ChainId,
-				SourceHeight:              checkpoint.Height,
-				BlockHash:                 checkpoint.BlockHash,
-				AppHash:                   checkpoint.AppHash,
-				ValidatorSetHash:          checkpoint.ValidatorSetHash,
-				PreviousCheckpointHash:    checkpoint.PreviousCheckpointHash,
-				CheckpointHash:            checkpoint.CheckpointHash,
-				HysteresisSignature:       checkpoint.HysteresisSignature,
-				BlockTimeUnix:             checkpoint.BlockTimeUnix,
-				SourceCheckpointProof:     sourceCheckpointProof,
-				SourceProofRevisionNumber: sourceProofRevisionNumber,
-				SourceProofRevisionHeight: sourceProofRevisionHeight,
+				SourceDomainId:               checkpoint.DomainId,
+				SourceChainId:                domain.ChainId,
+				SourceHeight:                 checkpoint.Height,
+				BlockHash:                    checkpoint.BlockHash,
+				AppHash:                      checkpoint.AppHash,
+				ValidatorSetHash:             checkpoint.ValidatorSetHash,
+				PreviousCheckpointHash:       checkpoint.PreviousCheckpointHash,
+				CheckpointHash:               checkpoint.CheckpointHash,
+				HysteresisSignature:          checkpoint.HysteresisSignature,
+				BlockTimeUnix:                checkpoint.BlockTimeUnix,
+				SourceCheckpointProof:        sourceCheckpointProof,
+				SourceProofRevisionNumber:    sourceProofRevisionNumber,
+				SourceProofRevisionHeight:    sourceProofRevisionHeight,
+				StateHash:                    checkpoint.StateHash,
+				PreviousStateHash:            checkpoint.PreviousStateHash,
+				ConsensusProof:               checkpoint.ConsensusProof,
+				ConsensusProofRevisionNumber: checkpoint.ConsensusProofRevisionNumber,
+				ConsensusProofRevisionHeight: checkpoint.ConsensusProofRevisionHeight,
+				KeyEpoch:                     checkpoint.KeyEpoch,
 			},
 		},
 	}

@@ -1,103 +1,380 @@
-{"Time":"2026-06-16T16:11:24.051278+09:00","Action":"start","Package":"github.com/crossref/crossrefd/x/crossref/client/cli"}
-{"Time":"2026-06-16T16:11:24.05133+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/client/cli","Output":"?   \tgithub.com/crossref/crossrefd/x/crossref/client/cli\t[no test files]\n"}
-{"Time":"2026-06-16T16:11:24.051338+09:00","Action":"skip","Package":"github.com/crossref/crossrefd/x/crossref/client/cli","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.157963+09:00","Action":"start","Package":"github.com/crossref/crossrefd/x/crossref/keeper"}
-{"Time":"2026-06-16T16:11:27.352515+09:00","Action":"start","Package":"github.com/crossref/crossrefd/x/crossref/module"}
-{"Time":"2026-06-16T16:11:27.352571+09:00","Action":"start","Package":"github.com/crossref/crossrefd/x/crossref/types"}
-{"Time":"2026-06-16T16:11:27.856474+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestGenesis"}
-{"Time":"2026-06-16T16:11:27.856833+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestGenesis","Output":"=== RUN   TestGenesis\n"}
-{"Time":"2026-06-16T16:11:27.857446+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestGenesis","Output":"--- PASS: TestGenesis (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.85746+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestGenesis","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.857467+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointVerifiesHysteresisSignature"}
-{"Time":"2026-06-16T16:11:27.857475+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointVerifiesHysteresisSignature","Output":"=== RUN   TestSubmitCheckpointVerifiesHysteresisSignature\n"}
-{"Time":"2026-06-16T16:11:27.859101+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointVerifiesHysteresisSignature","Output":"--- PASS: TestSubmitCheckpointVerifiesHysteresisSignature (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.859115+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointVerifiesHysteresisSignature","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.859119+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointRejectsInvalidHysteresisSignature"}
-{"Time":"2026-06-16T16:11:27.859122+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointRejectsInvalidHysteresisSignature","Output":"=== RUN   TestSubmitCheckpointRejectsInvalidHysteresisSignature\n"}
-{"Time":"2026-06-16T16:11:27.859391+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointRejectsInvalidHysteresisSignature","Output":"--- PASS: TestSubmitCheckpointRejectsInvalidHysteresisSignature (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.859397+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointRejectsInvalidHysteresisSignature","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.859404+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointRequiresHysteresisSignatureWhenDomainHasKey"}
-{"Time":"2026-06-16T16:11:27.859407+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointRequiresHysteresisSignatureWhenDomainHasKey","Output":"=== RUN   TestSubmitCheckpointRequiresHysteresisSignatureWhenDomainHasKey\n"}
-{"Time":"2026-06-16T16:11:27.859579+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointRequiresHysteresisSignatureWhenDomainHasKey","Output":"--- PASS: TestSubmitCheckpointRequiresHysteresisSignatureWhenDomainHasKey (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.859587+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSubmitCheckpointRequiresHysteresisSignatureWhenDomainHasKey","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.85961+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSendCrossReferencePacketRejectsUnboundSourceDomain"}
-{"Time":"2026-06-16T16:11:27.859613+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSendCrossReferencePacketRejectsUnboundSourceDomain","Output":"=== RUN   TestSendCrossReferencePacketRejectsUnboundSourceDomain\n"}
-{"Time":"2026-06-16T16:11:27.859753+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSendCrossReferencePacketRejectsUnboundSourceDomain","Output":"--- PASS: TestSendCrossReferencePacketRejectsUnboundSourceDomain (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.859759+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestSendCrossReferencePacketRejectsUnboundSourceDomain","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.859764+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams"}
-{"Time":"2026-06-16T16:11:27.859767+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams","Output":"=== RUN   TestMsgUpdateParams\n"}
-{"Time":"2026-06-16T16:11:27.860093+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/invalid_authority"}
-{"Time":"2026-06-16T16:11:27.860098+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/invalid_authority","Output":"=== RUN   TestMsgUpdateParams/invalid_authority\n"}
-{"Time":"2026-06-16T16:11:27.860139+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/invalid_authority","Output":"--- PASS: TestMsgUpdateParams/invalid_authority (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.860153+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/invalid_authority","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.860159+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/send_enabled_param"}
-{"Time":"2026-06-16T16:11:27.860164+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/send_enabled_param","Output":"=== RUN   TestMsgUpdateParams/send_enabled_param\n"}
-{"Time":"2026-06-16T16:11:27.860276+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/send_enabled_param","Output":"--- PASS: TestMsgUpdateParams/send_enabled_param (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.860283+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/send_enabled_param","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.860286+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/all_good"}
-{"Time":"2026-06-16T16:11:27.86029+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/all_good","Output":"=== RUN   TestMsgUpdateParams/all_good\n"}
-{"Time":"2026-06-16T16:11:27.860298+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/all_good","Output":"--- PASS: TestMsgUpdateParams/all_good (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.860301+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams/all_good","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.860305+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams","Output":"--- PASS: TestMsgUpdateParams (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.860308+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestMsgUpdateParams","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.860317+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestParamsQuery"}
-{"Time":"2026-06-16T16:11:27.860323+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestParamsQuery","Output":"=== RUN   TestParamsQuery\n"}
-{"Time":"2026-06-16T16:11:27.860471+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestParamsQuery","Output":"--- PASS: TestParamsQuery (0.00s)\n"}
-{"Time":"2026-06-16T16:11:27.860476+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Test":"TestParamsQuery","Elapsed":0}
-{"Time":"2026-06-16T16:11:27.860479+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Output":"PASS\n"}
-{"Time":"2026-06-16T16:11:27.861979+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Output":"ok  \tgithub.com/crossref/crossrefd/x/crossref/keeper\t0.703s\n"}
-{"Time":"2026-06-16T16:11:27.861998+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/keeper","Elapsed":0.704}
-{"Time":"2026-06-16T16:11:28.483385+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketVerifiesSourceDomainAndChain"}
-{"Time":"2026-06-16T16:11:28.483432+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketVerifiesSourceDomainAndChain","Output":"=== RUN   TestReceiveCrossReferencePacketVerifiesSourceDomainAndChain\n"}
-{"Time":"2026-06-16T16:11:28.484213+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketVerifiesSourceDomainAndChain","Output":"--- PASS: TestReceiveCrossReferencePacketVerifiesSourceDomainAndChain (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.48423+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketVerifiesSourceDomainAndChain","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.484242+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsSourceChainMismatch"}
-{"Time":"2026-06-16T16:11:28.484247+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsSourceChainMismatch","Output":"=== RUN   TestReceiveCrossReferencePacketRejectsSourceChainMismatch\n"}
-{"Time":"2026-06-16T16:11:28.484443+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsSourceChainMismatch","Output":"--- PASS: TestReceiveCrossReferencePacketRejectsSourceChainMismatch (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.484457+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsSourceChainMismatch","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.484463+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsMissingSourceDomain"}
-{"Time":"2026-06-16T16:11:28.484467+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsMissingSourceDomain","Output":"=== RUN   TestReceiveCrossReferencePacketRejectsMissingSourceDomain\n"}
-{"Time":"2026-06-16T16:11:28.484608+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsMissingSourceDomain","Output":"--- PASS: TestReceiveCrossReferencePacketRejectsMissingSourceDomain (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.484615+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsMissingSourceDomain","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.484619+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsCheckpointHashMismatch"}
-{"Time":"2026-06-16T16:11:28.484632+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsCheckpointHashMismatch","Output":"=== RUN   TestReceiveCrossReferencePacketRejectsCheckpointHashMismatch\n"}
-{"Time":"2026-06-16T16:11:28.484824+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsCheckpointHashMismatch","Output":"--- PASS: TestReceiveCrossReferencePacketRejectsCheckpointHashMismatch (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.48483+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsCheckpointHashMismatch","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.484833+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsMissingCheckpointProof"}
-{"Time":"2026-06-16T16:11:28.484836+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsMissingCheckpointProof","Output":"=== RUN   TestReceiveCrossReferencePacketRejectsMissingCheckpointProof\n"}
-{"Time":"2026-06-16T16:11:28.485027+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsMissingCheckpointProof","Output":"--- PASS: TestReceiveCrossReferencePacketRejectsMissingCheckpointProof (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.485032+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsMissingCheckpointProof","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.485035+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsInvalidCheckpointProof"}
-{"Time":"2026-06-16T16:11:28.485038+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsInvalidCheckpointProof","Output":"=== RUN   TestReceiveCrossReferencePacketRejectsInvalidCheckpointProof\n"}
-{"Time":"2026-06-16T16:11:28.485175+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsInvalidCheckpointProof","Output":"--- PASS: TestReceiveCrossReferencePacketRejectsInvalidCheckpointProof (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.485181+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsInvalidCheckpointProof","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.485185+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketVerifiesHysteresisSignature"}
-{"Time":"2026-06-16T16:11:28.485188+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketVerifiesHysteresisSignature","Output":"=== RUN   TestReceiveCrossReferencePacketVerifiesHysteresisSignature\n"}
-{"Time":"2026-06-16T16:11:28.486769+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketVerifiesHysteresisSignature","Output":"--- PASS: TestReceiveCrossReferencePacketVerifiesHysteresisSignature (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.486774+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketVerifiesHysteresisSignature","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.486778+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsInvalidHysteresisSignature"}
-{"Time":"2026-06-16T16:11:28.486784+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsInvalidHysteresisSignature","Output":"=== RUN   TestReceiveCrossReferencePacketRejectsInvalidHysteresisSignature\n"}
-{"Time":"2026-06-16T16:11:28.487064+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsInvalidHysteresisSignature","Output":"--- PASS: TestReceiveCrossReferencePacketRejectsInvalidHysteresisSignature (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.487074+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRejectsInvalidHysteresisSignature","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.487079+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRequiresHysteresisSignatureWhenDomainHasKey"}
-{"Time":"2026-06-16T16:11:28.487083+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRequiresHysteresisSignatureWhenDomainHasKey","Output":"=== RUN   TestReceiveCrossReferencePacketRequiresHysteresisSignatureWhenDomainHasKey\n"}
-{"Time":"2026-06-16T16:11:28.487438+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRequiresHysteresisSignatureWhenDomainHasKey","Output":"--- PASS: TestReceiveCrossReferencePacketRequiresHysteresisSignatureWhenDomainHasKey (0.00s)\n"}
-{"Time":"2026-06-16T16:11:28.487444+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Test":"TestReceiveCrossReferencePacketRequiresHysteresisSignatureWhenDomainHasKey","Elapsed":0}
-{"Time":"2026-06-16T16:11:28.487449+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Output":"PASS\n"}
-{"Time":"2026-06-16T16:11:28.488591+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/module","Output":"ok  \tgithub.com/crossref/crossrefd/x/crossref/module\t1.136s\n"}
-{"Time":"2026-06-16T16:11:28.488608+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/module","Elapsed":1.1360000000000001}
-{"Time":"2026-06-16T16:11:29.0826+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate"}
-{"Time":"2026-06-16T16:11:29.082643+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate","Output":"=== RUN   TestGenesisState_Validate\n"}
-{"Time":"2026-06-16T16:11:29.082651+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate/default_is_valid"}
-{"Time":"2026-06-16T16:11:29.082656+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate/default_is_valid","Output":"=== RUN   TestGenesisState_Validate/default_is_valid\n"}
-{"Time":"2026-06-16T16:11:29.082661+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate/default_is_valid","Output":"--- PASS: TestGenesisState_Validate/default_is_valid (0.00s)\n"}
-{"Time":"2026-06-16T16:11:29.082666+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate/default_is_valid","Elapsed":0}
-{"Time":"2026-06-16T16:11:29.082671+09:00","Action":"run","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate/valid_genesis_state"}
-{"Time":"2026-06-16T16:11:29.082674+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate/valid_genesis_state","Output":"=== RUN   TestGenesisState_Validate/valid_genesis_state\n"}
-{"Time":"2026-06-16T16:11:29.082678+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate/valid_genesis_state","Output":"--- PASS: TestGenesisState_Validate/valid_genesis_state (0.00s)\n"}
-{"Time":"2026-06-16T16:11:29.082688+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate/valid_genesis_state","Elapsed":0}
-{"Time":"2026-06-16T16:11:29.082704+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate","Output":"--- PASS: TestGenesisState_Validate (0.00s)\n"}
-{"Time":"2026-06-16T16:11:29.082707+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/types","Test":"TestGenesisState_Validate","Elapsed":0}
-{"Time":"2026-06-16T16:11:29.082718+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/types","Output":"PASS\n"}
-{"Time":"2026-06-16T16:11:29.08368+09:00","Action":"output","Package":"github.com/crossref/crossrefd/x/crossref/types","Output":"ok  \tgithub.com/crossref/crossrefd/x/crossref/types\t1.731s\n"}
-{"Time":"2026-06-16T16:11:29.083701+09:00","Action":"pass","Package":"github.com/crossref/crossrefd/x/crossref/types","Elapsed":1.7309999999999999}
+{
+  "generated_from": "/tmp/crossref-matrix-6c4r.log",
+  "ok": true,
+  "summary": {
+    "routes": 30,
+    "stored_cross_references": 30,
+    "has_ics23_proof": true,
+    "has_hysteresis_signature": true
+  },
+  "tests": [
+    {
+      "name": "DockerCrossrefExperiment",
+      "status": "PASS",
+      "routes": [
+        {
+          "route_id": "route-00",
+          "source_domain": "chain-a",
+          "source_channel": "channel-0",
+          "destination_domain": "chain-b",
+          "destination_channel": "channel-0"
+        },
+        {
+          "route_id": "route-01",
+          "source_domain": "chain-b",
+          "source_channel": "channel-0",
+          "destination_domain": "chain-a",
+          "destination_channel": "channel-0"
+        },
+        {
+          "route_id": "route-02",
+          "source_domain": "chain-a",
+          "source_channel": "channel-1",
+          "destination_domain": "chain-c",
+          "destination_channel": "channel-0"
+        },
+        {
+          "route_id": "route-03",
+          "source_domain": "chain-c",
+          "source_channel": "channel-0",
+          "destination_domain": "chain-a",
+          "destination_channel": "channel-1"
+        },
+        {
+          "route_id": "route-04",
+          "source_domain": "chain-a",
+          "source_channel": "channel-2",
+          "destination_domain": "chain-d",
+          "destination_channel": "channel-0"
+        },
+        {
+          "route_id": "route-05",
+          "source_domain": "chain-d",
+          "source_channel": "channel-0",
+          "destination_domain": "chain-a",
+          "destination_channel": "channel-2"
+        },
+        {
+          "route_id": "route-06",
+          "source_domain": "chain-a",
+          "source_channel": "channel-3",
+          "destination_domain": "chain-e",
+          "destination_channel": "channel-0"
+        },
+        {
+          "route_id": "route-07",
+          "source_domain": "chain-e",
+          "source_channel": "channel-0",
+          "destination_domain": "chain-a",
+          "destination_channel": "channel-3"
+        },
+        {
+          "route_id": "route-08",
+          "source_domain": "chain-a",
+          "source_channel": "channel-4",
+          "destination_domain": "chain-f",
+          "destination_channel": "channel-0"
+        },
+        {
+          "route_id": "route-09",
+          "source_domain": "chain-f",
+          "source_channel": "channel-0",
+          "destination_domain": "chain-a",
+          "destination_channel": "channel-4"
+        },
+        {
+          "route_id": "route-10",
+          "source_domain": "chain-b",
+          "source_channel": "channel-1",
+          "destination_domain": "chain-c",
+          "destination_channel": "channel-1"
+        },
+        {
+          "route_id": "route-11",
+          "source_domain": "chain-c",
+          "source_channel": "channel-1",
+          "destination_domain": "chain-b",
+          "destination_channel": "channel-1"
+        },
+        {
+          "route_id": "route-12",
+          "source_domain": "chain-b",
+          "source_channel": "channel-2",
+          "destination_domain": "chain-d",
+          "destination_channel": "channel-1"
+        },
+        {
+          "route_id": "route-13",
+          "source_domain": "chain-d",
+          "source_channel": "channel-1",
+          "destination_domain": "chain-b",
+          "destination_channel": "channel-2"
+        },
+        {
+          "route_id": "route-14",
+          "source_domain": "chain-b",
+          "source_channel": "channel-3",
+          "destination_domain": "chain-e",
+          "destination_channel": "channel-1"
+        },
+        {
+          "route_id": "route-15",
+          "source_domain": "chain-e",
+          "source_channel": "channel-1",
+          "destination_domain": "chain-b",
+          "destination_channel": "channel-3"
+        },
+        {
+          "route_id": "route-16",
+          "source_domain": "chain-b",
+          "source_channel": "channel-4",
+          "destination_domain": "chain-f",
+          "destination_channel": "channel-1"
+        },
+        {
+          "route_id": "route-17",
+          "source_domain": "chain-f",
+          "source_channel": "channel-1",
+          "destination_domain": "chain-b",
+          "destination_channel": "channel-4"
+        },
+        {
+          "route_id": "route-18",
+          "source_domain": "chain-c",
+          "source_channel": "channel-2",
+          "destination_domain": "chain-d",
+          "destination_channel": "channel-2"
+        },
+        {
+          "route_id": "route-19",
+          "source_domain": "chain-d",
+          "source_channel": "channel-2",
+          "destination_domain": "chain-c",
+          "destination_channel": "channel-2"
+        },
+        {
+          "route_id": "route-20",
+          "source_domain": "chain-c",
+          "source_channel": "channel-3",
+          "destination_domain": "chain-e",
+          "destination_channel": "channel-2"
+        },
+        {
+          "route_id": "route-21",
+          "source_domain": "chain-e",
+          "source_channel": "channel-2",
+          "destination_domain": "chain-c",
+          "destination_channel": "channel-3"
+        },
+        {
+          "route_id": "route-22",
+          "source_domain": "chain-c",
+          "source_channel": "channel-4",
+          "destination_domain": "chain-f",
+          "destination_channel": "channel-2"
+        },
+        {
+          "route_id": "route-23",
+          "source_domain": "chain-f",
+          "source_channel": "channel-2",
+          "destination_domain": "chain-c",
+          "destination_channel": "channel-4"
+        },
+        {
+          "route_id": "route-24",
+          "source_domain": "chain-d",
+          "source_channel": "channel-3",
+          "destination_domain": "chain-e",
+          "destination_channel": "channel-3"
+        },
+        {
+          "route_id": "route-25",
+          "source_domain": "chain-e",
+          "source_channel": "channel-3",
+          "destination_domain": "chain-d",
+          "destination_channel": "channel-3"
+        },
+        {
+          "route_id": "route-26",
+          "source_domain": "chain-d",
+          "source_channel": "channel-4",
+          "destination_domain": "chain-f",
+          "destination_channel": "channel-3"
+        },
+        {
+          "route_id": "route-27",
+          "source_domain": "chain-f",
+          "source_channel": "channel-3",
+          "destination_domain": "chain-d",
+          "destination_channel": "channel-4"
+        },
+        {
+          "route_id": "route-28",
+          "source_domain": "chain-e",
+          "source_channel": "channel-4",
+          "destination_domain": "chain-f",
+          "destination_channel": "channel-4"
+        },
+        {
+          "route_id": "route-29",
+          "source_domain": "chain-f",
+          "source_channel": "channel-4",
+          "destination_domain": "chain-e",
+          "destination_channel": "channel-4"
+        }
+      ],
+      "stored": [
+        {
+          "route_id": "route-01",
+          "local_domain": "chain-a",
+          "remote_domain": "chain-b"
+        },
+        {
+          "route_id": "route-03",
+          "local_domain": "chain-a",
+          "remote_domain": "chain-c"
+        },
+        {
+          "route_id": "route-05",
+          "local_domain": "chain-a",
+          "remote_domain": "chain-d"
+        },
+        {
+          "route_id": "route-07",
+          "local_domain": "chain-a",
+          "remote_domain": "chain-e"
+        },
+        {
+          "route_id": "route-09",
+          "local_domain": "chain-a",
+          "remote_domain": "chain-f"
+        },
+        {
+          "route_id": "route-00",
+          "local_domain": "chain-b",
+          "remote_domain": "chain-a"
+        },
+        {
+          "route_id": "route-11",
+          "local_domain": "chain-b",
+          "remote_domain": "chain-c"
+        },
+        {
+          "route_id": "route-13",
+          "local_domain": "chain-b",
+          "remote_domain": "chain-d"
+        },
+        {
+          "route_id": "route-15",
+          "local_domain": "chain-b",
+          "remote_domain": "chain-e"
+        },
+        {
+          "route_id": "route-17",
+          "local_domain": "chain-b",
+          "remote_domain": "chain-f"
+        },
+        {
+          "route_id": "route-02",
+          "local_domain": "chain-c",
+          "remote_domain": "chain-a"
+        },
+        {
+          "route_id": "route-10",
+          "local_domain": "chain-c",
+          "remote_domain": "chain-b"
+        },
+        {
+          "route_id": "route-19",
+          "local_domain": "chain-c",
+          "remote_domain": "chain-d"
+        },
+        {
+          "route_id": "route-21",
+          "local_domain": "chain-c",
+          "remote_domain": "chain-e"
+        },
+        {
+          "route_id": "route-23",
+          "local_domain": "chain-c",
+          "remote_domain": "chain-f"
+        },
+        {
+          "route_id": "route-04",
+          "local_domain": "chain-d",
+          "remote_domain": "chain-a"
+        },
+        {
+          "route_id": "route-12",
+          "local_domain": "chain-d",
+          "remote_domain": "chain-b"
+        },
+        {
+          "route_id": "route-18",
+          "local_domain": "chain-d",
+          "remote_domain": "chain-c"
+        },
+        {
+          "route_id": "route-25",
+          "local_domain": "chain-d",
+          "remote_domain": "chain-e"
+        },
+        {
+          "route_id": "route-27",
+          "local_domain": "chain-d",
+          "remote_domain": "chain-f"
+        },
+        {
+          "route_id": "route-06",
+          "local_domain": "chain-e",
+          "remote_domain": "chain-a"
+        },
+        {
+          "route_id": "route-14",
+          "local_domain": "chain-e",
+          "remote_domain": "chain-b"
+        },
+        {
+          "route_id": "route-20",
+          "local_domain": "chain-e",
+          "remote_domain": "chain-c"
+        },
+        {
+          "route_id": "route-24",
+          "local_domain": "chain-e",
+          "remote_domain": "chain-d"
+        },
+        {
+          "route_id": "route-29",
+          "local_domain": "chain-e",
+          "remote_domain": "chain-f"
+        },
+        {
+          "route_id": "route-08",
+          "local_domain": "chain-f",
+          "remote_domain": "chain-a"
+        },
+        {
+          "route_id": "route-16",
+          "local_domain": "chain-f",
+          "remote_domain": "chain-b"
+        },
+        {
+          "route_id": "route-22",
+          "local_domain": "chain-f",
+          "remote_domain": "chain-c"
+        },
+        {
+          "route_id": "route-26",
+          "local_domain": "chain-f",
+          "remote_domain": "chain-d"
+        },
+        {
+          "route_id": "route-28",
+          "local_domain": "chain-f",
+          "remote_domain": "chain-e"
+        }
+      ]
+    }
+  ]
+}

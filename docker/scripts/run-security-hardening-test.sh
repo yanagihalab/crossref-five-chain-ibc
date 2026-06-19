@@ -10,11 +10,14 @@ BLOCK_TIME_UNIX="${BLOCK_TIME_UNIX:-0}"
 ROTATION_HEIGHT="${ROTATION_HEIGHT:-2}"
 THRESHOLD_HEIGHT="${THRESHOLD_HEIGHT:-2}"
 BAD_PROOF_HEIGHT="${BAD_PROOF_HEIGHT:-2}"
+STALE_PROOF_HEIGHT="${STALE_PROOF_HEIGHT:-3}"
 REPLAY_HEIGHT="${REPLAY_HEIGHT:-1}"
 SKIP_REPLAY="${SKIP_REPLAY:-0}"
 SKIP_ROTATION="${SKIP_ROTATION:-0}"
 SKIP_THRESHOLD="${SKIP_THRESHOLD:-0}"
 SKIP_BAD_PROOF="${SKIP_BAD_PROOF:-0}"
+SKIP_STALE_PROOF="${SKIP_STALE_PROOF:-0}"
+STALE_PROOF_MAX_WAIT_BLOCKS="${STALE_PROOF_MAX_WAIT_BLOCKS:-80}"
 
 dc() {
   docker compose -f "${COMPOSE_FILE}" "$@"
@@ -184,6 +187,16 @@ previous_checkpoint_hash() {
   query_chain "${domain}" query crossref checkpoint "${domain}" "${previous_height}" --output json | json_string_field checkpoint_hash
 }
 
+previous_state_hash() {
+  domain="$1"
+  height="$2"
+  if [ "${height}" -le 1 ]; then
+    return 0
+  fi
+  previous_height=$((height - 1))
+  query_chain "${domain}" query crossref checkpoint "${domain}" "${previous_height}" --output json | json_string_field state_hash
+}
+
 hysteresis_json() {
   domain="$1"
   height="$2"
@@ -191,7 +204,9 @@ hysteresis_json() {
   app_hash="$4"
   seed="$5"
   previous_hash="${6:-}"
-  go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "${seed}" "${previous_hash}"
+  previous_state_hash="${7:-}"
+  key_epoch="${8:-1}"
+  go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "${seed}" "${previous_hash}" "${previous_state_hash}" "${key_epoch}"
 }
 
 hysteresis_public_key() {
@@ -207,7 +222,21 @@ hysteresis_signature() {
   app_hash="$4"
   seed="$5"
   previous_hash="${6:-}"
-  hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${seed}" "${previous_hash}" | json_string_field signature
+  previous_state_hash="${7:-}"
+  key_epoch="${8:-1}"
+  hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${seed}" "${previous_hash}" "${previous_state_hash}" "${key_epoch}" | json_string_field signature
+}
+
+hysteresis_state_hash() {
+  domain="$1"
+  height="$2"
+  block_hash="$3"
+  app_hash="$4"
+  seed="$5"
+  previous_hash="${6:-}"
+  previous_state_hash="${7:-}"
+  key_epoch="${8:-1}"
+  hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${seed}" "${previous_hash}" "${previous_state_hash}" "${key_epoch}" | json_string_field state_hash
 }
 
 threshold_json() {
@@ -217,7 +246,8 @@ threshold_json() {
   app_hash="$4"
   signer_count="$5"
   previous_hash="${6:-}"
-  go run ./docker/scripts/hysteresis-threshold-sign "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" 2 3 "${signer_count}" "crossref-threshold-${domain}" "${previous_hash}"
+  previous_state_hash="${7:-}"
+  go run ./docker/scripts/hysteresis-threshold-sign "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" 2 3 "${signer_count}" "crossref-threshold-${domain}" "${previous_hash}" "${previous_state_hash}"
 }
 
 threshold_public_key() {
@@ -232,7 +262,19 @@ threshold_signature() {
   app_hash="$4"
   signer_count="$5"
   previous_hash="${6:-}"
-  threshold_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${signer_count}" "${previous_hash}" | json_string_field signature
+  previous_state_hash="${7:-}"
+  threshold_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${signer_count}" "${previous_hash}" "${previous_state_hash}" | json_string_field signature
+}
+
+threshold_state_hash() {
+  domain="$1"
+  height="$2"
+  block_hash="$3"
+  app_hash="$4"
+  signer_count="$5"
+  previous_hash="${6:-}"
+  previous_state_hash="${7:-}"
+  threshold_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${signer_count}" "${previous_hash}" "${previous_state_hash}" | json_string_field state_hash
 }
 
 checkpoint_proof_json() {
@@ -258,6 +300,38 @@ assert_no_cross_reference() {
   cat /tmp/crossref-hardening-query.out
 }
 
+current_block_height() {
+  domain="$1"
+  query_chain "${domain}" status --output json \
+    | sed -n 's/.*"latest_block_height"[[:space:]]*:[[:space:]]*"\{0,1\}\([0-9][0-9]*\)"\{0,1\}.*/\1/p' \
+    | tail -1
+}
+
+wait_until_proof_is_stale() {
+  domain="$1"
+  proof_height="$2"
+  max_lag="${CROSSREF_MAX_CHECKPOINT_PROOF_LAG:-10000}"
+  target_height=$((proof_height + max_lag + 1))
+  start_height="$(current_block_height "${domain}")"
+  max_height=$((start_height + STALE_PROOF_MAX_WAIT_BLOCKS))
+
+  if [ "${target_height}" -gt "${max_height}" ]; then
+    echo "Stale proof check would require waiting until block ${target_height}, beyond max wait ${max_height}." >&2
+    echo "Start this Docker stack with CROSSREF_MAX_CHECKPOINT_PROOF_LAG set to a small value, for example 5." >&2
+    exit 1
+  fi
+
+  echo "Waiting for ${domain} to pass stale proof target height ${target_height}..."
+  while true; do
+    current="$(current_block_height "${domain}")"
+    if [ -n "${current}" ] && [ "${current}" -ge "${target_height}" ]; then
+      echo "${domain} current height ${current}; proof height ${proof_height} is stale."
+      return 0
+    fi
+    sleep 3
+  done
+}
+
 echo "Running security hardening test on ${TOPOLOGY_FILE} using ${DOMAIN_A}, ${DOMAIN_B}, ${DOMAIN_C}."
 
 if [ "${SKIP_REPLAY}" = "1" ]; then
@@ -281,21 +355,25 @@ else
 ROTATED_SEED="crossref-rotated-${DOMAIN_A}"
 ROTATED_PUBLIC_KEY="$(hysteresis_public_key "${DOMAIN_A}" "${ROTATED_SEED}")"
 for local_domain in ${DOMAINS}; do
-  run_tx "${local_domain}" register-domain validator "${DOMAIN_A}" "$(chain_id "${DOMAIN_A}")" --hysteresis-public-key "${ROTATED_PUBLIC_KEY}"
+  run_tx "${local_domain}" register-domain validator "${DOMAIN_A}" "$(chain_id "${DOMAIN_A}")" --hysteresis-public-key "${ROTATED_PUBLIC_KEY}" --key-epoch 2
 done
 rotation_block_hash="$(block_hash_for_domain_height "${DOMAIN_A}" "${ROTATION_HEIGHT}")"
 rotation_app_hash="$(app_hash_for_domain_height "${DOMAIN_A}" "${ROTATION_HEIGHT}")"
 rotation_previous_hash="$(previous_checkpoint_hash "${DOMAIN_A}" "${ROTATION_HEIGHT}")"
-rotation_signature="$(hysteresis_signature "${DOMAIN_A}" "${ROTATION_HEIGHT}" "${rotation_block_hash}" "${rotation_app_hash}" "${ROTATED_SEED}" "${rotation_previous_hash}")"
-run_tx "${DOMAIN_A}" submit-checkpoint validator "${DOMAIN_A}" "${ROTATION_HEIGHT}" "${rotation_block_hash}" "${rotation_app_hash}" --previous-checkpoint-hash "${rotation_previous_hash}" --hysteresis-signature "${rotation_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+rotation_previous_state="$(previous_state_hash "${DOMAIN_A}" "${ROTATION_HEIGHT}")"
+rotation_state_hash="$(hysteresis_state_hash "${DOMAIN_A}" "${ROTATION_HEIGHT}" "${rotation_block_hash}" "${rotation_app_hash}" "${ROTATED_SEED}" "${rotation_previous_hash}" "${rotation_previous_state}" 2)"
+rotation_signature="$(hysteresis_signature "${DOMAIN_A}" "${ROTATION_HEIGHT}" "${rotation_block_hash}" "${rotation_app_hash}" "${ROTATED_SEED}" "${rotation_previous_hash}" "${rotation_previous_state}" 2)"
+run_tx "${DOMAIN_A}" submit-checkpoint validator "${DOMAIN_A}" "${ROTATION_HEIGHT}" "${rotation_block_hash}" "${rotation_app_hash}" --previous-checkpoint-hash "${rotation_previous_hash}" --previous-state-hash "${rotation_previous_state}" --state-hash "${rotation_state_hash}" --hysteresis-signature "${rotation_signature}" --block-time-unix "${BLOCK_TIME_UNIX}" --key-epoch 2
 
 old_seed="crossref-topology-hysteresis-${DOMAIN_A}"
 next_height=$((ROTATION_HEIGHT + 1))
 next_block_hash="$(block_hash_for_domain_height "${DOMAIN_A}" "${next_height}")"
 next_app_hash="$(app_hash_for_domain_height "${DOMAIN_A}" "${next_height}")"
 next_previous_hash="$(previous_checkpoint_hash "${DOMAIN_A}" "${next_height}")"
-old_signature="$(hysteresis_signature "${DOMAIN_A}" "${next_height}" "${next_block_hash}" "${next_app_hash}" "${old_seed}" "${next_previous_hash}")"
-expect_tx_failure "${DOMAIN_A}" "hysteresis signature" submit-checkpoint validator "${DOMAIN_A}" "${next_height}" "${next_block_hash}" "${next_app_hash}" --previous-checkpoint-hash "${next_previous_hash}" --hysteresis-signature "${old_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+next_previous_state="$(previous_state_hash "${DOMAIN_A}" "${next_height}")"
+next_state_hash="$(hysteresis_state_hash "${DOMAIN_A}" "${next_height}" "${next_block_hash}" "${next_app_hash}" "${old_seed}" "${next_previous_hash}" "${next_previous_state}")"
+old_signature="$(hysteresis_signature "${DOMAIN_A}" "${next_height}" "${next_block_hash}" "${next_app_hash}" "${old_seed}" "${next_previous_hash}" "${next_previous_state}")"
+expect_tx_failure "${DOMAIN_A}" "hysteresis signature" submit-checkpoint validator "${DOMAIN_A}" "${next_height}" "${next_block_hash}" "${next_app_hash}" --previous-checkpoint-hash "${next_previous_hash}" --previous-state-hash "${next_previous_state}" --state-hash "${next_state_hash}" --hysteresis-signature "${old_signature}" --block-time-unix "${BLOCK_TIME_UNIX}" --key-epoch 1
 fi
 
 if [ "${SKIP_THRESHOLD}" = "1" ]; then
@@ -309,15 +387,19 @@ done
 threshold_block_hash="$(block_hash_for_domain_height "${DOMAIN_B}" "${THRESHOLD_HEIGHT}")"
 threshold_app_hash="$(app_hash_for_domain_height "${DOMAIN_B}" "${THRESHOLD_HEIGHT}")"
 threshold_previous_hash="$(previous_checkpoint_hash "${DOMAIN_B}" "${THRESHOLD_HEIGHT}")"
-threshold_good_signature="$(threshold_signature "${DOMAIN_B}" "${THRESHOLD_HEIGHT}" "${threshold_block_hash}" "${threshold_app_hash}" 2 "${threshold_previous_hash}")"
-run_tx "${DOMAIN_B}" submit-checkpoint validator "${DOMAIN_B}" "${THRESHOLD_HEIGHT}" "${threshold_block_hash}" "${threshold_app_hash}" --previous-checkpoint-hash "${threshold_previous_hash}" --hysteresis-signature "${threshold_good_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+threshold_previous_state="$(previous_state_hash "${DOMAIN_B}" "${THRESHOLD_HEIGHT}")"
+threshold_state_hash="$(threshold_state_hash "${DOMAIN_B}" "${THRESHOLD_HEIGHT}" "${threshold_block_hash}" "${threshold_app_hash}" 2 "${threshold_previous_hash}" "${threshold_previous_state}")"
+threshold_good_signature="$(threshold_signature "${DOMAIN_B}" "${THRESHOLD_HEIGHT}" "${threshold_block_hash}" "${threshold_app_hash}" 2 "${threshold_previous_hash}" "${threshold_previous_state}")"
+run_tx "${DOMAIN_B}" submit-checkpoint validator "${DOMAIN_B}" "${THRESHOLD_HEIGHT}" "${threshold_block_hash}" "${threshold_app_hash}" --previous-checkpoint-hash "${threshold_previous_hash}" --previous-state-hash "${threshold_previous_state}" --state-hash "${threshold_state_hash}" --hysteresis-signature "${threshold_good_signature}" --block-time-unix "${BLOCK_TIME_UNIX}" --key-epoch 1
 
 threshold_next_height=$((THRESHOLD_HEIGHT + 1))
 threshold_next_block_hash="$(block_hash_for_domain_height "${DOMAIN_B}" "${threshold_next_height}")"
 threshold_next_app_hash="$(app_hash_for_domain_height "${DOMAIN_B}" "${threshold_next_height}")"
 threshold_next_previous_hash="$(previous_checkpoint_hash "${DOMAIN_B}" "${threshold_next_height}")"
-threshold_bad_signature="$(threshold_signature "${DOMAIN_B}" "${threshold_next_height}" "${threshold_next_block_hash}" "${threshold_next_app_hash}" 1 "${threshold_next_previous_hash}")"
-expect_tx_failure "${DOMAIN_B}" "valid_signatures=1 threshold=2" submit-checkpoint validator "${DOMAIN_B}" "${threshold_next_height}" "${threshold_next_block_hash}" "${threshold_next_app_hash}" --previous-checkpoint-hash "${threshold_next_previous_hash}" --hysteresis-signature "${threshold_bad_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+threshold_next_previous_state="$(previous_state_hash "${DOMAIN_B}" "${threshold_next_height}")"
+threshold_next_state_hash="$(threshold_state_hash "${DOMAIN_B}" "${threshold_next_height}" "${threshold_next_block_hash}" "${threshold_next_app_hash}" 1 "${threshold_next_previous_hash}" "${threshold_next_previous_state}")"
+threshold_bad_signature="$(threshold_signature "${DOMAIN_B}" "${threshold_next_height}" "${threshold_next_block_hash}" "${threshold_next_app_hash}" 1 "${threshold_next_previous_hash}" "${threshold_next_previous_state}")"
+expect_tx_failure "${DOMAIN_B}" "valid_signatures=1 threshold=2" submit-checkpoint validator "${DOMAIN_B}" "${threshold_next_height}" "${threshold_next_block_hash}" "${threshold_next_app_hash}" --previous-checkpoint-hash "${threshold_next_previous_hash}" --previous-state-hash "${threshold_next_previous_state}" --state-hash "${threshold_next_state_hash}" --hysteresis-signature "${threshold_bad_signature}" --block-time-unix "${BLOCK_TIME_UNIX}" --key-epoch 1
 fi
 
 if [ "${SKIP_BAD_PROOF}" = "1" ]; then
@@ -327,12 +409,35 @@ else
 bad_block_hash="$(block_hash_for_domain_height "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}")"
 bad_app_hash="$(app_hash_for_domain_height "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}")"
 bad_previous_hash="$(previous_checkpoint_hash "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}")"
-bad_signature="$(hysteresis_signature "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}" "${bad_block_hash}" "${bad_app_hash}" "crossref-topology-hysteresis-${DOMAIN_C}" "${bad_previous_hash}")"
-run_tx "${DOMAIN_C}" submit-checkpoint validator "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}" "${bad_block_hash}" "${bad_app_hash}" --previous-checkpoint-hash "${bad_previous_hash}" --hysteresis-signature "${bad_signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+bad_previous_state="$(previous_state_hash "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}")"
+bad_state_hash="$(hysteresis_state_hash "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}" "${bad_block_hash}" "${bad_app_hash}" "crossref-topology-hysteresis-${DOMAIN_C}" "${bad_previous_hash}" "${bad_previous_state}")"
+bad_signature="$(hysteresis_signature "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}" "${bad_block_hash}" "${bad_app_hash}" "crossref-topology-hysteresis-${DOMAIN_C}" "${bad_previous_hash}" "${bad_previous_state}")"
+run_tx "${DOMAIN_C}" submit-checkpoint validator "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}" "${bad_block_hash}" "${bad_app_hash}" --previous-checkpoint-hash "${bad_previous_hash}" --previous-state-hash "${bad_previous_state}" --state-hash "${bad_state_hash}" --hysteresis-signature "${bad_signature}" --block-time-unix "${BLOCK_TIME_UNIX}" --key-epoch 1
 bad_proof_b64="$(b64 "not-a-valid-ics23-proof")"
 run_tx "${DOMAIN_C}" send-cross-reference-packet validator "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}" crossref "$(channel_id "${DOMAIN_C}" "${DOMAIN_A}")" --source-checkpoint-proof "${bad_proof_b64}" --source-proof-revision-number 0 --source-proof-revision-height 1
 sleep 15
 assert_no_cross_reference "${DOMAIN_A}" "${DOMAIN_C}" "${BAD_PROOF_HEIGHT}"
+fi
+
+if [ "${SKIP_STALE_PROOF}" = "1" ]; then
+  echo "5. Skipping stale proof because SKIP_STALE_PROOF=1."
+else
+  echo "5. Verifying stale source checkpoint proof is rejected on ${DOMAIN_A}<-${DOMAIN_C}."
+stale_block_hash="$(block_hash_for_domain_height "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}")"
+stale_app_hash="$(app_hash_for_domain_height "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}")"
+stale_previous_hash="$(previous_checkpoint_hash "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}")"
+stale_previous_state="$(previous_state_hash "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}")"
+stale_state_hash="$(hysteresis_state_hash "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}" "${stale_block_hash}" "${stale_app_hash}" "crossref-topology-hysteresis-${DOMAIN_C}" "${stale_previous_hash}" "${stale_previous_state}")"
+stale_signature="$(hysteresis_signature "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}" "${stale_block_hash}" "${stale_app_hash}" "crossref-topology-hysteresis-${DOMAIN_C}" "${stale_previous_hash}" "${stale_previous_state}")"
+run_tx "${DOMAIN_C}" submit-checkpoint validator "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}" "${stale_block_hash}" "${stale_app_hash}" --previous-checkpoint-hash "${stale_previous_hash}" --previous-state-hash "${stale_previous_state}" --state-hash "${stale_state_hash}" --hysteresis-signature "${stale_signature}" --block-time-unix "${BLOCK_TIME_UNIX}" --key-epoch 1
+stale_proof_json="$(checkpoint_proof_json "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}")"
+stale_proof="$(printf '%s\n' "${stale_proof_json}" | proof_field source_checkpoint_proof)"
+stale_revision_number="$(printf '%s\n' "${stale_proof_json}" | sed -n 's/.*"source_proof_revision_number"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' | tail -1)"
+stale_revision_height="$(printf '%s\n' "${stale_proof_json}" | sed -n 's/.*"source_proof_revision_height"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' | tail -1)"
+wait_until_proof_is_stale "${DOMAIN_A}" "${stale_revision_height}"
+run_tx "${DOMAIN_C}" send-cross-reference-packet validator "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}" crossref "$(channel_id "${DOMAIN_C}" "${DOMAIN_A}")" --source-checkpoint-proof "${stale_proof}" --source-proof-revision-number "${stale_revision_number}" --source-proof-revision-height "${stale_revision_height}"
+sleep 15
+assert_no_cross_reference "${DOMAIN_A}" "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}"
 fi
 
 echo "Security hardening Docker test passed."

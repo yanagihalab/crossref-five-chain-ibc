@@ -635,10 +635,10 @@ All 20 destination/source cross-reference records are stored at height=1.`;
       },
       {
         name: "DockerFiveChainIBCExperiment",
-        desc: "Docker Desktop 上の 5 本の crossrefd と Hermes relayer による broadcast Cross-reference",
+        desc: "source chain の 1 tx が全宛先channelへ packet を発行し、Hermes relayer が各 destination chain へ配送する Cross-reference",
         target: "chain-a から chain-e の 20 directed routes を route-00..route-19 の通し番号で 1 Hermes relayer に集約",
-        expected: "Broadcast tx が登録済み channel binding を列挙し、対象 remote domain へ fan-out する",
-        verified: "5 chains full mesh、20 directed routes、受信側で source chain store proof 検証後に保存",
+        expected: "source chain が登録済み channel binding を列挙して全 destination channel へ SendPacket し、relayer が配送する",
+        verified: "5 chains full mesh、20 directed routes、destination chain 全ノードが block 実行で packet を検証・保存",
         network: true,
         routes: [
           { from: "A", to: "B", label: "route-00 A -> B", channel: "A channel-0 / B channel-0", kind: "packet", verify: "ICS23 proof: chain-a checkpoint/1" },
@@ -729,7 +729,9 @@ All 20 destination/source cross-reference records are stored at height=1.`;
     metricElapsed.textContent = testRun.elapsed;
     output.textContent = testOutput;
 
-    tests.forEach((test, index) => {
+    tests.forEach((test, index) => addTestButton(test, index));
+
+    function addTestButton(test, index) {
       const button = document.createElement("button");
       button.className = "test";
       button.type = "button";
@@ -739,7 +741,7 @@ All 20 destination/source cross-reference records are stored at height=1.`;
       button.addEventListener("click", () => selectTest(index));
       list.appendChild(button);
       buttons.push(button);
-    });
+    }
 
     playBtn.addEventListener("click", togglePlay);
     stepBtn.addEventListener("click", stepForward);
@@ -832,13 +834,7 @@ All 20 destination/source cross-reference records are stored at height=1.`;
     }
 
     function drawNetworkDiagram(test, progress = 0) {
-      const chains = {
-        A: { x: 170, y: 88, title: "chain-a", value: "A/1", color: "#eff6ff", stroke: "#2563eb" },
-        B: { x: 930, y: 88, title: "chain-b", value: "B/1", color: "#f0fdf4", stroke: "#0f8b6f" },
-        C: { x: 180, y: 292, title: "chain-c", value: "C/1", color: "#fff7ed", stroke: "#c2410c" },
-        D: { x: 920, y: 292, title: "chain-d", value: "D/1", color: "#fdf2f8", stroke: "#be185d" },
-        E: { x: 550, y: 334, title: "chain-e", value: "E/1", color: "#f5f3ff", stroke: "#7c3aed" }
-      };
+      const chains = networkChains(test);
       const relayer = { x: 550, y: 168, w: 210, h: 84 };
       const route = test.routes[selectedStep % test.routes.length];
 
@@ -852,12 +848,46 @@ All 20 destination/source cross-reference records are stored at height=1.`;
 
       test.routes.forEach((candidate) => {
         const active = candidate === route;
-        drawAggregatedRoute(chains[candidate.from], relayer, chains[candidate.to], candidate, active);
+        if (chains[candidate.from] && chains[candidate.to]) {
+          drawAggregatedRoute(chains[candidate.from], relayer, chains[candidate.to], candidate, active);
+        }
       });
 
-      drawRouteToken(chains[route.from], relayer, chains[route.to], route, progress);
+      if (chains[route.from] && chains[route.to]) {
+        drawRouteToken(chains[route.from], relayer, chains[route.to], route, progress);
+      }
       drawRouteLegend(route);
       drawNetworkStateBand(test, route);
+    }
+
+    function networkChains(test) {
+      const ids = Array.from(new Set(test.routes.flatMap((route) => [route.from, route.to]))).sort();
+      const palette = [
+        ["#eff6ff", "#2563eb"],
+        ["#f0fdf4", "#0f8b6f"],
+        ["#fff7ed", "#c2410c"],
+        ["#fdf2f8", "#be185d"],
+        ["#f5f3ff", "#7c3aed"],
+        ["#ecfeff", "#0891b2"],
+        ["#fefce8", "#a16207"],
+        ["#f8fafc", "#475569"]
+      ];
+      const cx = 550;
+      const cy = 188;
+      const rx = 385;
+      const ry = 138;
+      return Object.fromEntries(ids.map((id, index) => {
+        const angle = -Math.PI / 2 + (Math.PI * 2 * index) / Math.max(ids.length, 1);
+        const [color, stroke] = palette[index % palette.length];
+        return [id, {
+          x: cx + Math.cos(angle) * rx,
+          y: cy + Math.sin(angle) * ry,
+          title: `chain-${id.toLowerCase()}`,
+          value: `${id}/1`,
+          color,
+          stroke
+        }];
+      }));
     }
 
     function drawChainNode(id, node, active) {
@@ -889,7 +919,7 @@ All 20 destination/source cross-reference records are stored at height=1.`;
       ctx.fillText("Hermes relayer", relayer.x - 58, relayer.y - 12);
       ctx.fillStyle = "#64748b";
       ctx.font = "12px system-ui, sans-serif";
-      ctx.fillText("one process / broadcast fan-out", relayer.x - 76, relayer.y + 11);
+      ctx.fillText("delivers packets to destination chains", relayer.x - 94, relayer.y + 11);
       ctx.fillStyle = route.kind === "packet" ? "#2563eb" : "#0f8b6f";
       ctx.font = "700 12px system-ui, sans-serif";
       ctx.fillText(`active: ${route.label}`, relayer.x - 70, relayer.y + 33);
@@ -1145,7 +1175,62 @@ All 20 destination/source cross-reference records are stored at height=1.`;
       });
     }
 
+    async function loadExternalResults() {
+      try {
+        const response = await fetch("test-results.json", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        const generated = externalResultToTest(data);
+        if (!generated) return;
+        tests.push(generated);
+        addTestButton(generated, tests.length - 1);
+        summaryCount.textContent = `${data.summary?.stored_cross_references ?? testRun.passed} / ${data.summary?.routes ?? testRun.passed + testRun.failed} stored`;
+        summaryCommand.textContent = data.generated_from ? `loaded ${data.generated_from}` : summaryCommand.textContent;
+      } catch {
+        // file:// browsers may block fetch; the embedded sample data remains usable.
+      }
+    }
+
+    function externalResultToTest(data) {
+      const first = data.tests?.find((item) => Array.isArray(item.routes) && item.routes.length > 0);
+      if (!first) return null;
+      const routes = first.routes.map((route) => {
+        const from = chainLetter(route.source_domain);
+        const to = chainLetter(route.destination_domain);
+        return {
+          from,
+          to,
+          label: `${route.route_id} ${from} -> ${to}`,
+          channel: `${route.source_domain}/${route.source_channel} -> ${route.destination_domain}/${route.destination_channel}`,
+          kind: route.accountability_event ? "alert" : "packet",
+          verify: route.accountability_event
+            ? `accountability: ${route.accountability_event.event_type}`
+            : "strict H(Sn-1), ICS23 proof, optional consensus proof"
+        };
+      });
+      const accountabilityEvents = data.accountability_events || data.accountabilityEvents || [];
+      const controllerMetrics = data.controller_metrics || data.controllerMetrics || [];
+      return {
+        name: `${first.name || "DockerCrossrefExperiment"}FromJSON`,
+        desc: `${routes.length} routes loaded from experiment JSON`,
+        target: data.generated_from || "visualizer/test-results.json",
+        expected: "実験ログから生成された route / proof / accountability 状態を表示する",
+        verified: `stored=${data.summary?.stored_cross_references ?? "?"}/${data.summary?.routes ?? routes.length}, accountability=${accountabilityEvents.length}, controller_metrics=${controllerMetrics.length}`,
+        network: true,
+        routes,
+        steps: routes.map((route) => `${route.label}: ${route.channel}`),
+        nodes: [],
+        edges: []
+      };
+    }
+
+    function chainLetter(domain) {
+      const suffix = String(domain || "").split("-").pop() || "?";
+      return suffix.slice(0, 1).toUpperCase();
+    }
+
     selectTest(0);
+    loadExternalResults();
   </script>
 </body>
 </html>

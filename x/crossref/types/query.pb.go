@@ -6,7 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types/query"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
@@ -490,6 +490,198 @@ func (m *QueryCrossReferenceResponse) GetCrossReference() CrossReference {
 	return CrossReference{}
 }
 
+type QueryAccountabilityEventRequest struct {
+	EventId string `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+}
+
+func (m *QueryAccountabilityEventRequest) Reset()         { *m = QueryAccountabilityEventRequest{} }
+func (m *QueryAccountabilityEventRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAccountabilityEventRequest) ProtoMessage()    {}
+func (*QueryAccountabilityEventRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{10}
+}
+func (m *QueryAccountabilityEventRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAccountabilityEventRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAccountabilityEventRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAccountabilityEventRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAccountabilityEventRequest.Merge(m, src)
+}
+func (m *QueryAccountabilityEventRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAccountabilityEventRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAccountabilityEventRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAccountabilityEventRequest proto.InternalMessageInfo
+
+func (m *QueryAccountabilityEventRequest) GetEventId() string {
+	if m != nil {
+		return m.EventId
+	}
+	return ""
+}
+
+type QueryAccountabilityEventResponse struct {
+	Event AccountabilityEvent `protobuf:"bytes,1,opt,name=event,proto3" json:"event"`
+}
+
+func (m *QueryAccountabilityEventResponse) Reset()         { *m = QueryAccountabilityEventResponse{} }
+func (m *QueryAccountabilityEventResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAccountabilityEventResponse) ProtoMessage()    {}
+func (*QueryAccountabilityEventResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{11}
+}
+func (m *QueryAccountabilityEventResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAccountabilityEventResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAccountabilityEventResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAccountabilityEventResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAccountabilityEventResponse.Merge(m, src)
+}
+func (m *QueryAccountabilityEventResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAccountabilityEventResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAccountabilityEventResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAccountabilityEventResponse proto.InternalMessageInfo
+
+func (m *QueryAccountabilityEventResponse) GetEvent() AccountabilityEvent {
+	if m != nil {
+		return m.Event
+	}
+	return AccountabilityEvent{}
+}
+
+type QueryAccountabilityEventsRequest struct {
+	DomainId   string             `protobuf:"bytes,1,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty"`
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAccountabilityEventsRequest) Reset()         { *m = QueryAccountabilityEventsRequest{} }
+func (m *QueryAccountabilityEventsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAccountabilityEventsRequest) ProtoMessage()    {}
+func (*QueryAccountabilityEventsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{12}
+}
+func (m *QueryAccountabilityEventsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAccountabilityEventsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAccountabilityEventsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAccountabilityEventsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAccountabilityEventsRequest.Merge(m, src)
+}
+func (m *QueryAccountabilityEventsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAccountabilityEventsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAccountabilityEventsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAccountabilityEventsRequest proto.InternalMessageInfo
+
+func (m *QueryAccountabilityEventsRequest) GetDomainId() string {
+	if m != nil {
+		return m.DomainId
+	}
+	return ""
+}
+
+func (m *QueryAccountabilityEventsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type QueryAccountabilityEventsResponse struct {
+	Events     []AccountabilityEvent `protobuf:"bytes,1,rep,name=events,proto3" json:"events"`
+	Pagination *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAccountabilityEventsResponse) Reset()         { *m = QueryAccountabilityEventsResponse{} }
+func (m *QueryAccountabilityEventsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAccountabilityEventsResponse) ProtoMessage()    {}
+func (*QueryAccountabilityEventsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc4067ce57b12db3, []int{13}
+}
+func (m *QueryAccountabilityEventsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAccountabilityEventsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAccountabilityEventsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAccountabilityEventsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAccountabilityEventsResponse.Merge(m, src)
+}
+func (m *QueryAccountabilityEventsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAccountabilityEventsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAccountabilityEventsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAccountabilityEventsResponse proto.InternalMessageInfo
+
+func (m *QueryAccountabilityEventsResponse) GetEvents() []AccountabilityEvent {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+func (m *QueryAccountabilityEventsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "crossrefd.crossref.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "crossrefd.crossref.v1.QueryParamsResponse")
@@ -501,57 +693,73 @@ func init() {
 	proto.RegisterType((*QueryLatestCheckpointResponse)(nil), "crossrefd.crossref.v1.QueryLatestCheckpointResponse")
 	proto.RegisterType((*QueryCrossReferenceRequest)(nil), "crossrefd.crossref.v1.QueryCrossReferenceRequest")
 	proto.RegisterType((*QueryCrossReferenceResponse)(nil), "crossrefd.crossref.v1.QueryCrossReferenceResponse")
+	proto.RegisterType((*QueryAccountabilityEventRequest)(nil), "crossrefd.crossref.v1.QueryAccountabilityEventRequest")
+	proto.RegisterType((*QueryAccountabilityEventResponse)(nil), "crossrefd.crossref.v1.QueryAccountabilityEventResponse")
+	proto.RegisterType((*QueryAccountabilityEventsRequest)(nil), "crossrefd.crossref.v1.QueryAccountabilityEventsRequest")
+	proto.RegisterType((*QueryAccountabilityEventsResponse)(nil), "crossrefd.crossref.v1.QueryAccountabilityEventsResponse")
 }
 
 func init() { proto.RegisterFile("crossrefd/crossref/v1/query.proto", fileDescriptor_fc4067ce57b12db3) }
 
 var fileDescriptor_fc4067ce57b12db3 = []byte{
-	// 707 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0xcf, 0x4f, 0x13, 0x41,
-	0x14, 0xc7, 0x3b, 0x88, 0x55, 0x9e, 0xf2, 0xc3, 0x11, 0x91, 0x2c, 0x50, 0x61, 0x8d, 0xa4, 0x92,
-	0xb8, 0x93, 0x82, 0x9e, 0x48, 0x94, 0x54, 0xa2, 0x90, 0x68, 0xa2, 0x8d, 0xd1, 0xc4, 0x4b, 0x33,
-	0xdd, 0x0e, 0xdb, 0x0d, 0xed, 0xce, 0xb2, 0x33, 0x10, 0x49, 0xc3, 0xc5, 0x7f, 0x40, 0x13, 0x8e,
-	0xfa, 0x07, 0x78, 0xf4, 0xe2, 0x9f, 0x60, 0xc2, 0x91, 0xc4, 0x8b, 0x27, 0x43, 0xc0, 0xc4, 0x7f,
-	0xc3, 0x74, 0x66, 0xda, 0xb2, 0xa5, 0x3f, 0xa8, 0xf1, 0xd2, 0x4c, 0x5f, 0xdf, 0xf7, 0xbd, 0xcf,
-	0x7b, 0x6f, 0xde, 0x14, 0xe6, 0xdc, 0x88, 0x0b, 0x11, 0xb1, 0x8d, 0x22, 0xa9, 0x9f, 0xc8, 0x4e,
-	0x86, 0x6c, 0x6d, 0xb3, 0x68, 0xd7, 0x09, 0x23, 0x2e, 0x39, 0xbe, 0xd1, 0x70, 0x71, 0xea, 0x27,
-	0x67, 0x27, 0x63, 0x5d, 0xa3, 0x15, 0x3f, 0xe0, 0x44, 0x7d, 0x6a, 0x4f, 0x6b, 0xc1, 0xe5, 0xa2,
-	0xc2, 0x05, 0x29, 0x50, 0xc1, 0x74, 0x08, 0xb2, 0x93, 0x29, 0x30, 0x49, 0x33, 0x24, 0xa4, 0x9e,
-	0x1f, 0x50, 0xe9, 0xf3, 0xc0, 0xf8, 0xda, 0xed, 0x13, 0x87, 0xd4, 0xdd, 0x64, 0xb2, 0x97, 0x4f,
-	0x44, 0x2b, 0xc2, 0xf8, 0x8c, 0x7b, 0xdc, 0xe3, 0xea, 0x48, 0x6a, 0x27, 0x63, 0x9d, 0xf6, 0x38,
-	0xf7, 0xca, 0x8c, 0xd0, 0xd0, 0x27, 0x34, 0x08, 0xb8, 0x54, 0xa9, 0x8d, 0xc6, 0x1e, 0x07, 0xfc,
-	0xb2, 0x46, 0xf7, 0x42, 0x05, 0xca, 0xb1, 0xad, 0x6d, 0x26, 0xa4, 0xfd, 0x06, 0xae, 0xc7, 0xac,
-	0x22, 0xe4, 0x81, 0x60, 0x78, 0x05, 0x92, 0x3a, 0xe1, 0x24, 0x9a, 0x45, 0xe9, 0x2b, 0x8b, 0x33,
-	0x4e, 0xdb, 0x7e, 0x38, 0x5a, 0x96, 0x1d, 0x3a, 0xf8, 0x75, 0x2b, 0xf1, 0xe5, 0xcf, 0xd7, 0x05,
-	0x94, 0x33, 0x3a, 0x3b, 0x63, 0xd2, 0xad, 0xf2, 0x0a, 0xf5, 0x03, 0x93, 0x0e, 0x4f, 0xc1, 0x50,
-	0x51, 0x19, 0xf2, 0x7e, 0x51, 0x85, 0x1e, 0xca, 0x5d, 0xd6, 0x86, 0xf5, 0xa2, 0xfd, 0xda, 0xb0,
-	0xd4, 0x25, 0x86, 0xe5, 0x11, 0x24, 0xb5, 0x8b, 0x61, 0x99, 0xeb, 0xc0, 0xa2, 0x65, 0xeb, 0xc1,
-	0x06, 0xcf, 0x0e, 0xd6, 0x78, 0x72, 0x46, 0x66, 0x3f, 0x87, 0x09, 0x15, 0xf7, 0x71, 0x89, 0xb9,
-	0x9b, 0x21, 0xf7, 0x03, 0x79, 0x1e, 0x1c, 0x3c, 0x01, 0xc9, 0x12, 0xf3, 0xbd, 0x92, 0x9c, 0x1c,
-	0x98, 0x45, 0xe9, 0xc1, 0x9c, 0xf9, 0x66, 0x17, 0xe0, 0xe6, 0x99, 0x70, 0x06, 0xf5, 0x29, 0x80,
-	0xdb, 0xb0, 0xf6, 0xc0, 0x6d, 0xca, 0x0d, 0xee, 0x29, 0xa9, 0xbd, 0x0c, 0xd3, 0x2a, 0xc7, 0x33,
-	0x2a, 0x99, 0x90, 0xfd, 0x81, 0xdb, 0x25, 0x98, 0xe9, 0x20, 0xfe, 0xdf, 0x98, 0xfb, 0x08, 0x2c,
-	0xdd, 0x8b, 0x9a, 0x22, 0xc7, 0x36, 0x58, 0xc4, 0x02, 0x97, 0xd5, 0x29, 0xe7, 0x61, 0xb4, 0xcc,
-	0x5d, 0x5a, 0xce, 0xb7, 0xb2, 0x0e, 0x2b, 0xf3, 0x6a, 0xbd, 0xd3, 0x69, 0x18, 0x8b, 0x58, 0x85,
-	0x4b, 0x76, 0xca, 0x71, 0x40, 0x39, 0x8e, 0x68, 0x7b, 0xc3, 0xf3, 0x36, 0x0c, 0x1b, 0x4f, 0x33,
-	0x9a, 0x0b, 0x6a, 0x34, 0x57, 0xb5, 0x71, 0x4d, 0x0f, 0x48, 0xc0, 0x54, 0x5b, 0x28, 0x53, 0xfd,
-	0x2b, 0x18, 0x55, 0x05, 0xe6, 0xa3, 0xfa, 0x4f, 0xa6, 0x05, 0x77, 0x3a, 0xb5, 0x20, 0x16, 0xc7,
-	0xb4, 0x61, 0xc4, 0x8d, 0x59, 0x17, 0x3f, 0x5d, 0x82, 0x8b, 0x2a, 0x2b, 0xfe, 0x80, 0x20, 0xa9,
-	0xf7, 0x02, 0xdf, 0xed, 0x10, 0xf1, 0xec, 0x22, 0x5a, 0x0b, 0xe7, 0x71, 0xd5, 0x15, 0xd8, 0xce,
-	0xfb, 0x1f, 0xbf, 0xf7, 0x07, 0xd2, 0x78, 0xbe, 0xf9, 0x42, 0x74, 0x7b, 0x34, 0xf0, 0x67, 0x04,
-	0x49, 0xdd, 0xc2, 0xee, 0x44, 0xb1, 0x5d, 0xed, 0x4e, 0x14, 0xdf, 0x51, 0x7b, 0x59, 0x11, 0x3d,
-	0xc0, 0x4b, 0xbd, 0x88, 0xf4, 0x80, 0x05, 0xa9, 0x36, 0x26, 0xbd, 0x87, 0xbf, 0x21, 0x80, 0xe6,
-	0x35, 0xc3, 0xf7, 0xba, 0xe5, 0x3d, 0xb3, 0x0a, 0x96, 0x73, 0x5e, 0x77, 0x83, 0xba, 0xa6, 0x50,
-	0xb3, 0x78, 0xa5, 0x17, 0x6a, 0xf3, 0x9e, 0xc7, 0x70, 0x49, 0x55, 0x5f, 0xbd, 0x3d, 0xfc, 0x1d,
-	0xc1, 0x58, 0xeb, 0x8e, 0xe1, 0xa5, 0x6e, 0x38, 0x1d, 0xd6, 0xd9, 0xba, 0xdf, 0x9f, 0xc8, 0x54,
-	0xf2, 0x44, 0x55, 0xb2, 0x82, 0x1f, 0xfe, 0x6b, 0x25, 0x65, 0x15, 0x19, 0x1f, 0x21, 0x18, 0x89,
-	0xdf, 0x71, 0x9c, 0xe9, 0xda, 0xd4, 0x76, 0xcb, 0x6e, 0x2d, 0xf6, 0x23, 0x31, 0x15, 0x78, 0xaa,
-	0x02, 0x8a, 0xf3, 0xbd, 0x2a, 0x68, 0xac, 0xaa, 0x20, 0xd5, 0x96, 0x27, 0x65, 0x8f, 0x54, 0x5b,
-	0x1f, 0x8f, 0xa6, 0xc9, 0x8c, 0x2a, 0xbb, 0x76, 0x70, 0x9c, 0x42, 0x87, 0xc7, 0x29, 0x74, 0x74,
-	0x9c, 0x42, 0x1f, 0x4f, 0x52, 0x89, 0xc3, 0x93, 0x54, 0xe2, 0xe7, 0x49, 0x2a, 0xf1, 0xd6, 0xf1,
-	0x7c, 0x59, 0xda, 0x2e, 0x38, 0x2e, 0xaf, 0xb4, 0x83, 0x78, 0xd7, 0x34, 0xca, 0xdd, 0x90, 0x89,
-	0x42, 0x52, 0xfd, 0x9b, 0x2e, 0xfd, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x9f, 0x0f, 0x76, 0xa5, 0x44,
-	0x08, 0x00, 0x00,
+	// 899 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xcf, 0x6f, 0x1b, 0x45,
+	0x14, 0xc7, 0x3d, 0x69, 0x6b, 0x9a, 0x57, 0x9a, 0x96, 0x69, 0x28, 0x65, 0xdb, 0xba, 0xc9, 0x22,
+	0x82, 0xb1, 0xc4, 0x8e, 0xec, 0x50, 0x8a, 0x54, 0x7e, 0x04, 0x53, 0x82, 0x23, 0x81, 0x54, 0x2c,
+	0x04, 0x12, 0x17, 0x6b, 0xbc, 0x9e, 0xac, 0x97, 0xda, 0x3b, 0xce, 0xee, 0xda, 0x22, 0xb2, 0x7c,
+	0xe1, 0xc2, 0x11, 0xa4, 0x5c, 0xf9, 0x03, 0x38, 0x72, 0x01, 0x89, 0x3f, 0x00, 0x29, 0xc7, 0x48,
+	0x5c, 0x38, 0xa1, 0x28, 0x41, 0xe2, 0xdf, 0x40, 0x3b, 0x33, 0xeb, 0xf5, 0xda, 0xbb, 0x6b, 0x3b,
+	0xea, 0x25, 0xda, 0x7d, 0x79, 0xdf, 0xf7, 0x3e, 0x6f, 0x66, 0xf6, 0x3b, 0x86, 0x4d, 0xd3, 0xe5,
+	0x9e, 0xe7, 0xb2, 0xfd, 0x16, 0x09, 0x9f, 0xc8, 0xa0, 0x4c, 0x0e, 0xfa, 0xcc, 0x3d, 0x34, 0x7a,
+	0x2e, 0xf7, 0x39, 0x7e, 0x79, 0x9c, 0x62, 0x84, 0x4f, 0xc6, 0xa0, 0xac, 0xbd, 0x44, 0xbb, 0xb6,
+	0xc3, 0x89, 0xf8, 0x2b, 0x33, 0xb5, 0x92, 0xc9, 0xbd, 0x2e, 0xf7, 0x48, 0x93, 0x7a, 0x4c, 0x96,
+	0x20, 0x83, 0x72, 0x93, 0xf9, 0xb4, 0x4c, 0x7a, 0xd4, 0xb2, 0x1d, 0xea, 0xdb, 0xdc, 0x51, 0xb9,
+	0x7a, 0x72, 0xe3, 0x1e, 0x35, 0x9f, 0x31, 0x7f, 0x5e, 0x8e, 0x4b, 0xbb, 0x9e, 0xca, 0x59, 0xb7,
+	0xb8, 0xc5, 0xc5, 0x23, 0x09, 0x9e, 0x54, 0xf4, 0x9e, 0xc5, 0xb9, 0xd5, 0x61, 0x84, 0xf6, 0x6c,
+	0x42, 0x1d, 0x87, 0xfb, 0xa2, 0xb5, 0xd2, 0xe8, 0xeb, 0x80, 0xbf, 0x08, 0xe8, 0x9e, 0x8a, 0x42,
+	0x75, 0x76, 0xd0, 0x67, 0x9e, 0xaf, 0x7f, 0x0d, 0xb7, 0x62, 0x51, 0xaf, 0xc7, 0x1d, 0x8f, 0xe1,
+	0x1d, 0xc8, 0xcb, 0x86, 0x77, 0xd0, 0x06, 0x2a, 0x5e, 0xab, 0xdc, 0x37, 0x12, 0xd7, 0xc3, 0x90,
+	0xb2, 0xea, 0xea, 0xf1, 0x3f, 0x0f, 0x72, 0xbf, 0xfc, 0xf7, 0x6b, 0x09, 0xd5, 0x95, 0x4e, 0x2f,
+	0xab, 0x76, 0x4f, 0x78, 0x97, 0xda, 0x8e, 0x6a, 0x87, 0xef, 0xc2, 0x6a, 0x4b, 0x04, 0x1a, 0x76,
+	0x4b, 0x94, 0x5e, 0xad, 0x5f, 0x95, 0x81, 0xbd, 0x96, 0xfe, 0x95, 0x62, 0x09, 0x25, 0x8a, 0xe5,
+	0x43, 0xc8, 0xcb, 0x14, 0xc5, 0xb2, 0x99, 0xc2, 0x22, 0x65, 0x7b, 0xce, 0x3e, 0xaf, 0x5e, 0x0e,
+	0x78, 0xea, 0x4a, 0xa6, 0x7f, 0x0e, 0xb7, 0x45, 0xdd, 0x8f, 0xdb, 0xcc, 0x7c, 0xd6, 0xe3, 0xb6,
+	0xe3, 0x2f, 0x82, 0x83, 0x6f, 0x43, 0xbe, 0xcd, 0x6c, 0xab, 0xed, 0xdf, 0x59, 0xd9, 0x40, 0xc5,
+	0xcb, 0x75, 0xf5, 0xa6, 0x37, 0xe1, 0x95, 0x99, 0x72, 0x0a, 0xf5, 0x53, 0x00, 0x73, 0x1c, 0x9d,
+	0x83, 0x1b, 0xc9, 0x15, 0xee, 0x84, 0x54, 0x7f, 0x0c, 0xf7, 0x44, 0x8f, 0xcf, 0xa8, 0xcf, 0x3c,
+	0x7f, 0x39, 0x70, 0xbd, 0x0d, 0xf7, 0x53, 0xc4, 0xcf, 0x1b, 0xf3, 0x08, 0x81, 0x26, 0xd7, 0x22,
+	0x50, 0xd4, 0xd9, 0x3e, 0x73, 0x99, 0x63, 0xb2, 0x90, 0x72, 0x0b, 0x6e, 0x74, 0xb8, 0x49, 0x3b,
+	0x8d, 0x69, 0xd6, 0xeb, 0x22, 0xfc, 0x24, 0x5c, 0xe9, 0x22, 0xdc, 0x74, 0x59, 0x97, 0xfb, 0x6c,
+	0x22, 0x71, 0x45, 0x24, 0xae, 0xc9, 0xf8, 0x38, 0xf3, 0x35, 0xb8, 0xae, 0x32, 0xd5, 0xd6, 0x5c,
+	0x12, 0x5b, 0xf3, 0xa2, 0x0c, 0xd6, 0xe4, 0x06, 0x79, 0x70, 0x37, 0x11, 0x4a, 0x4d, 0xff, 0x25,
+	0xdc, 0x10, 0x03, 0x36, 0xdc, 0xf0, 0x5f, 0x6a, 0x09, 0x5e, 0x4f, 0x5b, 0x82, 0x58, 0x1d, 0xb5,
+	0x0c, 0x6b, 0x66, 0x2c, 0xaa, 0xbf, 0x07, 0x0f, 0x44, 0xd3, 0x8f, 0x4c, 0x93, 0xf7, 0x1d, 0x9f,
+	0x36, 0xed, 0x8e, 0xed, 0x1f, 0x7e, 0x32, 0x60, 0xd1, 0xa6, 0xbd, 0x0a, 0x57, 0x59, 0xf0, 0x1e,
+	0xad, 0xc3, 0x0b, 0xe2, 0x7d, 0xaf, 0xa5, 0x7f, 0x0b, 0x1b, 0xe9, 0x6a, 0xc5, 0xbd, 0x0b, 0x57,
+	0x44, 0xba, 0xa2, 0x2d, 0xa5, 0xd0, 0x26, 0x94, 0x50, 0xc8, 0x52, 0xae, 0xff, 0x80, 0xd2, 0x9b,
+	0x79, 0x0b, 0x7d, 0x19, 0xbb, 0x00, 0x91, 0xb5, 0x89, 0x9d, 0xba, 0x56, 0xd9, 0x32, 0xa4, 0x0f,
+	0x1a, 0x81, 0x0f, 0x1a, 0xd2, 0x4a, 0x95, 0x0f, 0x1a, 0x4f, 0xa9, 0x15, 0x9e, 0x89, 0xfa, 0x84,
+	0x52, 0xff, 0x1d, 0xc1, 0x66, 0x06, 0x89, 0x9a, 0xbb, 0x06, 0x79, 0x01, 0x1e, 0x78, 0xd1, 0xa5,
+	0x0b, 0x0d, 0xae, 0xf4, 0xc1, 0xb9, 0x9f, 0xe1, 0x7e, 0x63, 0x2e, 0xb7, 0xc4, 0x98, 0x04, 0xaf,
+	0xfc, 0x01, 0x70, 0x45, 0x80, 0xe3, 0x1f, 0x11, 0xe4, 0xa5, 0x09, 0xe2, 0x37, 0x53, 0xb8, 0x66,
+	0x5d, 0x57, 0x2b, 0x2d, 0x92, 0x2a, 0xfb, 0xea, 0xc6, 0xf7, 0x7f, 0xfd, 0x7b, 0xb4, 0x52, 0xc4,
+	0x5b, 0xd1, 0x75, 0x90, 0x75, 0x43, 0xe0, 0x9f, 0x11, 0xe4, 0xe5, 0xf7, 0x92, 0x4d, 0x14, 0x33,
+	0xe6, 0x6c, 0xa2, 0xb8, 0x21, 0xeb, 0x8f, 0x05, 0xd1, 0x43, 0xbc, 0x3d, 0x8f, 0x48, 0x1e, 0x18,
+	0x8f, 0x0c, 0xc7, 0x47, 0x69, 0x84, 0x7f, 0x43, 0x00, 0x91, 0xa7, 0xe0, 0xb7, 0xb2, 0xfa, 0xce,
+	0xf8, 0x9e, 0x66, 0x2c, 0x9a, 0xae, 0x50, 0x6b, 0x02, 0xb5, 0x8a, 0x77, 0xe6, 0xa1, 0x46, 0xa6,
+	0x16, 0xc3, 0x25, 0x43, 0xe9, 0x33, 0x23, 0xfc, 0x27, 0x82, 0x9b, 0xd3, 0x86, 0x8a, 0xb7, 0xb3,
+	0x70, 0x52, 0xbc, 0x5b, 0x7b, 0x7b, 0x39, 0x91, 0x9a, 0x64, 0x57, 0x4c, 0xb2, 0x83, 0x3f, 0xb8,
+	0xe8, 0x24, 0x1d, 0x51, 0x19, 0x9f, 0x22, 0x58, 0x8b, 0x1b, 0x1a, 0x2e, 0x67, 0x2e, 0x6a, 0x92,
+	0xb3, 0x6b, 0x95, 0x65, 0x24, 0x6a, 0x02, 0x4b, 0x4c, 0x40, 0x71, 0x63, 0xde, 0x04, 0x63, 0x5f,
+	0xf6, 0xc8, 0x70, 0xea, 0xfe, 0x18, 0x91, 0xe1, 0xf4, 0x4d, 0x11, 0x85, 0xc2, 0xad, 0x3a, 0x41,
+	0x70, 0x2b, 0xc1, 0x0c, 0xf0, 0x3b, 0x59, 0xd0, 0xe9, 0xbe, 0xad, 0x3d, 0x5a, 0x5a, 0xb7, 0xec,
+	0xe9, 0xa3, 0xb1, 0x22, 0x44, 0xda, 0x15, 0x19, 0x86, 0xb7, 0xc5, 0x08, 0x1f, 0x23, 0x58, 0x4f,
+	0x32, 0x49, 0xbc, 0x2c, 0xdb, 0xd8, 0x82, 0xde, 0x5d, 0x5e, 0xa8, 0xa6, 0x7a, 0x5f, 0x4c, 0xf5,
+	0x08, 0x3f, 0xbc, 0xd0, 0x54, 0xd5, 0xda, 0xf1, 0x59, 0x01, 0x9d, 0x9c, 0x15, 0xd0, 0xe9, 0x59,
+	0x01, 0xfd, 0x74, 0x5e, 0xc8, 0x9d, 0x9c, 0x17, 0x72, 0x7f, 0x9f, 0x17, 0x72, 0xdf, 0x18, 0x96,
+	0xed, 0xb7, 0xfb, 0x4d, 0xc3, 0xe4, 0xdd, 0xa4, 0xd2, 0xdf, 0x45, 0x41, 0xff, 0xb0, 0xc7, 0xbc,
+	0x66, 0x5e, 0xfc, 0xb0, 0xdd, 0xfe, 0x3f, 0x00, 0x00, 0xff, 0xff, 0xd5, 0x64, 0x5f, 0xb0, 0xcf,
+	0x0b, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -572,6 +780,8 @@ type QueryClient interface {
 	Checkpoint(ctx context.Context, in *QueryCheckpointRequest, opts ...grpc.CallOption) (*QueryCheckpointResponse, error)
 	LatestCheckpoint(ctx context.Context, in *QueryLatestCheckpointRequest, opts ...grpc.CallOption) (*QueryLatestCheckpointResponse, error)
 	CrossReference(ctx context.Context, in *QueryCrossReferenceRequest, opts ...grpc.CallOption) (*QueryCrossReferenceResponse, error)
+	AccountabilityEvent(ctx context.Context, in *QueryAccountabilityEventRequest, opts ...grpc.CallOption) (*QueryAccountabilityEventResponse, error)
+	AccountabilityEvents(ctx context.Context, in *QueryAccountabilityEventsRequest, opts ...grpc.CallOption) (*QueryAccountabilityEventsResponse, error)
 }
 
 type queryClient struct {
@@ -627,6 +837,24 @@ func (c *queryClient) CrossReference(ctx context.Context, in *QueryCrossReferenc
 	return out, nil
 }
 
+func (c *queryClient) AccountabilityEvent(ctx context.Context, in *QueryAccountabilityEventRequest, opts ...grpc.CallOption) (*QueryAccountabilityEventResponse, error) {
+	out := new(QueryAccountabilityEventResponse)
+	err := c.cc.Invoke(ctx, "/crossrefd.crossref.v1.Query/AccountabilityEvent", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AccountabilityEvents(ctx context.Context, in *QueryAccountabilityEventsRequest, opts ...grpc.CallOption) (*QueryAccountabilityEventsResponse, error) {
+	out := new(QueryAccountabilityEventsResponse)
+	err := c.cc.Invoke(ctx, "/crossrefd.crossref.v1.Query/AccountabilityEvents", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -635,6 +863,8 @@ type QueryServer interface {
 	Checkpoint(context.Context, *QueryCheckpointRequest) (*QueryCheckpointResponse, error)
 	LatestCheckpoint(context.Context, *QueryLatestCheckpointRequest) (*QueryLatestCheckpointResponse, error)
 	CrossReference(context.Context, *QueryCrossReferenceRequest) (*QueryCrossReferenceResponse, error)
+	AccountabilityEvent(context.Context, *QueryAccountabilityEventRequest) (*QueryAccountabilityEventResponse, error)
+	AccountabilityEvents(context.Context, *QueryAccountabilityEventsRequest) (*QueryAccountabilityEventsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -655,6 +885,12 @@ func (*UnimplementedQueryServer) LatestCheckpoint(ctx context.Context, req *Quer
 }
 func (*UnimplementedQueryServer) CrossReference(ctx context.Context, req *QueryCrossReferenceRequest) (*QueryCrossReferenceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CrossReference not implemented")
+}
+func (*UnimplementedQueryServer) AccountabilityEvent(ctx context.Context, req *QueryAccountabilityEventRequest) (*QueryAccountabilityEventResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AccountabilityEvent not implemented")
+}
+func (*UnimplementedQueryServer) AccountabilityEvents(ctx context.Context, req *QueryAccountabilityEventsRequest) (*QueryAccountabilityEventsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AccountabilityEvents not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -751,6 +987,42 @@ func _Query_CrossReference_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AccountabilityEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAccountabilityEventRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AccountabilityEvent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crossrefd.crossref.v1.Query/AccountabilityEvent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AccountabilityEvent(ctx, req.(*QueryAccountabilityEventRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AccountabilityEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAccountabilityEventsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AccountabilityEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crossrefd.crossref.v1.Query/AccountabilityEvents",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AccountabilityEvents(ctx, req.(*QueryAccountabilityEventsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "crossrefd.crossref.v1.Query",
@@ -775,6 +1047,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CrossReference",
 			Handler:    _Query_CrossReference_Handler,
+		},
+		{
+			MethodName: "AccountabilityEvent",
+			Handler:    _Query_AccountabilityEvent_Handler,
+		},
+		{
+			MethodName: "AccountabilityEvents",
+			Handler:    _Query_AccountabilityEvents_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1106,6 +1386,160 @@ func (m *QueryCrossReferenceResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryAccountabilityEventRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAccountabilityEventRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAccountabilityEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.EventId) > 0 {
+		i -= len(m.EventId)
+		copy(dAtA[i:], m.EventId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.EventId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAccountabilityEventResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAccountabilityEventResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAccountabilityEventResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Event.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAccountabilityEventsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAccountabilityEventsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAccountabilityEventsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.DomainId) > 0 {
+		i -= len(m.DomainId)
+		copy(dAtA[i:], m.DomainId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DomainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAccountabilityEventsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAccountabilityEventsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAccountabilityEventsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Events) > 0 {
+		for iNdEx := len(m.Events) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Events[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1240,6 +1674,66 @@ func (m *QueryCrossReferenceResponse) Size() (n int) {
 	_ = l
 	l = m.CrossReference.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryAccountabilityEventRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.EventId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAccountabilityEventResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Event.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryAccountabilityEventsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DomainId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAccountabilityEventsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -2088,6 +2582,409 @@ func (m *QueryCrossReferenceResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.CrossReference.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAccountabilityEventRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAccountabilityEventRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAccountabilityEventRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EventId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EventId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAccountabilityEventResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAccountabilityEventResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAccountabilityEventResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Event", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Event.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAccountabilityEventsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAccountabilityEventsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAccountabilityEventsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DomainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DomainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAccountabilityEventsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAccountabilityEventsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAccountabilityEventsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, AccountabilityEvent{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

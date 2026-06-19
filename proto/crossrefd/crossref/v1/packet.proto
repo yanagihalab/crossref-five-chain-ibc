@@ -20,6 +20,8 @@ message DomainInfo {
   bytes validator_set_hash = 3;
   string metadata_uri = 4;
   bytes hysteresis_public_key = 5;
+  uint64 key_epoch = 6;
+  string admin = 7;
 }
 
 message DomainChannel {
@@ -42,6 +44,12 @@ message Checkpoint {
   bytes checkpoint_hash = 7;
   bytes hysteresis_signature = 8;
   int64 block_time_unix = 9;
+  bytes state_hash = 10;
+  bytes previous_state_hash = 11;
+  bytes consensus_proof = 12;
+  uint64 consensus_proof_revision_number = 13;
+  uint64 consensus_proof_revision_height = 14;
+  uint64 key_epoch = 15;
 }
 
 message CrossReference {
@@ -62,6 +70,20 @@ message TamperAlert {
   bytes conflicting_checkpoint_hash = 4;
   string reason = 5;
   int64 detected_time_unix = 6;
+  string reporter = 7;
+  string accountability_action = 8;
+}
+
+message AccountabilityEvent {
+  string event_id = 1;
+  string domain_id = 2;
+  string chain_id = 3;
+  uint64 height = 4;
+  string actor = 5;
+  string event_type = 6;
+  string evidence = 7;
+  string recommended_action = 8;
+  int64 detected_time_unix = 9;
 }
 
 message CrossReferencePacketData {
@@ -78,6 +100,12 @@ message CrossReferencePacketData {
   bytes source_checkpoint_proof = 11;
   uint64 source_proof_revision_number = 12;
   uint64 source_proof_revision_height = 13;
+  bytes state_hash = 14;
+  bytes previous_state_hash = 15;
+  bytes consensus_proof = 16;
+  uint64 consensus_proof_revision_number = 17;
+  uint64 consensus_proof_revision_height = 18;
+  uint64 key_epoch = 19;
 }
 
 message CrossReferencePacketAck {

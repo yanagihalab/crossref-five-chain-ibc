@@ -253,31 +253,51 @@ func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channel
 	}
 
 	checkpoint := types.Checkpoint{
-		DomainId:               data.SourceDomainId,
-		Height:                 data.SourceHeight,
-		BlockHash:              data.BlockHash,
-		AppHash:                data.AppHash,
-		ValidatorSetHash:       data.ValidatorSetHash,
-		PreviousCheckpointHash: data.PreviousCheckpointHash,
-		CheckpointHash:         data.CheckpointHash,
-		HysteresisSignature:    data.HysteresisSignature,
-		BlockTimeUnix:          data.BlockTimeUnix,
+		DomainId:                     data.SourceDomainId,
+		Height:                       data.SourceHeight,
+		BlockHash:                    data.BlockHash,
+		AppHash:                      data.AppHash,
+		ValidatorSetHash:             data.ValidatorSetHash,
+		PreviousCheckpointHash:       data.PreviousCheckpointHash,
+		CheckpointHash:               data.CheckpointHash,
+		HysteresisSignature:          data.HysteresisSignature,
+		BlockTimeUnix:                data.BlockTimeUnix,
+		StateHash:                    data.StateHash,
+		PreviousStateHash:            data.PreviousStateHash,
+		ConsensusProof:               data.ConsensusProof,
+		ConsensusProofRevisionNumber: data.ConsensusProofRevisionNumber,
+		ConsensusProofRevisionHeight: data.ConsensusProofRevisionHeight,
+		KeyEpoch:                     data.KeyEpoch,
+	}
+	if checkpoint.KeyEpoch == 0 {
+		checkpoint.KeyEpoch = sourceDomain.KeyEpoch
+	}
+	if err := types.NormalizeCheckpointHashes(&checkpoint); err != nil {
+		return nil, errorsmod.Wrap(err, "packet checkpoint hash mismatch")
 	}
 	if !bytes.Equal(types.ComputeCheckpointHash(checkpoint), checkpoint.CheckpointHash) {
 		return nil, errorsmod.Wrap(types.ErrCheckpointHashMismatch, "packet checkpoint hash mismatch")
 	}
 	if err := im.keeper.VerifySourceCheckpointProof(ctx, binding, checkpoint, data.SourceCheckpointProof, data.SourceProofRevisionNumber, data.SourceProofRevisionHeight); err != nil {
+		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "invalid_source_checkpoint_proof", err.Error(), "reject_packet"))
+		return nil, err
+	}
+	if err := im.keeper.VerifyConsensusProof(ctx, checkpoint); err != nil {
+		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "invalid_consensus_proof", err.Error(), "reject_packet"))
 		return nil, err
 	}
 	if err := im.keeper.ValidateCheckpoint(ctx, checkpoint); err != nil {
+		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "invalid_checkpoint_chain", err.Error(), "reject_packet"))
 		return nil, err
 	}
 	if err := types.VerifyHysteresisSignature(sourceDomain, checkpoint); err != nil {
+		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "invalid_hysteresis_signature", err.Error(), "reject_packet"))
 		return nil, err
 	}
 	if existing, found, err := im.keeper.GetCrossReference(ctx, binding.LocalDomainId, data.SourceDomainId, data.SourceHeight); err != nil {
 		return nil, err
 	} else if found {
+		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "replay_packet", fmt.Sprintf("existing_hash=%X packet_hash=%X", existing.RemoteCheckpointHash, data.CheckpointHash), "reject_packet"))
 		return nil, errorsmod.Wrapf(types.ErrReplayPacket, "local=%s remote=%s height=%d existing_hash=%X packet_hash=%X", binding.LocalDomainId, data.SourceDomainId, data.SourceHeight, existing.RemoteCheckpointHash, data.CheckpointHash)
 	}
 	if err := im.keeper.SetCheckpoint(ctx, checkpoint); err != nil {
@@ -296,4 +316,17 @@ func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channel
 		return nil, err
 	}
 	return checkpoint.CheckpointHash, nil
+}
+
+func packetAccountabilityEvent(data *types.CrossReferencePacketData, relayer, eventType, evidence, action string) types.AccountabilityEvent {
+	return types.AccountabilityEvent{
+		EventId:           fmt.Sprintf("%s/%d/%s/%s", data.SourceDomainId, data.SourceHeight, eventType, relayer),
+		DomainId:          data.SourceDomainId,
+		ChainId:           data.SourceChainId,
+		Height:            data.SourceHeight,
+		Actor:             relayer,
+		EventType:         eventType,
+		Evidence:          evidence,
+		RecommendedAction: action,
+	}
 }

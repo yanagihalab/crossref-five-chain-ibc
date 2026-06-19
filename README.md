@@ -24,7 +24,7 @@ The prototype models five domains:
 - `chain-d`
 - `chain-e`
 
-Hermes opens pairwise `crossref/crossref` IBC channels for every unordered pair. This produces 10 pairwise channel connections and 20 directed cross-reference routes. Each source chain can submit its own checkpoint and broadcast that checkpoint to the other four chains.
+Hermes opens pairwise `crossref/crossref` IBC channels for every unordered pair. This produces 10 pairwise channel connections and 20 directed cross-reference routes. Each source chain can submit its own checkpoint and then include one crossref sendPacket fan-out transaction in a block. That transaction emits IBC packets on every bound destination channel for the source domain; relayer workers deliver those packets to each destination chain; destination validators process the packets during normal block execution.
 
 The receiver validates:
 
@@ -43,6 +43,7 @@ The module currently supports:
 - `BindDomainChannel`: bind a local domain and remote domain pair to an IBC port/channel.
 - `SubmitCheckpoint`: store a local checkpoint after hash and optional hysteresis signature verification.
 - `SendCrossReferencePacket`: send one checkpoint to a bound remote domain.
+- `SendCrossReferencePacket --all-bound-channels` / `BroadcastCrossReferencePacket`: emit packets to every bound destination channel for the source domain from one source-chain tx.
 - `BroadcastCrossReferencePacket`: send one source checkpoint to all bound remote domains.
 - `ReceiveCrossReferencePacket`: receive and verify a checkpoint packet, including ICS23 source-store proof validation.
 - query endpoints for domains, channels, checkpoints, cross-references, and checkpoint proof export.

@@ -49,6 +49,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "remote_height"},
 					},
 				},
+				{
+					RpcMethod:      "AccountabilityEvent",
+					Use:            "accountability-event [event-id]",
+					Short:          "Shows an accountability event",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "event_id"}},
+				},
+				{
+					RpcMethod: "AccountabilityEvents",
+					Use:       "accountability-events",
+					Short:     "Lists accountability events",
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

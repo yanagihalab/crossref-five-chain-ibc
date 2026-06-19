@@ -28,14 +28,15 @@ type Keeper struct {
 	Schema collections.Schema
 	Params collections.Item[types.Params]
 
-	Port              collections.Item[string]
-	Domains           collections.Map[string, types.DomainInfo]
-	DomainChannels    collections.Map[string, types.DomainChannel]
-	ChannelDomains    collections.Map[string, types.DomainChannel]
-	Checkpoints       collections.Map[string, types.Checkpoint]
-	LatestCheckpoints collections.Map[string, uint64]
-	CrossReferences   collections.Map[string, types.CrossReference]
-	OutgoingPackets   collections.Map[string, []byte]
+	Port                 collections.Item[string]
+	Domains              collections.Map[string, types.DomainInfo]
+	DomainChannels       collections.Map[string, types.DomainChannel]
+	ChannelDomains       collections.Map[string, types.DomainChannel]
+	Checkpoints          collections.Map[string, types.Checkpoint]
+	LatestCheckpoints    collections.Map[string, uint64]
+	CrossReferences      collections.Map[string, types.CrossReference]
+	OutgoingPackets      collections.Map[string, []byte]
+	AccountabilityEvents collections.Map[string, types.AccountabilityEvent]
 
 	ibcKeeperFn   func() *ibckeeper.Keeper
 	proofVerifier CheckpointProofVerifier
@@ -64,17 +65,18 @@ func NewKeeper(
 		addressCodec: addressCodec,
 		authority:    authority,
 
-		bankKeeper:        bankKeeper,
-		ibcKeeperFn:       ibcKeeperFn,
-		Port:              collections.NewItem(sb, types.PortKey, "port", collections.StringValue),
-		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		Domains:           collections.NewMap(sb, types.DomainKeyPrefix, "domains", collections.StringKey, codec.CollValue[types.DomainInfo](cdc)),
-		DomainChannels:    collections.NewMap(sb, types.DomainChannelKeyPrefix, "domain_channels", collections.StringKey, codec.CollValue[types.DomainChannel](cdc)),
-		ChannelDomains:    collections.NewMap(sb, types.ChannelDomainKeyPrefix, "channel_domains", collections.StringKey, codec.CollValue[types.DomainChannel](cdc)),
-		Checkpoints:       collections.NewMap(sb, types.CheckpointKeyPrefix, "checkpoints", collections.StringKey, codec.CollValue[types.Checkpoint](cdc)),
-		LatestCheckpoints: collections.NewMap(sb, types.LatestCheckpointKeyPrefix, "latest_checkpoints", collections.StringKey, collections.Uint64Value),
-		CrossReferences:   collections.NewMap(sb, types.CrossReferenceKeyPrefix, "cross_references", collections.StringKey, codec.CollValue[types.CrossReference](cdc)),
-		OutgoingPackets:   collections.NewMap(sb, types.OutgoingPacketKeyPrefix, "outgoing_packets", collections.StringKey, collections.BytesValue),
+		bankKeeper:           bankKeeper,
+		ibcKeeperFn:          ibcKeeperFn,
+		Port:                 collections.NewItem(sb, types.PortKey, "port", collections.StringValue),
+		Params:               collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Domains:              collections.NewMap(sb, types.DomainKeyPrefix, "domains", collections.StringKey, codec.CollValue[types.DomainInfo](cdc)),
+		DomainChannels:       collections.NewMap(sb, types.DomainChannelKeyPrefix, "domain_channels", collections.StringKey, codec.CollValue[types.DomainChannel](cdc)),
+		ChannelDomains:       collections.NewMap(sb, types.ChannelDomainKeyPrefix, "channel_domains", collections.StringKey, codec.CollValue[types.DomainChannel](cdc)),
+		Checkpoints:          collections.NewMap(sb, types.CheckpointKeyPrefix, "checkpoints", collections.StringKey, codec.CollValue[types.Checkpoint](cdc)),
+		LatestCheckpoints:    collections.NewMap(sb, types.LatestCheckpointKeyPrefix, "latest_checkpoints", collections.StringKey, collections.Uint64Value),
+		CrossReferences:      collections.NewMap(sb, types.CrossReferenceKeyPrefix, "cross_references", collections.StringKey, codec.CollValue[types.CrossReference](cdc)),
+		OutgoingPackets:      collections.NewMap(sb, types.OutgoingPacketKeyPrefix, "outgoing_packets", collections.StringKey, collections.BytesValue),
+		AccountabilityEvents: collections.NewMap(sb, types.AccountabilityEventKeyPrefix, "accountability_events", collections.StringKey, codec.CollValue[types.AccountabilityEvent](cdc)),
 	}
 
 	schema, err := sb.Build()

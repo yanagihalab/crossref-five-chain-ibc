@@ -5,6 +5,7 @@ CHAIN_COUNT="${CHAIN_COUNT:-5}"
 RELAYER_COUNT="${RELAYER_COUNT:-3}"
 FAILED_WORKER="${FAILED_WORKER:-1}"
 RUN_DOCKER_FAILOVER="${RUN_DOCKER_FAILOVER:-0}"
+FAILOVER_CHECKPOINT_HEIGHT="${FAILOVER_CHECKPOINT_HEIGHT:-2}"
 
 node docker/scripts/generate-topology.mjs "${CHAIN_COUNT}" "${RELAYER_COUNT}"
 
@@ -32,7 +33,7 @@ echo "Starting topology ${stem}..."
 docker compose -f "${compose_file}" up -d --build
 
 echo "Running baseline relay experiment..."
-COMPOSE_FILE="${compose_file}" TOPOLOGY_FILE="${topology}" docker/scripts/run-crossref-experiment.sh
+COMPOSE_FILE="${compose_file}" TOPOLOGY_FILE="${topology}" RELAYER_WORKER_COUNT="${RELAYER_COUNT}" docker/scripts/run-crossref-experiment.sh
 
 echo "Stopping failed worker relayer-${FAILED_WORKER}..."
 docker compose -f "${compose_file}" stop "relayer-${FAILED_WORKER}"
@@ -42,11 +43,11 @@ for worker in $(node -e 'const fs=require("fs"); const t=JSON.parse(fs.readFileS
   docker compose -f "${compose_file}" -f "${failover_override}" up -d --no-deps --force-recreate "relayer-${worker}"
 done
 
+echo "Running post-failover relay experiment at checkpoint height ${FAILOVER_CHECKPOINT_HEIGHT}..."
+COMPOSE_FILE="${compose_file}" TOPOLOGY_FILE="${failover_topology}" RELAYER_WORKER_COUNT="${RELAYER_COUNT}" CHECKPOINT_HEIGHT="${FAILOVER_CHECKPOINT_HEIGHT}" SKIP_REGISTER=1 SKIP_BIND=1 docker/scripts/run-crossref-experiment.sh
+
 cat <<EOF
-Failover assignment applied:
+Failover assignment and post-failover packet flow verified:
   topology: ${failover_topology}
   compose override: ${failover_override}
-
-Run the next checkpoint height with:
-  COMPOSE_FILE="${compose_file}" TOPOLOGY_FILE="${failover_topology}" CHECKPOINT_HEIGHT=2 docker/scripts/run-crossref-experiment.sh
 EOF

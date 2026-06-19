@@ -67,6 +67,14 @@ func CmdRegisterDomain() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			keyEpoch, err := cmd.Flags().GetUint64("key-epoch")
+			if err != nil {
+				return err
+			}
+			admin, err := cmd.Flags().GetString("admin")
+			if err != nil {
+				return err
+			}
 
 			msg := &types.MsgRegisterDomain{
 				Creator:             creator,
@@ -75,6 +83,8 @@ func CmdRegisterDomain() *cobra.Command {
 				ValidatorSetHash:    validatorSetHash,
 				MetadataUri:         metadataURI,
 				HysteresisPublicKey: hysteresisPublicKey,
+				KeyEpoch:            keyEpoch,
+				Admin:               admin,
 			}
 			return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -82,6 +92,8 @@ func CmdRegisterDomain() *cobra.Command {
 	cmd.Flags().String("validator-set-hash", "", "Base64-encoded validator set hash")
 	cmd.Flags().String("metadata-uri", "", "Domain metadata URI")
 	cmd.Flags().String("hysteresis-public-key", "", "Base64-encoded Ed25519 or threshold hysteresis public key")
+	cmd.Flags().Uint64("key-epoch", 0, "Hysteresis signing key epoch")
+	cmd.Flags().String("admin", "", "Domain admin address; defaults to creator")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -179,18 +191,40 @@ func CmdSubmitCheckpoint() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			stateHash, err := bytesFlag(cmd, "state-hash")
+			if err != nil {
+				return err
+			}
+			previousStateHash, err := bytesFlag(cmd, "previous-state-hash")
+			if err != nil {
+				return err
+			}
+			consensusProof, consensusProofRevisionNumber, consensusProofRevisionHeight, err := consensusProofFlags(cmd)
+			if err != nil {
+				return err
+			}
+			keyEpoch, err := cmd.Flags().GetUint64("key-epoch")
+			if err != nil {
+				return err
+			}
 
 			msg := &types.MsgSubmitCheckpoint{
-				Creator:                creator,
-				DomainId:               args[1],
-				Height:                 height,
-				BlockHash:              blockHash,
-				AppHash:                appHash,
-				ValidatorSetHash:       validatorSetHash,
-				PreviousCheckpointHash: previousCheckpointHash,
-				CheckpointHash:         checkpointHash,
-				HysteresisSignature:    hysteresisSignature,
-				BlockTimeUnix:          blockTimeUnix,
+				Creator:                      creator,
+				DomainId:                     args[1],
+				Height:                       height,
+				BlockHash:                    blockHash,
+				AppHash:                      appHash,
+				ValidatorSetHash:             validatorSetHash,
+				PreviousCheckpointHash:       previousCheckpointHash,
+				CheckpointHash:               checkpointHash,
+				HysteresisSignature:          hysteresisSignature,
+				BlockTimeUnix:                blockTimeUnix,
+				StateHash:                    stateHash,
+				PreviousStateHash:            previousStateHash,
+				ConsensusProof:               consensusProof,
+				ConsensusProofRevisionNumber: consensusProofRevisionNumber,
+				ConsensusProofRevisionHeight: consensusProofRevisionHeight,
+				KeyEpoch:                     keyEpoch,
 			}
 			return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -200,6 +234,12 @@ func CmdSubmitCheckpoint() *cobra.Command {
 	cmd.Flags().String("checkpoint-hash", "", "Base64-encoded checkpoint hash")
 	cmd.Flags().String("hysteresis-signature", "", "Base64-encoded hysteresis signature")
 	cmd.Flags().Int64("block-time-unix", 0, "Checkpoint block time as Unix seconds")
+	cmd.Flags().String("state-hash", "", "Base64-encoded paper state hash H(S_n)")
+	cmd.Flags().String("previous-state-hash", "", "Base64-encoded previous paper state hash H(S_n-1)")
+	cmd.Flags().String("consensus-proof", "", "Base64-encoded consensus proof envelope")
+	cmd.Flags().Uint64("consensus-proof-revision-number", 0, "Consensus proof revision number")
+	cmd.Flags().Uint64("consensus-proof-revision-height", 0, "Consensus proof revision height")
+	cmd.Flags().Uint64("key-epoch", 0, "Hysteresis signing key epoch")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -208,7 +248,7 @@ func CmdSendCrossReferencePacket() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send-cross-reference-packet [sender] [source-domain-id] [source-height] [port-id] [channel-id]",
 		Short: "Sends a checkpoint as an IBC packet",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.RangeArgs(3, 5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -226,22 +266,64 @@ func CmdSendCrossReferencePacket() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			consensusProof, consensusProofRevisionNumber, consensusProofRevisionHeight, err := consensusProofFlags(cmd)
+			if err != nil {
+				return err
+			}
+			allBoundChannels, err := cmd.Flags().GetBool("all-bound-channels")
+			if err != nil {
+				return err
+			}
+			if allBoundChannels {
+				portID := types.PortID
+				if len(args) >= 4 {
+					portID = args[3]
+				}
+				excludeRemoteDomainIDs, err := cmd.Flags().GetStringSlice("exclude-remote-domain-ids")
+				if err != nil {
+					return err
+				}
+				msg := &types.MsgBroadcastCrossReferencePacket{
+					Sender:                       sender,
+					SourceDomainId:               args[1],
+					SourceHeight:                 sourceHeight,
+					PortId:                       portID,
+					ExcludeRemoteDomainIds:       excludeRemoteDomainIDs,
+					TimeoutSeconds:               timeoutSeconds,
+					SourceCheckpointProof:        proof,
+					SourceProofRevisionNumber:    revisionNumber,
+					SourceProofRevisionHeight:    revisionHeight,
+					ConsensusProof:               consensusProof,
+					ConsensusProofRevisionNumber: consensusProofRevisionNumber,
+					ConsensusProofRevisionHeight: consensusProofRevisionHeight,
+				}
+				return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			}
+			if len(args) != 5 {
+				return fmt.Errorf("port-id and channel-id are required unless --all-bound-channels is set")
+			}
 
 			msg := &types.MsgSendCrossReferencePacket{
-				Sender:                    sender,
-				SourceDomainId:            args[1],
-				SourceHeight:              sourceHeight,
-				PortId:                    args[3],
-				ChannelId:                 args[4],
-				TimeoutSeconds:            timeoutSeconds,
-				SourceCheckpointProof:     proof,
-				SourceProofRevisionNumber: revisionNumber,
-				SourceProofRevisionHeight: revisionHeight,
+				Sender:                       sender,
+				SourceDomainId:               args[1],
+				SourceHeight:                 sourceHeight,
+				PortId:                       args[3],
+				ChannelId:                    args[4],
+				TimeoutSeconds:               timeoutSeconds,
+				SourceCheckpointProof:        proof,
+				SourceProofRevisionNumber:    revisionNumber,
+				SourceProofRevisionHeight:    revisionHeight,
+				ConsensusProof:               consensusProof,
+				ConsensusProofRevisionNumber: consensusProofRevisionNumber,
+				ConsensusProofRevisionHeight: consensusProofRevisionHeight,
 			}
 			return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	cmd.Flags().Bool("all-bound-channels", false, "Send one broadcast tx that emits packets on every bound channel for the source domain")
+	cmd.Flags().StringSlice("exclude-remote-domain-ids", nil, "Remote domain IDs to exclude when --all-bound-channels is set")
 	addPacketProofFlags(cmd)
+	addConsensusProofFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -276,17 +358,24 @@ func CmdBroadcastCrossReferencePacket() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			consensusProof, consensusProofRevisionNumber, consensusProofRevisionHeight, err := consensusProofFlags(cmd)
+			if err != nil {
+				return err
+			}
 
 			msg := &types.MsgBroadcastCrossReferencePacket{
-				Sender:                    sender,
-				SourceDomainId:            args[1],
-				SourceHeight:              sourceHeight,
-				PortId:                    portID,
-				ExcludeRemoteDomainIds:    excludeRemoteDomainIDs,
-				TimeoutSeconds:            timeoutSeconds,
-				SourceCheckpointProof:     proof,
-				SourceProofRevisionNumber: revisionNumber,
-				SourceProofRevisionHeight: revisionHeight,
+				Sender:                       sender,
+				SourceDomainId:               args[1],
+				SourceHeight:                 sourceHeight,
+				PortId:                       portID,
+				ExcludeRemoteDomainIds:       excludeRemoteDomainIDs,
+				TimeoutSeconds:               timeoutSeconds,
+				SourceCheckpointProof:        proof,
+				SourceProofRevisionNumber:    revisionNumber,
+				SourceProofRevisionHeight:    revisionHeight,
+				ConsensusProof:               consensusProof,
+				ConsensusProofRevisionNumber: consensusProofRevisionNumber,
+				ConsensusProofRevisionHeight: consensusProofRevisionHeight,
 			}
 			return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -294,6 +383,7 @@ func CmdBroadcastCrossReferencePacket() *cobra.Command {
 	cmd.Flags().String("port-id", types.PortID, "IBC port ID to broadcast from")
 	cmd.Flags().StringSlice("exclude-remote-domain-ids", nil, "Remote domain IDs to exclude")
 	addPacketProofFlags(cmd)
+	addConsensusProofFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -303,6 +393,28 @@ func addPacketProofFlags(cmd *cobra.Command) {
 	cmd.Flags().String("source-checkpoint-proof", "", "Base64-encoded source checkpoint ICS23 proof")
 	cmd.Flags().Uint64("source-proof-revision-number", 0, "Source proof revision number")
 	cmd.Flags().Uint64("source-proof-revision-height", 0, "Source proof revision height")
+}
+
+func addConsensusProofFlags(cmd *cobra.Command) {
+	cmd.Flags().String("consensus-proof", "", "Base64-encoded consensus proof envelope")
+	cmd.Flags().Uint64("consensus-proof-revision-number", 0, "Consensus proof revision number")
+	cmd.Flags().Uint64("consensus-proof-revision-height", 0, "Consensus proof revision height")
+}
+
+func consensusProofFlags(cmd *cobra.Command) ([]byte, uint64, uint64, error) {
+	proof, err := bytesFlag(cmd, "consensus-proof")
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	revisionNumber, err := cmd.Flags().GetUint64("consensus-proof-revision-number")
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	revisionHeight, err := cmd.Flags().GetUint64("consensus-proof-revision-height")
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	return proof, revisionNumber, revisionHeight, nil
 }
 
 func packetProofFlags(cmd *cobra.Command) (uint64, []byte, uint64, uint64, error) {

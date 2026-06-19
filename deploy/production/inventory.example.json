@@ -1,0 +1,41 @@
+{
+  "environment": "staging",
+  "chainIdPrefix": "crossref-staging",
+  "domains": [
+    {
+      "domainId": "domain-a",
+      "chainId": "crossref-staging-a",
+      "validators": [
+        {
+          "name": "validator-a-1",
+          "host": "validator-a-1.example.net",
+          "p2pPort": 26656,
+          "rpcPort": 26657,
+          "grpcPort": 9090,
+          "home": "/var/lib/crossrefd"
+        },
+        {
+          "name": "validator-a-2",
+          "host": "validator-a-2.example.net",
+          "p2pPort": 26656,
+          "rpcPort": 26657,
+          "grpcPort": 9090,
+          "home": "/var/lib/crossrefd"
+        }
+      ],
+      "persistentPeers": []
+    }
+  ],
+  "relayers": [
+    {
+      "name": "relayer-1",
+      "host": "relayer-1.example.net",
+      "workerCount": 4,
+      "controller": true
+    }
+  ],
+  "monitoring": {
+    "prometheusHost": "prometheus.example.net",
+    "alertmanagerHost": "alertmanager.example.net"
+  }
+}

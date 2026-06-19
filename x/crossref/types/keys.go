@@ -25,13 +25,14 @@ var (
 	// PortKey defines the key to store the port ID in store
 	PortKey = collections.NewPrefix("crossref-port-")
 
-	DomainKeyPrefix           = collections.NewPrefix("domain/")
-	DomainChannelKeyPrefix    = collections.NewPrefix("domain-channel/")
-	ChannelDomainKeyPrefix    = collections.NewPrefix("channel-domain/")
-	CheckpointKeyPrefix       = collections.NewPrefix("checkpoint/")
-	LatestCheckpointKeyPrefix = collections.NewPrefix("latest-checkpoint/")
-	CrossReferenceKeyPrefix   = collections.NewPrefix("cross-reference/")
-	OutgoingPacketKeyPrefix   = collections.NewPrefix("outgoing-packet/")
+	DomainKeyPrefix              = collections.NewPrefix("domain/")
+	DomainChannelKeyPrefix       = collections.NewPrefix("domain-channel/")
+	ChannelDomainKeyPrefix       = collections.NewPrefix("channel-domain/")
+	CheckpointKeyPrefix          = collections.NewPrefix("checkpoint/")
+	LatestCheckpointKeyPrefix    = collections.NewPrefix("latest-checkpoint/")
+	CrossReferenceKeyPrefix      = collections.NewPrefix("cross-reference/")
+	OutgoingPacketKeyPrefix      = collections.NewPrefix("outgoing-packet/")
+	AccountabilityEventKeyPrefix = collections.NewPrefix("accountability-event/")
 )
 
 // ParamsKey is the prefix to retrieve all Params

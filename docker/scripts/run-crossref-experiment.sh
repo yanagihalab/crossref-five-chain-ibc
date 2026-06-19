@@ -8,11 +8,15 @@ COMPOSE_FILE="${COMPOSE_FILE:-docker/docker-compose.yml}"
 RELAYER_SERVICE="${RELAYER_SERVICE:-relayer}"
 RELAYER_INDEX="${RELAYER_INDEX:-1}"
 DENOM="${DENOM:-stake}"
+CROSSREF_TX_GAS="${CROSSREF_TX_GAS:-600000}"
 BLOCK_TIME_UNIX="${BLOCK_TIME_UNIX:-0}"
 CHECKPOINT_HEIGHT="${CHECKPOINT_HEIGHT:-1}"
 DRY_RUN="${DRY_RUN:-0}"
 SKIP_REGISTER="${SKIP_REGISTER:-0}"
 SKIP_BIND="${SKIP_BIND:-0}"
+CROSSREF_VERIFY_RETRIES="${CROSSREF_VERIFY_RETRIES:-36}"
+CROSSREF_VERIFY_SLEEP_SECONDS="${CROSSREF_VERIFY_SLEEP_SECONDS:-5}"
+CROSSREF_BROADCAST_MODE="${CROSSREF_BROADCAST_MODE:-sequential}"
 
 if [ ! -f "${TOPOLOGY_FILE}" ]; then
   echo "Topology ${TOPOLOGY_FILE} not found; generating ${CHAIN_COUNT} chains / ${RELAYER_WORKER_COUNT} relayers..."
@@ -126,7 +130,7 @@ relayer_for_route() {
 tx_chain() {
   domain="$1"
   shift
-  query_chain "${domain}" tx crossref "$@" --from validator --chain-id "$(chain_id "${domain}")" --keyring-backend test --yes --fees "0${DENOM}"
+  query_chain "${domain}" tx crossref "$@" --from validator --chain-id "$(chain_id "${domain}")" --keyring-backend test --yes --gas "${CROSSREF_TX_GAS}" --fees "0${DENOM}"
 }
 
 wait_tx() {
@@ -183,15 +187,62 @@ wait_reference() {
   route="$(route_id "${remote_domain}" "${local_domain}")"
 
   echo "${route} ${local_domain} stored cross-reference for ${remote_domain}:"
-  for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+  attempt=1
+  while [ "${attempt}" -le "${CROSSREF_VERIFY_RETRIES}" ]; do
     if query_chain "${local_domain}" query crossref cross-reference "${local_domain}" "${remote_domain}" "${height}" --output json; then
       return 0
     fi
-    echo "Cross-reference ${local_domain}<-${remote_domain} not visible yet; retry ${attempt}/12..."
-    sleep 5
+    echo "Cross-reference ${local_domain}<-${remote_domain} not visible yet; retry ${attempt}/${CROSSREF_VERIFY_RETRIES}..."
+    sleep "${CROSSREF_VERIFY_SLEEP_SECONDS}"
+    attempt=$((attempt + 1))
   done
 
   query_chain "${local_domain}" query crossref cross-reference "${local_domain}" "${remote_domain}" "${height}" --output json
+}
+
+run_broadcast_for_source() {
+  source_domain="$1"
+  run_tx "${source_domain}" send-cross-reference-packet validator "${source_domain}" "${CHECKPOINT_HEIGHT}" \
+    --all-bound-channels \
+    --source-checkpoint-proof "$(proof_value "${source_domain}" source_checkpoint_proof)" \
+    --source-proof-revision-number "$(proof_number "${source_domain}" source_proof_revision_number)" \
+    --source-proof-revision-height "$(proof_number "${source_domain}" source_proof_revision_height)"
+}
+
+run_parallel_broadcasts() {
+  tmp_dir="${TMPDIR:-/tmp}/crossref-broadcast-${ACTUAL_CHAIN_COUNT}c-${CHECKPOINT_HEIGHT}-$$"
+  mkdir -p "${tmp_dir}"
+  pids=""
+
+  for source_domain in ${DOMAINS}; do
+    log_file="${tmp_dir}/${source_domain}.log"
+    (
+      echo "Parallel broadcast start: ${source_domain}"
+      run_broadcast_for_source "${source_domain}"
+      echo "Parallel broadcast done: ${source_domain}"
+    ) >"${log_file}" 2>&1 &
+    pids="${pids} $!:${source_domain}:${log_file}"
+  done
+
+  failed=0
+  for item in ${pids}; do
+    pid="${item%%:*}"
+    rest="${item#*:}"
+    source_domain="${rest%%:*}"
+    log_file="${rest#*:}"
+    if wait "${pid}"; then
+      cat "${log_file}"
+    else
+      failed=1
+      echo "Parallel broadcast failed: ${source_domain}" >&2
+      cat "${log_file}" >&2
+    fi
+  done
+
+  if [ "${failed}" != "0" ]; then
+    echo "One or more parallel broadcasts failed." >&2
+    return 1
+  fi
 }
 
 json_string_field() {
@@ -237,12 +288,13 @@ hysteresis_json() {
   block_hash="$3"
   app_hash="$4"
   previous_hash="${5:-}"
+  previous_state_hash="${6:-}"
   cache_dir="${TMPDIR:-/tmp}/crossref-hysteresis-${ACTUAL_CHAIN_COUNT}c"
   mkdir -p "${cache_dir}"
-  cache_key="$(printf '%s-%s-%s-%s-%s-%s' "${domain}" "${height}" "${block_hash}" "${app_hash}" "${previous_hash:-genesis}" "${BLOCK_TIME_UNIX}" | tr -c 'A-Za-z0-9_.=-' '_')"
+  cache_key="$(printf '%s-%s-%s-%s-%s-%s-%s' "${domain}" "${height}" "${block_hash}" "${app_hash}" "${previous_hash:-genesis}" "${previous_state_hash:-genesis}" "${BLOCK_TIME_UNIX}" | tr -c 'A-Za-z0-9_.=-' '_')"
   cache_file="${cache_dir}/${cache_key}.json"
   if [ ! -f "${cache_file}" ]; then
-    go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "$(hysteresis_seed "${domain}")" "${previous_hash}" >"${cache_file}"
+    go run docker/scripts/hysteresis-sign.go "${domain}" "${height}" "${block_hash}" "${app_hash}" "${BLOCK_TIME_UNIX}" "$(hysteresis_seed "${domain}")" "${previous_hash}" "${previous_state_hash}" >"${cache_file}"
   fi
   cat "${cache_file}"
 }
@@ -259,8 +311,37 @@ hysteresis_signature() {
   block_hash="$3"
   app_hash="$4"
   previous_hash="${5:-}"
-  json="$(hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${previous_hash}")"
+  previous_state_hash="${6:-}"
+  json="$(hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${previous_hash}" "${previous_state_hash}")"
   printf '%s\n' "${json}" | json_string_field signature
+}
+
+hysteresis_state_hash() {
+  domain="$1"
+  height="$2"
+  block_hash="$3"
+  app_hash="$4"
+  previous_hash="${5:-}"
+  previous_state_hash="${6:-}"
+  json="$(hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${previous_hash}" "${previous_state_hash}")"
+  printf '%s\n' "${json}" | json_string_field state_hash
+}
+
+hysteresis_consensus_proof() {
+  domain="$1"
+  height="$2"
+  block_hash="$3"
+  app_hash="$4"
+  previous_hash="${5:-}"
+  previous_state_hash="${6:-}"
+  json="$(hysteresis_json "${domain}" "${height}" "${block_hash}" "${app_hash}" "${previous_hash}" "${previous_state_hash}")"
+  printf '%s\n' "${json}" | json_string_field consensus_proof
+}
+
+consensus_submit_flags() {
+  if [ "${CROSSREF_REQUIRE_CONSENSUS_PROOF:-false}" = "true" ]; then
+    printf '%s\n' "--consensus-proof $1 --consensus-proof-revision-number 1 --consensus-proof-revision-height $2"
+  fi
 }
 
 previous_checkpoint_hash() {
@@ -271,6 +352,16 @@ previous_checkpoint_hash() {
   fi
   previous_height=$((height - 1))
   query_chain "${domain}" query crossref checkpoint "${domain}" "${previous_height}" --output json | json_string_field checkpoint_hash
+}
+
+previous_state_hash() {
+  domain="$1"
+  height="$2"
+  if [ "${height}" -le 1 ]; then
+    return 0
+  fi
+  previous_height=$((height - 1))
+  query_chain "${domain}" query crossref checkpoint "${domain}" "${previous_height}" --output json | json_string_field state_hash
 }
 
 proof_file() {
@@ -370,11 +461,17 @@ for domain in ${DOMAINS}; do
   block_hash="$(block_hash_for_domain "${domain}")"
   app_hash="$(app_hash_for_domain "${domain}")"
   previous_hash="$(previous_checkpoint_hash "${domain}" "${CHECKPOINT_HEIGHT}")"
-  signature="$(hysteresis_signature "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" "${previous_hash}")"
+  previous_state="$(previous_state_hash "${domain}" "${CHECKPOINT_HEIGHT}")"
+  state_hash="$(hysteresis_state_hash "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" "${previous_hash}" "${previous_state}")"
+  consensus_proof="$(hysteresis_consensus_proof "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" "${previous_hash}" "${previous_state}")"
+  consensus_flags="$(consensus_submit_flags "${consensus_proof}" "${CHECKPOINT_HEIGHT}")"
+  signature="$(hysteresis_signature "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" "${previous_hash}" "${previous_state}")"
   if [ -n "${previous_hash}" ]; then
-    run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" --previous-checkpoint-hash "${previous_hash}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+    # shellcheck disable=SC2086
+    run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" --previous-checkpoint-hash "${previous_hash}" --previous-state-hash "${previous_state}" --state-hash "${state_hash}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}" --key-epoch 1 ${consensus_flags}
   else
-    run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}"
+    # shellcheck disable=SC2086
+    run_tx "${domain}" submit-checkpoint validator "${domain}" "${CHECKPOINT_HEIGHT}" "${block_hash}" "${app_hash}" --state-hash "${state_hash}" --hysteresis-signature "${signature}" --block-time-unix "${BLOCK_TIME_UNIX}" --key-epoch 1 ${consensus_flags}
   fi
 done
 
@@ -399,13 +496,23 @@ for source_domain in ${DOMAINS}; do
   done
 done
 
-echo "Broadcasting cross-reference packets from all ${ACTUAL_CHAIN_COUNT} chains..."
-for source_domain in ${DOMAINS}; do
-  run_tx "${source_domain}" broadcast-cross-reference-packet validator "${source_domain}" "${CHECKPOINT_HEIGHT}" \
-    --source-checkpoint-proof "$(proof_value "${source_domain}" source_checkpoint_proof)" \
-    --source-proof-revision-number "$(proof_number "${source_domain}" source_proof_revision_number)" \
-    --source-proof-revision-height "$(proof_number "${source_domain}" source_proof_revision_height)"
-done
+echo "Submitting crossref sendPacket fan-out tx from all ${ACTUAL_CHAIN_COUNT} source chains..."
+case "${CROSSREF_BROADCAST_MODE}" in
+  parallel)
+    echo "Using parallel broadcast mode: all source chains submit sendPacket fan-out tx concurrently."
+    run_parallel_broadcasts
+    ;;
+  sequential)
+    echo "Using sequential broadcast mode: one source chain fan-out tx at a time."
+    for source_domain in ${DOMAINS}; do
+      run_broadcast_for_source "${source_domain}"
+    done
+    ;;
+  *)
+    echo "Unknown CROSSREF_BROADCAST_MODE=${CROSSREF_BROADCAST_MODE}; expected sequential or parallel." >&2
+    exit 1
+    ;;
+esac
 
 sleep 20
 

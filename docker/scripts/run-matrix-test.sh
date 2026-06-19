@@ -3,6 +3,7 @@ set -euo pipefail
 
 MATRIX="${MATRIX:-3:1 5:3 ${CHAIN_COUNT:-6}:${RELAYER_COUNT:-2}}"
 RUN_DOCKER_MATRIX="${RUN_DOCKER_MATRIX:-0}"
+MATRIX_KEEP_STACK="${MATRIX_KEEP_STACK:-0}"
 
 for item in ${MATRIX}; do
   chains="${item%%:*}"
@@ -40,8 +41,15 @@ for item in ${MATRIX}; do
 
   if [ "${RUN_DOCKER_MATRIX}" = "1" ]; then
     echo "Starting Docker matrix topology ${chains}c/${relayers}r..."
+    docker compose -f "${compose_file}" down -v --remove-orphans >/dev/null 2>&1 || true
     docker compose -f "${compose_file}" up -d --build
     docker compose -f "${compose_file}" ps
+    echo "Running packet-flow experiment for ${chains}c/${relayers}r..."
+    CHAIN_COUNT="${chains}" RELAYER_WORKER_COUNT="${relayers}" COMPOSE_FILE="${compose_file}" TOPOLOGY_FILE="${topology_file}" CHECKPOINT_HEIGHT=1 \
+      docker/scripts/run-crossref-experiment.sh
+    if [ "${MATRIX_KEEP_STACK}" != "1" ]; then
+      docker compose -f "${compose_file}" down -v --remove-orphans
+    fi
   fi
 done
 

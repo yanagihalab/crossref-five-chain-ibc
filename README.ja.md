@@ -24,7 +24,7 @@ Crossref Five-Chain IBC は、Cosmos SDK を使って cross-reference blockchain
 - `chain-d`
 - `chain-e`
 
-Hermes は全ペアに対して `crossref/crossref` の IBC channel を開く。これにより、10 本の双方向 channel connection と、20 方向の directed cross-reference route ができる。各 source chain は自身の checkpoint を登録し、それを他の 4 チェーンへ broadcast できる。
+Hermes は全ペアに対して `crossref/crossref` の IBC channel を開く。これにより、10 本の双方向 channel connection と、20 方向の directed cross-reference route ができる。各 source chain は自身の checkpoint を登録し、1 つの crossref sendPacket fan-out tx を block に入れる。この tx は source domain に bind された全 destination channel へ IBC packet を発行する。relayer worker はそれらの packet を各 destination chain へ配送し、destination chain の validator は通常の block 実行で packet を処理する。
 
 受信側は次を検証する。
 
@@ -43,6 +43,7 @@ Hermes は全ペアに対して `crossref/crossref` の IBC channel を開く。
 - `BindDomainChannel`: local domain と remote domain のペアを IBC port/channel に bind する。
 - `SubmitCheckpoint`: hash と任意の hysteresis signature を検証して local checkpoint を保存する。
 - `SendCrossReferencePacket`: bind 済み remote domain へ checkpoint を 1 件送信する。
+- `SendCrossReferencePacket --all-bound-channels` / `BroadcastCrossReferencePacket`: 1 つの source-chain tx から、source domain に bind された全 destination channel へ packet を発行する。
 - `BroadcastCrossReferencePacket`: 1 つの source checkpoint を bind 済みの全 remote domain へ送信する。
 - `ReceiveCrossReferencePacket`: checkpoint packet を受信し、ICS23 source-store proof を含めて検証する。
 - domain、channel、checkpoint、cross-reference、checkpoint proof export 用の query endpoint。

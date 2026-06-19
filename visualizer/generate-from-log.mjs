@@ -32,6 +32,26 @@ while ((match = storedPattern.exec(log)) !== null) {
   });
 }
 
+const accountabilityEvents = [];
+const eventPattern = /accountability(?: event)?:?\s+(\{[^\n]+\})/gi;
+while ((match = eventPattern.exec(log)) !== null) {
+  try {
+    accountabilityEvents.push(JSON.parse(match[1]));
+  } catch {
+    accountabilityEvents.push({ raw: match[1] });
+  }
+}
+
+const controllerMetrics = [];
+const metricPattern = /relayer-controller(?: metric)?:?\s+(\{[^\n]+\})/gi;
+while ((match = metricPattern.exec(log)) !== null) {
+  try {
+    controllerMetrics.push(JSON.parse(match[1]));
+  } catch {
+    controllerMetrics.push({ raw: match[1] });
+  }
+}
+
 const result = {
   generated_from: logPath,
   ok: /cross-reference experiment passed/i.test(log),
@@ -40,7 +60,11 @@ const result = {
     stored_cross_references: stored.length,
     has_ics23_proof: /source_checkpoint_proof|ICS23|membership proof/i.test(log),
     has_hysteresis_signature: /hysteresis_signature|hysteresis public key/i.test(log),
+    accountability_events: accountabilityEvents.length,
+    controller_metrics: controllerMetrics.length,
   },
+  accountability_events: accountabilityEvents,
+  controller_metrics: controllerMetrics,
   tests: [
     {
       name: "DockerCrossrefExperiment",

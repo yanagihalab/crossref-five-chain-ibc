@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"os"
+	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,15 +13,14 @@ import (
 	"github.com/crossref/crossrefd/x/crossref/types"
 )
 
-const maxCheckpointProofLag = uint64(10000)
-
 func (k Keeper) VerifySourceCheckpointProof(ctx context.Context, binding types.DomainChannel, checkpoint types.Checkpoint, proof []byte, revisionNumber, revisionHeight uint64) error {
 	if len(proof) == 0 || revisionHeight == 0 {
 		return errorsmod.Wrap(types.ErrCheckpointProofRequired, "source_checkpoint_proof and source_proof_revision_height are required")
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if currentHeight := uint64(sdkCtx.BlockHeight()); currentHeight > revisionHeight+maxCheckpointProofLag {
-		return errorsmod.Wrapf(types.ErrCheckpointProofStale, "current_height=%d proof_height=%d max_lag=%d", currentHeight, revisionHeight, maxCheckpointProofLag)
+	proofLag := k.checkpointProofLag(ctx)
+	if currentHeight := uint64(sdkCtx.BlockHeight()); currentHeight > revisionHeight+proofLag {
+		return errorsmod.Wrapf(types.ErrCheckpointProofStale, "current_height=%d proof_height=%d max_lag=%d", currentHeight, revisionHeight, proofLag)
 	}
 
 	key, err := types.CheckpointStorageKey(checkpoint.DomainId, checkpoint.Height)
@@ -78,4 +79,21 @@ func (k Keeper) sourceClientID(ctx sdk.Context, binding types.DomainChannel) (st
 		return "", errorsmod.Wrapf(types.ErrCheckpointProofInvalid, "connection %s has no client id", channel.ConnectionHops[0])
 	}
 	return connection.ClientId, nil
+}
+
+func (k Keeper) checkpointProofLag(ctx context.Context) uint64 {
+	params, err := k.Params.Get(ctx)
+	lag := types.DefaultCheckpointProofMaxLag
+	if err == nil && params.CheckpointProofMaxLag != 0 {
+		lag = params.CheckpointProofMaxLag
+	}
+	raw := os.Getenv("CROSSREF_MAX_CHECKPOINT_PROOF_LAG")
+	if raw == "" {
+		return lag
+	}
+	override, err := strconv.ParseUint(raw, 10, 64)
+	if err != nil || override == 0 {
+		return lag
+	}
+	return override
 }

@@ -856,6 +856,7 @@ All 20 destination/source cross-reference records are stored at height=1.`;
       if (chains[route.from] && chains[route.to]) {
         drawRouteToken(chains[route.from], relayer, chains[route.to], route, progress);
       }
+      drawFanoutSemantics(chains[route.from], relayer, chains[route.to]);
       drawRouteLegend(route);
       drawNetworkStateBand(test, route);
     }
@@ -923,6 +924,25 @@ All 20 destination/source cross-reference records are stored at height=1.`;
       ctx.fillStyle = route.kind === "packet" ? "#2563eb" : "#0f8b6f";
       ctx.font = "700 12px system-ui, sans-serif";
       ctx.fillText(`active: ${route.label}`, relayer.x - 70, relayer.y + 33);
+    }
+
+    function drawFanoutSemantics(from, relayer, to) {
+      if (!from || !to) return;
+      drawMiniLabel(from.x, from.y + 70, "source chain", "1 tx emits all bound packets", "#2563eb");
+      drawMiniLabel(relayer.x, relayer.y + 62, "relayer", "delivers packet commitments", "#64748b");
+      drawMiniLabel(to.x, to.y + 70, "destination chain", "validators execute packet", "#0f8b6f");
+    }
+
+    function drawMiniLabel(x, y, titleText, bodyText, color) {
+      const w = 196;
+      const h = 42;
+      roundedRect(x - w / 2, y, w, h, 8, "#ffffff", color);
+      ctx.fillStyle = color;
+      ctx.font = "800 10px system-ui, sans-serif";
+      ctx.fillText(titleText, x - w / 2 + 12, y + 16);
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "11px system-ui, sans-serif";
+      ctx.fillText(bodyText, x - w / 2 + 12, y + 32);
     }
 
     function drawAggregatedRoute(from, relayer, to, route, active) {
@@ -1020,10 +1040,10 @@ All 20 destination/source cross-reference records are stored at height=1.`;
       roundedRect(x, y, w, h, 8, "#f8fafc", "#d7dee8");
       ctx.fillStyle = "#64748b";
       ctx.font = "700 12px system-ui, sans-serif";
-      ctx.fillText("Observed broadcast route and source-chain verification", x + 18, y + 21);
+      ctx.fillText("Crossref send model", x + 18, y + 21);
       ctx.fillStyle = "#1f2933";
       ctx.font = "14px system-ui, sans-serif";
-      const text = `${route.label}: ${test.steps[selectedStep]}。検証: ${route.verify || "source domain/channel/hash"}。確認: ${test.verified}。`;
+      const text = `${route.label}: source chain が全宛先channel向け packet を発行し、relayer が配送し、destination chain の全ノードが block 実行で処理する。検証: ${route.verify || "source domain/channel/hash"}。`;
       wrapText(text, x + 260, y + 21, w - 282, 18);
     }
 

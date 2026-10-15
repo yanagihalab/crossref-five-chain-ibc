@@ -21,7 +21,9 @@ Module-only advisories remain separately documented; this is not a Rust Hermes s
 For a **new** network, use `generate-inventory.mjs`, review your own new hosts, then the guarded
 `start-network.mjs plan`, `prepare-fresh`, deployment dry-run, deployment and `start-fresh` commands
 in the full guide. Three-Relayer operation additionally requires independent funded identities,
-manually reviewed R2/R3 deployments and exclusive packet filters. Example addresses are not live targets.
+an initial one-Relayer bootstrap to discover real channels, confirmed R1 stop, manually reviewed
+R2/R3 deployments and exclusive packet filters before the three Relayers start.
+Do not rerun fresh startup on already-started databases. Example addresses are not live targets.
 
 For a **retained** chain, never use `init`, `prepare-fresh` or unsafe reset. Restore the database,
 genesis, keys and signing state together from one verified snapshot. Verify that every other copy

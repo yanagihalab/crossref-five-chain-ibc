@@ -110,6 +110,19 @@ test('three Relayers are checked before Validator starts and started only after 
   assert.equal(calls.length, 0);
 });
 
+test('a generation funded for three Relayers can bootstrap only R1 before filter verification', async t => {
+  const f = fixture(t), file = path.join(f.output, 'prepared/manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(file));
+  manifest.relayers = [1,2,3].map(i => ({ name: 'relayer-' + i, address: 'funded-fixture-' + i }));
+  fs.writeFileSync(file, JSON.stringify(manifest));
+  const calls = [];
+  const result = await startFresh(f, { execute: async (program, args) => {
+    if (program === process.execPath) calls.push(args[1]);
+  }, relayAction: async () => { throw Error('R2/R3 must not start before filter verification'); } });
+  assert.equal(result.relayers, 1);
+  assert.deepEqual(calls, ['doctor', 'start', 'health', 'channels', 'health', 'relayer-start']);
+});
+
 test('a failed vulnerability scan blocks all SSH and all startup operations', async t => {
   const f = fixture(t), calls = [];
   await assert.rejects(startFresh(f, { execute: async (p,args) => { calls.push({ p,args }); throw Error('security scan not passed'); } }));

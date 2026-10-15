@@ -111,6 +111,18 @@ prepareは独立3アカウントをgenesisで資金化し、
 既存の1 Relayer用prepared世代を上書きして3台用に変更しない。
 
 標準deployが配置するのは12 ValidatorとR1である。R2/R3は、起動せずに次を別途配置する。
+新規チェーンではOPEN channelがまだ存在しないので、全3台を検証済みと偽って一括起動しない。
+まず3台分を資金化したprepared世代を、**multi引数なしで**1 Relayerだけbootstrapする。
+
+```bash
+node deploy/recovery/start-network.mjs start-fresh \
+  --inventory "$INV" --output-dir "$OUT" --confirm-new-network fresh-study
+node deploy/network/orchestrator.mjs relayer-stop --inventory "$INV" --output-dir "$OUT"
+```
+
+これでValidatorの進行と実channelを確認できる。R1を通常停止したことを確認してから、
+下記3台の配置・担当を仕上げる。DBはすでに開始しているため、ここから
+`start-fresh`や`prepare-fresh`を再実行しない。
 
 1. 新しい専用workspaceへCompose、Hermes設定、scripts、空keyringディレクトリを置く。
    R1と同じ検証済みHermes image digestをpinし、Composeのproject/workspace/serviceを設定JSONと一致させる。
@@ -125,13 +137,13 @@ prepareは独立3アカウントをgenesisで資金化し、
 ```bash
 node deploy/network/manage-relayers.mjs list --config deploy/network/multi-relayer.json
 node deploy/network/manage-relayers.mjs check --config deploy/network/multi-relayer.json
-node deploy/recovery/start-network.mjs start-fresh \
-  --inventory "$INV" --output-dir "$OUT" --confirm-new-network fresh-study \
-  --multi-relayer-config deploy/network/multi-relayer.json
+node deploy/network/orchestrator.mjs health --inventory "$INV" --output-dir "$OUT"
+make govulncheck
+node deploy/network/manage-relayers.mjs start --config deploy/network/multi-relayer.json
 node deploy/network/manage-relayers.mjs status --config deploy/network/multi-relayer.json
 ```
 
-このlauncherは3台の事前checkを行うが、R2/R3の自動配備や排他packet_filterの自動証明はしない。
+この管理コマンドは3台の事前checkを行うが、R2/R3の自動配備や排他packet_filterの自動証明はしない。
 実配備の個別確認を省略しない。過去のcontroller/run-once記録を解除したり、旧Txを自動再送しない。
 
 ## 保存チェーンを継続する場合

@@ -1,0 +1,74 @@
+syntax = "proto3";
+package crossrefd.crossref.v1;
+import "gogoproto/gogo.proto";
+option go_package = "github.com/crossref/crossrefd/x/crossref/types";
+
+// History v2 is a separate, all-participant protocol; legacy checkpoints are unchanged.
+message HistoryMember {
+  string domain_id = 1;
+  string chain_id = 2;
+  bytes public_key = 3;
+}
+message HistoryConfig {
+  bool enabled = 1;
+  string session_id = 2;
+  string local_domain_id = 3;
+  repeated HistoryMember members = 4 [(gogoproto.nullable) = false];
+  uint64 interval_blocks = 5;
+  uint64 packet_timeout_seconds = 6;
+  // Immutable session policy. Enables the v3 ancestry-verified protocol.
+  bool require_ancestry_proof = 7;
+}
+message HistoryPart {
+  string domain_id = 1;
+  string chain_id = 2;
+  uint64 height = 3;
+  bytes block_hash = 4;
+  // Post-state of height, taken from the next CometBFT header's app_hash.
+  bytes app_hash = 5;
+  bytes ancestry_proof = 6;
+}
+message HistoryAncestryProof {
+  // Canonical CometBFT Header protobufs, anchor through source height + 1.
+  repeated bytes headers = 1;
+}
+message HistorySeal {
+  string domain_id = 1;
+  bytes previous_signature_hash = 2;
+  bytes signature = 3;
+  // Assigned by source block execution, not supplied by the signer.
+  uint64 recorded_height = 4;
+}
+message HistoryRound {
+  uint64 number = 1;
+  uint64 opened_height = 2;
+  uint64 completed_height = 3;
+  string status = 4;
+  repeated HistoryPart parts = 5 [(gogoproto.nullable) = false];
+  repeated HistorySeal seals = 6 [(gogoproto.nullable) = false];
+}
+message HistoryPacketData {
+  bytes session_hash = 1;
+  uint64 round = 2;
+  string source_domain_id = 3;
+  HistoryPart part = 4;
+  HistorySeal seal = 5;
+}
+message HistoryOutbox {
+  string destination = 1;
+  HistoryPacketData packet = 2 [(gogoproto.nullable) = false];
+  uint64 sequence = 3;
+  string port_id = 4;
+  string channel_id = 5;
+  uint64 attempts = 6;
+  uint64 retry_height = 7;
+}
+message HistoryState {
+  HistoryConfig config = 1 [(gogoproto.nullable) = false];
+  HistoryRound current = 2 [(gogoproto.nullable) = false];
+  HistoryRound previous = 3 [(gogoproto.nullable) = false];
+  repeated HistoryPacketData pending_parts = 4 [(gogoproto.nullable) = false];
+  repeated HistoryOutbox outbox = 5 [(gogoproto.nullable) = false];
+  uint64 last_block_height = 6;
+  bytes last_block_hash = 7;
+}

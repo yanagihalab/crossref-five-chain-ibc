@@ -4,6 +4,13 @@ Crossref Five-Chain IBC は、Cosmos SDK を使って cross-reference blockchain
 
 英語版は [README.md](README.md) である。
 
+## Validator・Relayerの最新版
+
+Go 1.26.9以上とNode 22を使用する。初回buildの前に `make security-deps` が必須。
+[起動・復元手順](docs/NODE-STARTUP.ja.md) と
+[32件の脆弱性対応記録](docs/SECURITY-REMEDIATION-20261014.ja.md) を参照する。
+公開物には実運用の鍵・DB・認証情報・inventoryを含めない。
+
 ## このリポジトリに含まれるもの
 
 - `x/crossref`: domain 登録、checkpoint 保存、channel bind、cross-reference packet の送受信、ICS23 proof 検証、hysteresis signature 検証を行う Cosmos SDK module。
@@ -63,7 +70,7 @@ domain は Ed25519 の `hysteresis_public_key` を登録できる。
 ## 必要なもの
 
 - macOS または Linux shell
-- 生成済み Cosmos SDK app を build できる Go toolchain
+- Go 1.26.9以上、Node 22
 - Docker Desktop または Docker Engine + Docker Compose
 - Docker image pull や Go module cache が空のときの依存解決用ネットワーク
 
@@ -72,6 +79,8 @@ domain は Ed25519 の `hysteresis_public_key` を登録できる。
 リポジトリ root で実行する。
 
 ```bash
+make security-deps
+mkdir -p build
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
 docker compose -f docker/docker-compose.yml up -d --build
 docker/scripts/run-crossref-experiment.sh
@@ -119,6 +128,7 @@ node visualizer/generate-from-log.mjs /tmp/crossref-experiment.log visualizer/te
 Go test を実行する:
 
 ```bash
+make security-deps
 go test -count=1 ./...
 ```
 

@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "network": "lab-202609",
+  "byzantineFaults": 1,
+  "remoteRoot": "/opt/crossref",
+  "denom": "stake",
+  "checkpointProofMaxLag": 10000,
+  "requireConsensusProof": false,
+  "ssh": { "identityFile": "~/.ssh/id_ed25519" },
+  "hosts": [
+    { "id": "chain-a-host-1", "address": "10.77.0.11", "bindAddress": "10.77.0.11", "failureDomain": "physical-a-1", "architecture": "amd64" },
+    { "id": "chain-a-host-2", "address": "10.77.0.12", "bindAddress": "10.77.0.12", "failureDomain": "physical-a-2", "architecture": "amd64" },
+    { "id": "chain-a-host-3", "address": "10.77.0.13", "bindAddress": "10.77.0.13", "failureDomain": "physical-a-3", "architecture": "amd64" },
+    { "id": "chain-a-host-4", "address": "10.77.0.14", "bindAddress": "10.77.0.14", "failureDomain": "physical-a-4", "architecture": "amd64" },
+    { "id": "chain-b-host-1", "address": "10.77.0.15", "bindAddress": "10.77.0.15", "failureDomain": "physical-b-1", "architecture": "amd64" },
+    { "id": "chain-b-host-2", "address": "10.77.0.16", "bindAddress": "10.77.0.16", "failureDomain": "physical-b-2", "architecture": "amd64" },
+    { "id": "chain-b-host-3", "address": "10.77.0.17", "bindAddress": "10.77.0.17", "failureDomain": "physical-b-3", "architecture": "amd64" },
+    { "id": "chain-b-host-4", "address": "10.77.0.18", "bindAddress": "10.77.0.18", "failureDomain": "physical-b-4", "architecture": "amd64" },
+    { "id": "chain-c-host-1", "address": "10.77.0.19", "bindAddress": "10.77.0.19", "failureDomain": "physical-c-1", "architecture": "amd64" },
+    { "id": "chain-c-host-2", "address": "10.77.0.20", "bindAddress": "10.77.0.20", "failureDomain": "physical-c-2", "architecture": "amd64" },
+    { "id": "chain-c-host-3", "address": "10.77.0.21", "bindAddress": "10.77.0.21", "failureDomain": "physical-c-3", "architecture": "amd64" },
+    { "id": "chain-c-host-4", "address": "10.77.0.22", "bindAddress": "10.77.0.22", "failureDomain": "physical-c-4", "architecture": "amd64" },
+    { "id": "chain-d-host-1", "address": "10.77.0.23", "bindAddress": "10.77.0.23", "failureDomain": "physical-d-1", "architecture": "amd64" },
+    { "id": "chain-d-host-2", "address": "10.77.0.24", "bindAddress": "10.77.0.24", "failureDomain": "physical-d-2", "architecture": "amd64" },
+    { "id": "chain-d-host-3", "address": "10.77.0.25", "bindAddress": "10.77.0.25", "failureDomain": "physical-d-3", "architecture": "amd64" },
+    { "id": "chain-d-host-4", "address": "10.77.0.26", "bindAddress": "10.77.0.26", "failureDomain": "physical-d-4", "architecture": "amd64" },
+    { "id": "chain-e-host-1", "address": "10.77.0.27", "bindAddress": "10.77.0.27", "failureDomain": "physical-e-1", "architecture": "amd64" },
+    { "id": "chain-e-host-2", "address": "10.77.0.28", "bindAddress": "10.77.0.28", "failureDomain": "physical-e-2", "architecture": "amd64" },
+    { "id": "chain-e-host-3", "address": "10.77.0.29", "bindAddress": "10.77.0.29", "failureDomain": "physical-e-3", "architecture": "amd64" },
+    { "id": "chain-e-host-4", "address": "10.77.0.30", "bindAddress": "10.77.0.30", "failureDomain": "physical-e-4", "architecture": "amd64" },
+    { "id": "relay-1", "address": "10.77.0.31", "bindAddress": "10.77.0.31", "failureDomain": "relay-physical-1", "architecture": "amd64" }
+  ],
+  "chains": [
+    { "id": "crossref-lab-202609-a", "domain": "chain-a", "validators": ["chain-a-host-1", "chain-a-host-2", "chain-a-host-3", "chain-a-host-4"] },
+    { "id": "crossref-lab-202609-b", "domain": "chain-b", "validators": ["chain-b-host-1", "chain-b-host-2", "chain-b-host-3", "chain-b-host-4"] },
+    { "id": "crossref-lab-202609-c", "domain": "chain-c", "validators": ["chain-c-host-1", "chain-c-host-2", "chain-c-host-3", "chain-c-host-4"] },
+    { "id": "crossref-lab-202609-d", "domain": "chain-d", "validators": ["chain-d-host-1", "chain-d-host-2", "chain-d-host-3", "chain-d-host-4"] },
+    { "id": "crossref-lab-202609-e", "domain": "chain-e", "validators": ["chain-e-host-1", "chain-e-host-2", "chain-e-host-3", "chain-e-host-4"] }
+  ],
+  "relayer": { "host": "relay-1", "image": "ghcr.io/informalsystems/hermes:1.10.5" }
+}

@@ -17,10 +17,8 @@ func ComputeCheckpointHash(c Checkpoint) []byte {
 	return h.Sum(nil)
 }
 
-// ComputeCheckpointStateHash returns H(S_n), the paper-level state commitment
-// for a checkpoint. It deliberately excludes the hysteresis chain fields
-// (previous_state_hash, checkpoint_hash, signatures, and proofs) so H(S_n-1)
-// can be validated independently from the checkpoint store key/hash.
+// ComputeCheckpointStateHash returns the legacy checkpoint state commitment.
+// This is not the paper's H(S_n), which hashes a previous signature.
 func ComputeCheckpointStateHash(c Checkpoint) []byte {
 	h := sha256.New()
 	writeString(h, "crossref-state-v1")

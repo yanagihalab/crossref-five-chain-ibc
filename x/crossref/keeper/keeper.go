@@ -35,8 +35,14 @@ type Keeper struct {
 	Checkpoints          collections.Map[string, types.Checkpoint]
 	LatestCheckpoints    collections.Map[string, uint64]
 	CrossReferences      collections.Map[string, types.CrossReference]
+	CrossReferenceAcks   collections.Map[string, types.CrossReferenceAck]
 	OutgoingPackets      collections.Map[string, []byte]
 	AccountabilityEvents collections.Map[string, types.AccountabilityEvent]
+	TrustedLightClients  collections.Map[string, types.TrustedLightClientState]
+	LightClientUpdates   collections.Map[string, types.LightClientUpdate]
+	HistoryState         collections.Item[types.HistoryState]
+	HistoryRounds        collections.Map[uint64, types.HistoryRound]
+	historySender        func(sdk.Context, string, string, uint64, []byte) (uint64, error)
 
 	ibcKeeperFn   func() *ibckeeper.Keeper
 	proofVerifier CheckpointProofVerifier
@@ -75,8 +81,13 @@ func NewKeeper(
 		Checkpoints:          collections.NewMap(sb, types.CheckpointKeyPrefix, "checkpoints", collections.StringKey, codec.CollValue[types.Checkpoint](cdc)),
 		LatestCheckpoints:    collections.NewMap(sb, types.LatestCheckpointKeyPrefix, "latest_checkpoints", collections.StringKey, collections.Uint64Value),
 		CrossReferences:      collections.NewMap(sb, types.CrossReferenceKeyPrefix, "cross_references", collections.StringKey, codec.CollValue[types.CrossReference](cdc)),
+		CrossReferenceAcks:   collections.NewMap(sb, types.CrossReferenceAckKeyPrefix, "cross_reference_acks", collections.StringKey, codec.CollValue[types.CrossReferenceAck](cdc)),
 		OutgoingPackets:      collections.NewMap(sb, types.OutgoingPacketKeyPrefix, "outgoing_packets", collections.StringKey, collections.BytesValue),
 		AccountabilityEvents: collections.NewMap(sb, types.AccountabilityEventKeyPrefix, "accountability_events", collections.StringKey, codec.CollValue[types.AccountabilityEvent](cdc)),
+		TrustedLightClients:  collections.NewMap(sb, types.TrustedLightClientKeyPrefix, "trusted_light_clients", collections.StringKey, codec.CollValue[types.TrustedLightClientState](cdc)),
+		LightClientUpdates:   collections.NewMap(sb, types.LightClientUpdateKeyPrefix, "light_client_updates", collections.StringKey, codec.CollValue[types.LightClientUpdate](cdc)),
+		HistoryState:         collections.NewItem(sb, collections.NewPrefix("history-v2-state/"), "history_v2_state", codec.CollValue[types.HistoryState](cdc)),
+		HistoryRounds:        collections.NewMap(sb, collections.NewPrefix("history-v2-round/"), "history_v2_rounds", collections.Uint64Key, codec.CollValue[types.HistoryRound](cdc)),
 	}
 
 	schema, err := sb.Build()

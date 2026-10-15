@@ -1,0 +1,873 @@
+{
+  "kind": "32-advisory-runtime-reachability-remediation",
+  "verifiedAt": "2026-10-14T08:28:36.387Z",
+  "baselineCommit": "985c72fac17fb074dac582c66bd40a80062250a2",
+  "toolVersion": "govulncheck v1.9.0",
+  "config": {
+    "protocol_version": "v1.0.0",
+    "scanner_name": "govulncheck",
+    "scanner_version": "v1.9.0",
+    "db": "https://vuln.go.dev",
+    "db_last_modified": "2026-10-08T22:31:09Z",
+    "go_version": "go1.26.9",
+    "scan_level": "symbol",
+    "scan_mode": "source"
+  },
+  "scanTarget": {
+    "os": "linux",
+    "arch": "amd64",
+    "mode": "source",
+    "testFiles": false
+  },
+  "sourceSymbolFindings": 0,
+  "linuxBinarySymbolFindings": 0,
+  "unusedModuleOnlyFindings": [
+    "GO-2026-5932",
+    "GO-2025-3442"
+  ],
+  "upstreamSDKKnownAdvisoriesSeparatelyChecked": {
+    "version": "v0.54.3",
+    "ids": [
+      "GO-2023-1821",
+      "GO-2023-1881"
+    ],
+    "package": "github.com/cosmos/cosmos-sdk/x/crisis",
+    "imported": false
+  },
+  "entries": [
+    {
+      "id": "GO-2026-6617",
+      "title": "HTTP/2 HPACKの並行更新によるクラッシュ",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6617",
+      "versionsBefore": [
+        {
+          "module": "golang.org/x/net",
+          "foundVersion": "v0.55.0",
+          "fixedVersion": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "golang.org/x/net",
+          "version": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6615",
+      "title": "OpenTelemetryログ出力のCPU空回り",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6615",
+      "versionsBefore": [
+        {
+          "module": "go.opentelemetry.io/otel/sdk/log",
+          "foundVersion": "v0.19.0",
+          "fixedVersion": "v0.21.0"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "go.opentelemetry.io/otel/sdk/log",
+          "version": "v0.22.0"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6613",
+      "title": "CONNECT成功後のHTTP/1要求解釈ずれ",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6613",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6612",
+      "title": "HTTP/2フロー制御の二重返却",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6612",
+      "versionsBefore": [
+        {
+          "module": "golang.org/x/net",
+          "foundVersion": "v0.55.0",
+          "fixedVersion": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "golang.org/x/net",
+          "version": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6611",
+      "title": "HTTP/2ウィンドウ変更によるCPU消費",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6611",
+      "versionsBefore": [
+        {
+          "module": "golang.org/x/net",
+          "foundVersion": "v0.55.0",
+          "fixedVersion": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "golang.org/x/net",
+          "version": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6610",
+      "title": "HTTP/2不正ヘッダーによる応答密輸",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6610",
+      "versionsBefore": [
+        {
+          "module": "golang.org/x/net",
+          "foundVersion": "v0.55.0",
+          "fixedVersion": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "golang.org/x/net",
+          "version": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6609",
+      "title": "大量Range指定によるCPU消費",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6609",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6608",
+      "title": "multipart/MIME解析のメモリ上限回避",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6608",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6607",
+      "title": "TLS ECH不正拡張によるメモリ枯渇",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6607",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6605",
+      "title": "CONNECT拒否後の共有HTTP接続汚染",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6605",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6603",
+      "title": "HTTP/2 Trailer宣言によるメモリ枯渇",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6603",
+      "versionsBefore": [
+        {
+          "module": "golang.org/x/net",
+          "foundVersion": "v0.55.0",
+          "fixedVersion": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "golang.org/x/net",
+          "version": "v0.60.0"
+        },
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6600",
+      "title": "templateのyield文脈でエスケープ不備",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6600",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6599",
+      "title": "連続template式の文脈追跡不備",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6599",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.9"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6508",
+      "title": "OTLPログ通信の環境変数TLS設定無視",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6508",
+      "versionsBefore": [
+        {
+          "module": "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc",
+          "foundVersion": "v0.19.0",
+          "fixedVersion": "v0.21.0"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc",
+          "version": "v0.22.0"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6505",
+      "title": "トレース送信先の内部ログへの露出",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6505",
+      "versionsBefore": [
+        {
+          "module": "go.opentelemetry.io/otel/exporters/otlp/otlptrace",
+          "foundVersion": "v1.43.0",
+          "fixedVersion": "v1.45.0"
+        },
+        {
+          "module": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc",
+          "foundVersion": "v1.43.0",
+          "fixedVersion": "v1.45.0"
+        },
+        {
+          "module": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp",
+          "foundVersion": "v1.43.0",
+          "fixedVersion": "v1.45.0"
+        },
+        {
+          "module": "go.opentelemetry.io/otel/sdk",
+          "foundVersion": "v1.43.0",
+          "fixedVersion": "v1.45.0"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "go.opentelemetry.io/otel/exporters/otlp/otlptrace",
+          "version": "v1.46.0"
+        },
+        {
+          "module": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc",
+          "version": "v1.46.0"
+        },
+        {
+          "module": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp",
+          "version": "v1.46.0"
+        },
+        {
+          "module": "go.opentelemetry.io/otel/sdk",
+          "version": "v1.46.0"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6443",
+      "title": "gRPC xDSのHost欠落によるpanic",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6443",
+      "versionsBefore": [
+        {
+          "module": "google.golang.org/grpc",
+          "foundVersion": "v1.81.0",
+          "fixedVersion": "v1.82.2"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "google.golang.org/grpc",
+          "version": "v1.83.2"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6348",
+      "title": "gRPC小分けDATAフレームによるOOM",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6348",
+      "versionsBefore": [
+        {
+          "module": "google.golang.org/grpc",
+          "foundVersion": "v1.81.0",
+          "fixedVersion": "v1.83.1"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "google.golang.org/grpc",
+          "version": "v1.83.2"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6218",
+      "title": "相対URLの..解決が二次時間",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6218",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.6"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6165",
+      "title": "DTLSのECDHE_PSKメッセージ解析panic",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6165",
+      "versionsBefore": [
+        {
+          "module": "github.com/pion/dtls/v3",
+          "foundVersion": "v3.1.2",
+          "fixedVersion": "v3.1.4"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "github.com/pion/dtls/v3",
+          "version": "v3.1.5"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6099",
+      "title": "WebTransport未知capsuleのメモリ枯渇",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6099",
+      "versionsBefore": [
+        {
+          "module": "github.com/quic-go/webtransport-go",
+          "foundVersion": "v0.10.0",
+          "fixedVersion": "v0.11.1"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "github.com/quic-go/webtransport-go",
+          "version": "v0.13.0"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6091",
+      "title": "templateのJavaScript正規表現文脈不備",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6091",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.6"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6090",
+      "title": "TLS KeyUpdate連投によるCPU消費",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6090",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.6"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6089",
+      "title": "平文HTTP/2判別時のtimeout未適用",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6089",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.6"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-6061",
+      "title": "gRPC xDS認可とRapid Resetの複合問題",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-6061",
+      "versionsBefore": [
+        {
+          "module": "google.golang.org/grpc",
+          "foundVersion": "v1.81.0",
+          "fixedVersion": "v1.82.1"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "google.golang.org/grpc",
+          "version": "v1.83.2"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-5972",
+      "title": "ASN.1再帰解析によるスタック枯渇",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-5972",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.6"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-5970",
+      "title": "不正UTF-8の正規化で無限ループ",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-5970",
+      "versionsBefore": [
+        {
+          "module": "golang.org/x/text",
+          "foundVersion": "v0.37.0",
+          "fixedVersion": "v0.39.0"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "golang.org/x/text",
+          "version": "v0.42.0"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-5932",
+      "title": "旧OpenPGPパッケージの保守終了・設計上の危険",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-5932",
+      "versionsBefore": [
+        {
+          "module": "golang.org/x/crypto",
+          "foundVersion": "v0.52.0",
+          "fixedVersion": null
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "golang.org/x/crypto",
+          "version": "v0.57.0"
+        }
+      ],
+      "action": "Replace SDK armor import with ProtonMail/go-crypto v1.5.2; verify exact upstream module and complete source tree; old OpenPGP runtime package forbidden",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": true,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-5856",
+      "title": "TLS ECHでの追跡可能性・プライバシー漏洩",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-5856",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.5"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-5158",
+      "title": "OpenTelemetry baggage解析の長さ制限欠落",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-5158",
+      "versionsBefore": [
+        {
+          "module": "go.opentelemetry.io/otel",
+          "foundVersion": "v1.43.0",
+          "fixedVersion": "v1.44.0"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "go.opentelemetry.io/otel",
+          "version": "v1.46.0"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-5026",
+      "title": "Punycodeの正規化差による権限チェック回避",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-5026",
+      "versionsBefore": [
+        {
+          "module": "stdlib",
+          "foundVersion": "v1.26.4",
+          "fixedVersion": "v1.26.6"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "stdlib",
+          "version": "go1.26.9"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-4508",
+      "title": "go-ethereumのP2P入力によるメモリDoS",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-4508",
+      "versionsBefore": [
+        {
+          "module": "github.com/ethereum/go-ethereum",
+          "foundVersion": "v1.16.8",
+          "fixedVersion": "v1.17.0"
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "github.com/ethereum/go-ethereum",
+          "version": "v1.17.0"
+        }
+      ],
+      "action": "Update affected dependency/toolchain and validate source plus Linux binary",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    },
+    {
+      "id": "GO-2026-4479",
+      "title": "DTLS AES-GCMのnonce重複リスク",
+      "officialSource": "https://pkg.go.dev/vuln/GO-2026-4479",
+      "versionsBefore": [
+        {
+          "module": "github.com/pion/dtls/v2",
+          "foundVersion": "v2.2.12",
+          "fixedVersion": null
+        }
+      ],
+      "versionsAfter": [
+        {
+          "module": "github.com/pion/dtls/v2",
+          "version": "v2.2.12"
+        }
+      ],
+      "action": "Upgrade libp2p to v0.50.0 and STUN/v3 to v3.1.7; remove DTLS/v2 runtime dependency",
+      "symbolFindingAbsentInFinalScan": true,
+      "moduleOnlyAdvisoryStillPresent": false,
+      "status": "verified-runtime-reachability-remediated"
+    }
+  ],
+  "evidence": [
+    {
+      "name": "go-tests-final.log",
+      "bytes": 1606,
+      "sha256": "cd5cbceaf3dd43fcaa83222379df1c3855848fd1c096ba8ed0f6667b0f4bbec3"
+    },
+    {
+      "name": "go-vet-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "node-tests-final.log",
+      "bytes": 853905,
+      "sha256": "32df9d89d1474834f359cd4906dc5c9398981055b26fb817c4e7d004ce712b08"
+    },
+    {
+      "name": "linux-source-scan-final.json",
+      "bytes": 1137770,
+      "sha256": "44039dd245a5bb711f2356286eab021f06eb0ca8f7d2ff2b8c2119ea15f8d8e3"
+    },
+    {
+      "name": "make-govulncheck-final.log",
+      "bytes": 564,
+      "sha256": "2a1bd78374bdcc7595f1f36b57507a7024744c30eba0e459ad85b19bb0a11551"
+    },
+    {
+      "name": "linux-build-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "linux-binary-scan-final.log",
+      "bytes": 395,
+      "sha256": "682fd114eacd405a6a490c32853a156a9ba29f57ff11c5aaf9610a6cb1ca9633"
+    },
+    {
+      "name": "sdk-advisory-gate.log",
+      "bytes": 146,
+      "sha256": "6f01e81494367a3b1d3b58493b419c9605a14dc769ba228c5de3d0161b584994"
+    }
+  ],
+  "linuxBinary": {
+    "sha256": "0f9549db49aae22ec01af814c86b4a3fe78cc3ebf6c62d8df68e951b821a7a55",
+    "target": "linux/amd64",
+    "goVersion": "go1.26.9"
+  },
+  "sdkPreparedSourceReceiptSHA256": "cdfe84a868e81e6e0a64ac703e5e6fb885b8437017bc120f61b1a6005b8900f2",
+  "knownLimitations": {
+    "hermesRustNotScanned": true,
+    "oldRetainedBinariesNotUpgraded": true,
+    "noNewHostConsensusNetworkStarted": true,
+    "legacyLintNotClaimedGreen": true,
+    "exploitsNotReproduced": true
+  },
+  "noFindingSuppression": true,
+  "originalFrozenEvaluationAndSigningStateUnchanged": true,
+  "automationRemainsPaused": true
+}

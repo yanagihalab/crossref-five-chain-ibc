@@ -9,10 +9,9 @@ import (
 
 var hysteresisThresholdMagic = []byte("crxmsig1")
 
-// HysteresisSignBytes returns the paper-strict canonical bytes signed by a
-// domain CCN. It commits to H(S_n-1) separately from checkpoint_hash and to the
-// current H(S_n), which keeps the hysteresis signature chain independent from
-// the store key/hash used for IBC membership proofs.
+// HysteresisSignBytes preserves the legacy v1 checkpoint signing format.
+// It chains checkpoint STATE hashes, not the paper's previous signature hash.
+// The all-participant protocol and actual signature chain use HistorySignBytes.
 func HysteresisSignBytes(checkpoint Checkpoint) []byte {
 	stateHash := checkpoint.StateHash
 	if len(stateHash) == 0 {

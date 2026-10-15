@@ -38,13 +38,74 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		CmdParams(),
 		CmdDomain(),
 		CmdCheckpoint(),
 		CmdLatestCheckpoint(),
 		CmdCrossReference(),
+		CmdCrossReferenceAck(),
+		CmdTrustedLightClientState(),
+		CmdLightClientUpdates(),
 		CmdCheckpointProof(),
+		CmdHistory(),
+		CmdHistoryRound(),
 	)
 
+	return cmd
+}
+
+func CmdParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "params", Short: "Shows the crossref module parameters", Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			res, err := types.NewQueryClient(clientCtx).Params(cmd.Context(), &types.QueryParamsRequest{})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdHistory() *cobra.Command {
+	cmd := &cobra.Command{Use: "history", Short: "Shows history-v2 state and canonical signing bytes", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, args []string) error {
+		ctx, err := client.GetClientQueryContext(cmd)
+		if err != nil {
+			return err
+		}
+		res, err := types.NewQueryClient(ctx).History(cmd.Context(), &types.QueryHistoryRequest{})
+		if err != nil {
+			return err
+		}
+		return ctx.PrintProto(res)
+	}}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdHistoryRound() *cobra.Command {
+	cmd := &cobra.Command{Use: "history-round [round]", Short: "Shows an archived history-v2 round", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
+		round, err := strconv.ParseUint(args[0], 10, 64)
+		if err != nil || round == 0 {
+			return fmt.Errorf("invalid history round")
+		}
+		ctx, err := client.GetClientQueryContext(cmd)
+		if err != nil {
+			return err
+		}
+		res, err := types.NewQueryClient(ctx).HistoryRound(cmd.Context(), &types.QueryHistoryRoundRequest{Round: round})
+		if err != nil {
+			return err
+		}
+		return ctx.PrintProto(res)
+	}}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -137,6 +198,77 @@ func CmdCrossReference() *cobra.Command {
 				RemoteDomainId: args[1],
 				RemoteHeight:   height,
 			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdCrossReferenceAck() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "crossref-ack [port-id] [channel-id] [packet-sequence]",
+		Short: "Shows the Crossref application ACK stored after an IBC acknowledgement",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			sequence, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid packet sequence: %w", err)
+			}
+			res, err := types.NewQueryClient(clientCtx).CrossReferenceAck(cmd.Context(), &types.QueryCrossReferenceAckRequest{
+				PortId:         args[0],
+				ChannelId:      args[1],
+				PacketSequence: sequence,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdTrustedLightClientState() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "trusted-light-client-state [domain-id]",
+		Short: "Shows the trusted light-client state for a domain",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			res, err := types.NewQueryClient(clientCtx).TrustedLightClientState(cmd.Context(), &types.QueryTrustedLightClientStateRequest{DomainId: args[0]})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdLightClientUpdates() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "light-client-updates [domain-id]",
+		Short: "Lists trusted light-client updates for a domain",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			res, err := types.NewQueryClient(clientCtx).LightClientUpdates(cmd.Context(), &types.QueryLightClientUpdatesRequest{DomainId: args[0]})
 			if err != nil {
 				return err
 			}

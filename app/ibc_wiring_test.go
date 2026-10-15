@@ -37,6 +37,8 @@ func TestCrossrefIBCAppWiring(t *testing.T) {
 	require.Contains(t, app.DefaultGenesis(), govtypes.ModuleName)
 	require.Contains(t, app.DefaultGenesis(), upgradetypes.ModuleName)
 	require.False(t, reflect.ValueOf(app.CrossrefKeeper).FieldByName("ibcKeeperFn").IsNil(), "crossref keeper must be wired to the app IBC keeper")
+	require.NotNil(t, app.MsgServiceRouter().Handler(&crossreftypes.MsgAttachHistoryProof{}), "ancestry proof Msg must be routed by the full app")
+	require.NotNil(t, app.MsgServiceRouter().Handler(&crossreftypes.MsgSignHistoryRound{}))
 }
 
 func TestOperationalGovernanceUpgradeAndIBCModulesAreWired(t *testing.T) {
@@ -53,6 +55,8 @@ func TestOperationalGovernanceUpgradeAndIBCModulesAreWired(t *testing.T) {
 	require.Contains(t, versionMap, icatypes.ModuleName)
 	require.Contains(t, versionMap, ibctm.ModuleName)
 	require.Contains(t, versionMap, crossreftypes.ModuleName)
+	require.Equal(t, uint64(4), versionMap[crossreftypes.ModuleName])
+	require.True(t, app.UpgradeKeeper.HasHandler(CrossrefV4UpgradeName))
 	require.Contains(t, versionMap, sanctiontypes.ModuleName)
 
 	require.NotNil(t, app.IBCKeeper)

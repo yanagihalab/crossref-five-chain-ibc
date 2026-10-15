@@ -32,8 +32,16 @@ func outgoingPacketKey(portID, channelID string, sequence uint64) string {
 	return fmt.Sprintf("%s/%s/%020d", portID, channelID, sequence)
 }
 
+func crossReferenceAckKey(portID, channelID string, sequence uint64) string {
+	return fmt.Sprintf("%s/%s/%020d", portID, channelID, sequence)
+}
+
 func accountabilityEventKey(event types.AccountabilityEvent) string {
 	return fmt.Sprintf("%s/%s/%020d/%s", event.DomainId, event.EventType, event.Height, event.EventId)
+}
+
+func lightClientUpdateKey(update types.LightClientUpdate) string {
+	return fmt.Sprintf("%s/%020d/%s", update.DomainId, update.TargetHeight, fmt.Sprintf("%X", update.TargetBlockHash))
 }
 
 func (k Keeper) SetDomain(ctx context.Context, domain types.DomainInfo) error {
@@ -183,6 +191,21 @@ func (k Keeper) SetOutgoingPacket(ctx context.Context, portID, channelID string,
 	return k.OutgoingPackets.Set(ctx, outgoingPacketKey(portID, channelID, sequence), checkpointHash)
 }
 
+func (k Keeper) SetCrossReferenceAck(ctx context.Context, ack types.CrossReferenceAck) error {
+	return k.CrossReferenceAcks.Set(ctx, crossReferenceAckKey(ack.PortId, ack.ChannelId, ack.PacketSequence), ack)
+}
+
+func (k Keeper) GetCrossReferenceAck(ctx context.Context, portID, channelID string, sequence uint64) (types.CrossReferenceAck, bool, error) {
+	ack, err := k.CrossReferenceAcks.Get(ctx, crossReferenceAckKey(portID, channelID, sequence))
+	if err != nil {
+		if errorsmod.IsOf(err, collections.ErrNotFound) {
+			return types.CrossReferenceAck{}, false, nil
+		}
+		return types.CrossReferenceAck{}, false, err
+	}
+	return ack, true, nil
+}
+
 func (k Keeper) RecordAccountabilityEvent(ctx context.Context, event types.AccountabilityEvent) error {
 	if event.EventId == "" {
 		event.EventId = fmt.Sprintf("%s/%s/%020d/%s", event.DomainId, event.EventType, event.Height, event.Actor)
@@ -231,4 +254,47 @@ func (k Keeper) ListAccountabilityEvents(ctx context.Context, domainID string) (
 		return events[i].EventId < events[j].EventId
 	})
 	return events, nil
+}
+
+func (k Keeper) SetTrustedLightClientState(ctx context.Context, state types.TrustedLightClientState) error {
+	return k.TrustedLightClients.Set(ctx, state.DomainId, state)
+}
+
+func (k Keeper) GetTrustedLightClientState(ctx context.Context, domainID string) (types.TrustedLightClientState, bool, error) {
+	state, err := k.TrustedLightClients.Get(ctx, domainID)
+	if err != nil {
+		if errorsmod.IsOf(err, collections.ErrNotFound) {
+			return types.TrustedLightClientState{}, false, nil
+		}
+		return types.TrustedLightClientState{}, false, err
+	}
+	return state, true, nil
+}
+
+func (k Keeper) RecordLightClientUpdate(ctx context.Context, update types.LightClientUpdate) error {
+	return k.LightClientUpdates.Set(ctx, lightClientUpdateKey(update), update)
+}
+
+func (k Keeper) ListLightClientUpdates(ctx context.Context, domainID string) ([]types.LightClientUpdate, error) {
+	var updates []types.LightClientUpdate
+	err := k.LightClientUpdates.Walk(ctx, nil, func(_ string, update types.LightClientUpdate) (bool, error) {
+		if domainID != "" && update.DomainId != domainID {
+			return false, nil
+		}
+		updates = append(updates, update)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(updates, func(i, j int) bool {
+		if updates[i].DomainId != updates[j].DomainId {
+			return updates[i].DomainId < updates[j].DomainId
+		}
+		if updates[i].TargetHeight != updates[j].TargetHeight {
+			return updates[i].TargetHeight < updates[j].TargetHeight
+		}
+		return bytes.Compare(updates[i].TargetBlockHash, updates[j].TargetBlockHash) < 0
+	})
+	return updates, nil
 }

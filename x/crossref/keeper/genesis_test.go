@@ -12,6 +12,28 @@ func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.DefaultParams(),
 		PortId: types.PortID,
+		TrustedLightClientStates: []types.TrustedLightClientState{
+			{
+				DomainId:               "chain-a",
+				ChainId:                "crossref-a",
+				LatestHeight:           7,
+				LatestBlockHash:        []byte("block-7"),
+				LatestValidatorSetHash: []byte("validators-7"),
+				NextValidatorSetHash:   []byte("validators-8"),
+			},
+		},
+		LightClientUpdates: []types.LightClientUpdate{
+			{
+				DomainId:                "chain-a",
+				ChainId:                 "crossref-a",
+				TargetHeight:            7,
+				TargetBlockHash:         []byte("block-7"),
+				TargetValidatorSetHash:  []byte("validators-7"),
+				NextValidatorSetHash:    []byte("validators-8"),
+				VerificationMode:        "trust-root",
+				TrustedValidatorSetHash: []byte("validators-7"),
+			},
+		},
 	}
 
 	f := initFixture(t)
@@ -23,4 +45,6 @@ func TestGenesis(t *testing.T) {
 
 	require.Equal(t, genesisState.PortId, got.PortId)
 	require.EqualExportedValues(t, genesisState.Params, got.Params)
+	require.EqualExportedValues(t, genesisState.TrustedLightClientStates, got.TrustedLightClientStates)
+	require.EqualExportedValues(t, genesisState.LightClientUpdates, got.LightClientUpdates)
 }

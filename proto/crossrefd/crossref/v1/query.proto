@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crossrefd/crossref/v1/packet.proto";
 import "crossrefd/crossref/v1/params.proto";
+import "crossrefd/crossref/v1/history.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -12,6 +13,12 @@ option go_package = "github.com/crossref/crossrefd/x/crossref/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  rpc History(QueryHistoryRequest) returns (QueryHistoryResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/history";
+  }
+  rpc HistoryRound(QueryHistoryRoundRequest) returns (QueryHistoryRoundResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/history/rounds/{round}";
+  }
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/crossref/crossrefd/crossref/v1/params";
@@ -28,16 +35,33 @@ service Query {
   rpc CrossReference(QueryCrossReferenceRequest) returns (QueryCrossReferenceResponse) {
     option (google.api.http).get = "/crossref/crossrefd/crossref/v1/references/{local_domain_id}/{remote_domain_id}/{remote_height}";
   }
+  rpc CrossReferenceAck(QueryCrossReferenceAckRequest) returns (QueryCrossReferenceAckResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/acks/{port_id}/{channel_id}/{packet_sequence}";
+  }
   rpc AccountabilityEvent(QueryAccountabilityEventRequest) returns (QueryAccountabilityEventResponse) {
     option (google.api.http).get = "/crossref/crossrefd/crossref/v1/accountability/events/{event_id}";
   }
   rpc AccountabilityEvents(QueryAccountabilityEventsRequest) returns (QueryAccountabilityEventsResponse) {
     option (google.api.http).get = "/crossref/crossrefd/crossref/v1/accountability/events";
   }
+  rpc TrustedLightClientState(QueryTrustedLightClientStateRequest) returns (QueryTrustedLightClientStateResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/light-clients/{domain_id}/state";
+  }
+  rpc LightClientUpdates(QueryLightClientUpdatesRequest) returns (QueryLightClientUpdatesResponse) {
+    option (google.api.http).get = "/crossref/crossrefd/crossref/v1/light-clients/{domain_id}/updates";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
+
+message QueryHistoryRequest {}
+message QueryHistoryResponse {
+  HistoryState state = 1 [(gogoproto.nullable) = false];
+  bytes sign_bytes = 2;
+}
+message QueryHistoryRoundRequest { uint64 round = 1; }
+message QueryHistoryRoundResponse { HistoryRound round = 1 [(gogoproto.nullable) = false]; }
 
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
@@ -83,6 +107,16 @@ message QueryCrossReferenceResponse {
   CrossReference cross_reference = 1 [(gogoproto.nullable) = false];
 }
 
+message QueryCrossReferenceAckRequest {
+  string port_id = 1;
+  string channel_id = 2;
+  uint64 packet_sequence = 3;
+}
+
+message QueryCrossReferenceAckResponse {
+  CrossReferenceAck ack = 1 [(gogoproto.nullable) = false];
+}
+
 message QueryAccountabilityEventRequest {
   string event_id = 1;
 }
@@ -98,5 +132,23 @@ message QueryAccountabilityEventsRequest {
 
 message QueryAccountabilityEventsResponse {
   repeated AccountabilityEvent events = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryTrustedLightClientStateRequest {
+  string domain_id = 1;
+}
+
+message QueryTrustedLightClientStateResponse {
+  TrustedLightClientState state = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryLightClientUpdatesRequest {
+  string domain_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryLightClientUpdatesResponse {
+  repeated LightClientUpdate updates = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -1,5 +1,6 @@
 syntax = "proto3";
 package crossrefd.crossref.v1;
+import "crossrefd/crossref/v1/history.proto";
 
 option go_package = "github.com/crossref/crossrefd/x/crossref/types";
 
@@ -8,6 +9,7 @@ message CrossrefPacketData {
   oneof packet {
     NoData noData = 1;
     CrossReferencePacketData cross_reference = 2;
+    HistoryPacketData history = 3;
   }
 }
 
@@ -22,6 +24,34 @@ message DomainInfo {
   bytes hysteresis_public_key = 5;
   uint64 key_epoch = 6;
   string admin = 7;
+}
+
+message TrustedLightClientState {
+  string domain_id = 1;
+  string chain_id = 2;
+  uint64 latest_height = 3;
+  bytes latest_block_hash = 4;
+  bytes latest_app_hash = 5;
+  bytes latest_validator_set_hash = 6;
+  bytes next_validator_set_hash = 7;
+  int64 latest_block_time_unix = 8;
+  int64 updated_time_unix = 9;
+  uint64 update_count = 10;
+}
+
+message LightClientUpdate {
+  string domain_id = 1;
+  string chain_id = 2;
+  uint64 trusted_height = 3;
+  bytes trusted_validator_set_hash = 4;
+  uint64 target_height = 5;
+  bytes target_block_hash = 6;
+  bytes target_app_hash = 7;
+  bytes target_validator_set_hash = 8;
+  bytes next_validator_set_hash = 9;
+  int64 target_block_time_unix = 10;
+  int64 updated_time_unix = 11;
+  string verification_mode = 12;
 }
 
 message DomainChannel {
@@ -61,6 +91,8 @@ message CrossReference {
   string channel_id = 6;
   string relayer = 7;
   int64 received_time_unix = 8;
+  uint64 destination_received_height = 9;
+  uint64 packet_sequence = 10;
 }
 
 message TamperAlert {
@@ -113,4 +145,27 @@ message CrossReferencePacketAck {
   string code = 2;
   string message = 3;
   bytes stored_checkpoint_hash = 4;
+  string local_domain_id = 5;
+  string remote_domain_id = 6;
+  uint64 remote_height = 7;
+  string port_id = 8;
+  string channel_id = 9;
+  uint64 packet_sequence = 10;
+  uint64 destination_received_height = 11;
+  int64 destination_received_time_unix = 12;
+}
+
+message CrossReferenceAck {
+  string source_domain_id = 1;
+  uint64 source_height = 2;
+  string port_id = 3;
+  string channel_id = 4;
+  uint64 packet_sequence = 5;
+  bool ibc_ack_success = 6;
+  string ibc_ack_error = 7;
+  bytes ibc_acknowledgement = 8;
+  CrossReferencePacketAck crossref_ack = 9;
+  uint64 acknowledged_height = 10;
+  int64 acknowledged_time_unix = 11;
+  string relayer = 12;
 }

@@ -72,6 +72,8 @@ IBC の channel ID はチェーンごとのローカルIDである。そのた�
 Docker image 内で使う Linux ARM64 版の daemon をビルドする。
 
 ```bash
+make security-deps
+mkdir -p build
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
 ```
 

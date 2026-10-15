@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channeltypes "github.com/cosmos/ibc-go/v11/modules/core/04-channel/types"
@@ -20,6 +21,18 @@ import (
 type IBCModule struct {
 	cdc    codec.Codec
 	keeper keeper.Keeper
+}
+
+type crossReferenceReceipt struct {
+	localDomainID             string
+	remoteDomainID            string
+	remoteHeight              uint64
+	portID                    string
+	channelID                 string
+	packetSequence            uint64
+	storedCheckpointHash      []byte
+	destinationReceivedHeight uint64
+	destinationReceivedTime   int64
 }
 
 // NewIBCModule creates a new IBCModule given the associated keeper
@@ -119,6 +132,7 @@ func (im IBCModule) OnRecvPacket(
 	modulePacket channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
+	defer telemetry.MeasureSince(telemetry.Now(), "crossref", "history", "ibc_recv_callback")
 	var modulePacketData types.CrossrefPacketData
 	if err := modulePacketData.Unmarshal(modulePacket.GetData()); err != nil {
 		return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal packet data: %s", err.Error()))
@@ -126,15 +140,29 @@ func (im IBCModule) OnRecvPacket(
 
 	// Dispatch packet
 	switch packet := modulePacketData.Packet.(type) {
+	case *types.CrossrefPacketData_History:
+		if err := im.keeper.ReceiveHistoryPacket(ctx, modulePacket, packet.History); err != nil {
+			return channeltypes.NewErrorAcknowledgement(err)
+		}
+		return channeltypes.NewResultAcknowledgement([]byte("history-v2-buffered-or-stored"))
 	case *types.CrossrefPacketData_CrossReference:
-		hash, err := im.receiveCrossReferencePacket(ctx, modulePacket.GetDestPort(), modulePacket.GetDestChannel(), relayer.String(), packet.CrossReference)
+		receipt, err := im.receiveCrossReferencePacket(ctx, modulePacket.GetDestPort(), modulePacket.GetDestChannel(), modulePacket.GetSequence(), relayer.String(), packet.CrossReference)
 		if err != nil {
 			return channeltypes.NewErrorAcknowledgement(err)
 		}
 		ackBz := im.cdc.MustMarshalJSON(&types.CrossReferencePacketAck{
-			Accepted:             true,
-			Code:                 "accepted",
-			StoredCheckpointHash: hash,
+			Accepted:                    true,
+			Code:                        "accepted",
+			Message:                     "cross-reference stored",
+			StoredCheckpointHash:        receipt.storedCheckpointHash,
+			LocalDomainId:               receipt.localDomainID,
+			RemoteDomainId:              receipt.remoteDomainID,
+			RemoteHeight:                receipt.remoteHeight,
+			PortId:                      receipt.portID,
+			ChannelId:                   receipt.channelID,
+			PacketSequence:              receipt.packetSequence,
+			DestinationReceivedHeight:   receipt.destinationReceivedHeight,
+			DestinationReceivedTimeUnix: receipt.destinationReceivedTime,
 		})
 		return channeltypes.NewResultAcknowledgement(ackBz)
 	default:
@@ -151,6 +179,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
+	defer telemetry.MeasureSince(telemetry.Now(), "crossref", "history", "ibc_ack_callback")
 	var ack channeltypes.Acknowledgement
 	if err := im.cdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal packet acknowledgement: %v", err)
@@ -162,12 +191,18 @@ func (im IBCModule) OnAcknowledgementPacket(
 	}
 
 	var eventType string
+	if packet, ok := modulePacketData.Packet.(*types.CrossrefPacketData_History); ok {
+		return im.keeper.HistoryPacketResult(ctx, modulePacket, packet.History, ack.Success() && bytes.Equal(ack.GetResult(), []byte("history-v2-buffered-or-stored")))
+	}
+	var sourceDomainID string
+	var sourceHeight uint64
 
 	// Dispatch packet
 	switch packet := modulePacketData.Packet.(type) {
 	case *types.CrossrefPacketData_CrossReference:
 		eventType = "crossref_ack"
-		_ = packet
+		sourceDomainID = packet.CrossReference.SourceDomainId
+		sourceHeight = packet.CrossReference.SourceHeight
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s packet type: %T", types.ModuleName, packet)
 		return errorsmod.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
@@ -182,6 +217,25 @@ func (im IBCModule) OnAcknowledgementPacket(
 
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
+		var crossrefAck types.CrossReferencePacketAck
+		if err := im.cdc.UnmarshalJSON(resp.Result, &crossrefAck); err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal crossref acknowledgement: %v", err)
+		}
+		if err := im.keeper.SetCrossReferenceAck(ctx, types.CrossReferenceAck{
+			SourceDomainId:       sourceDomainID,
+			SourceHeight:         sourceHeight,
+			PortId:               modulePacket.GetSourcePort(),
+			ChannelId:            modulePacket.GetSourceChannel(),
+			PacketSequence:       modulePacket.GetSequence(),
+			IbcAckSuccess:        true,
+			IbcAcknowledgement:   acknowledgement,
+			CrossrefAck:          &crossrefAck,
+			AcknowledgedHeight:   uint64(ctx.BlockHeight()),
+			AcknowledgedTimeUnix: ctx.BlockTime().Unix(),
+			Relayer:              relayer.String(),
+		}); err != nil {
+			return err
+		}
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				eventType,
@@ -189,6 +243,21 @@ func (im IBCModule) OnAcknowledgementPacket(
 			),
 		)
 	case *channeltypes.Acknowledgement_Error:
+		if err := im.keeper.SetCrossReferenceAck(ctx, types.CrossReferenceAck{
+			SourceDomainId:       sourceDomainID,
+			SourceHeight:         sourceHeight,
+			PortId:               modulePacket.GetSourcePort(),
+			ChannelId:            modulePacket.GetSourceChannel(),
+			PacketSequence:       modulePacket.GetSequence(),
+			IbcAckSuccess:        false,
+			IbcAckError:          resp.Error,
+			IbcAcknowledgement:   acknowledgement,
+			AcknowledgedHeight:   uint64(ctx.BlockHeight()),
+			AcknowledgedTimeUnix: ctx.BlockTime().Unix(),
+			Relayer:              relayer.String(),
+		}); err != nil {
+			return err
+		}
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				eventType,
@@ -207,6 +276,7 @@ func (im IBCModule) OnTimeoutPacket(
 	modulePacket channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
+	defer telemetry.MeasureSince(telemetry.Now(), "crossref", "history", "ibc_timeout_callback")
 	var modulePacketData types.CrossrefPacketData
 	if err := modulePacketData.Unmarshal(modulePacket.GetData()); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal packet data: %s", err.Error())
@@ -214,6 +284,8 @@ func (im IBCModule) OnTimeoutPacket(
 
 	// Dispatch packet
 	switch packet := modulePacketData.Packet.(type) {
+	case *types.CrossrefPacketData_History:
+		return im.keeper.HistoryPacketResult(ctx, modulePacket, packet.History, false)
 	case *types.CrossrefPacketData_CrossReference:
 		_ = packet
 	default:
@@ -224,32 +296,33 @@ func (im IBCModule) OnTimeoutPacket(
 	return nil
 }
 
-func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channelID, relayer string, data *types.CrossReferencePacketData) ([]byte, error) {
+func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channelID string, packetSequence uint64, relayer string, data *types.CrossReferencePacketData) (crossReferenceReceipt, error) {
+	var empty crossReferenceReceipt
 	if data == nil || data.SourceDomainId == "" {
-		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "source_domain_id is required")
+		return empty, errorsmod.Wrap(types.ErrInvalidRequest, "source_domain_id is required")
 	}
 	if data.SourceHeight == 0 || len(data.BlockHash) == 0 || len(data.AppHash) == 0 || len(data.CheckpointHash) == 0 {
-		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "source_height, block_hash, app_hash and checkpoint_hash are required")
+		return empty, errorsmod.Wrap(types.ErrInvalidRequest, "source_height, block_hash, app_hash and checkpoint_hash are required")
 	}
 	binding, found, err := im.keeper.GetDomainChannelByChannel(ctx, portID, channelID)
 	if err != nil {
-		return nil, err
+		return empty, err
 	}
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrDomainChannelNotFound, "port=%s channel=%s", portID, channelID)
+		return empty, errorsmod.Wrapf(types.ErrDomainChannelNotFound, "port=%s channel=%s", portID, channelID)
 	}
 	if binding.RemoteDomainId != data.SourceDomainId {
-		return nil, errorsmod.Wrapf(types.ErrUnauthorizedChannel, "packet domain=%s bound domain=%s", data.SourceDomainId, binding.RemoteDomainId)
+		return empty, errorsmod.Wrapf(types.ErrUnauthorizedChannel, "packet domain=%s bound domain=%s", data.SourceDomainId, binding.RemoteDomainId)
 	}
 	sourceDomain, found, err := im.keeper.GetDomain(ctx, data.SourceDomainId)
 	if err != nil {
-		return nil, err
+		return empty, err
 	}
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrDomainNotFound, "source domain=%s", data.SourceDomainId)
+		return empty, errorsmod.Wrapf(types.ErrDomainNotFound, "source domain=%s", data.SourceDomainId)
 	}
 	if sourceDomain.ChainId != data.SourceChainId {
-		return nil, errorsmod.Wrapf(types.ErrSourceChainMismatch, "domain=%s packet_chain=%s registered_chain=%s", data.SourceDomainId, data.SourceChainId, sourceDomain.ChainId)
+		return empty, errorsmod.Wrapf(types.ErrSourceChainMismatch, "domain=%s packet_chain=%s registered_chain=%s", data.SourceDomainId, data.SourceChainId, sourceDomain.ChainId)
 	}
 
 	checkpoint := types.Checkpoint{
@@ -273,49 +346,63 @@ func (im IBCModule) receiveCrossReferencePacket(ctx sdk.Context, portID, channel
 		checkpoint.KeyEpoch = sourceDomain.KeyEpoch
 	}
 	if err := types.NormalizeCheckpointHashes(&checkpoint); err != nil {
-		return nil, errorsmod.Wrap(err, "packet checkpoint hash mismatch")
+		return empty, errorsmod.Wrap(err, "packet checkpoint hash mismatch")
 	}
 	if !bytes.Equal(types.ComputeCheckpointHash(checkpoint), checkpoint.CheckpointHash) {
-		return nil, errorsmod.Wrap(types.ErrCheckpointHashMismatch, "packet checkpoint hash mismatch")
+		return empty, errorsmod.Wrap(types.ErrCheckpointHashMismatch, "packet checkpoint hash mismatch")
 	}
 	if err := im.keeper.VerifySourceCheckpointProof(ctx, binding, checkpoint, data.SourceCheckpointProof, data.SourceProofRevisionNumber, data.SourceProofRevisionHeight); err != nil {
 		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "invalid_source_checkpoint_proof", err.Error(), "reject_packet"))
-		return nil, err
+		return empty, err
 	}
 	if err := im.keeper.VerifyConsensusProof(ctx, checkpoint); err != nil {
 		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "invalid_consensus_proof", err.Error(), "reject_packet"))
-		return nil, err
+		return empty, err
 	}
 	if err := im.keeper.ValidateCheckpoint(ctx, checkpoint); err != nil {
 		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "invalid_checkpoint_chain", err.Error(), "reject_packet"))
-		return nil, err
+		return empty, err
 	}
 	if err := types.VerifyHysteresisSignature(sourceDomain, checkpoint); err != nil {
 		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "invalid_hysteresis_signature", err.Error(), "reject_packet"))
-		return nil, err
+		return empty, err
 	}
 	if existing, found, err := im.keeper.GetCrossReference(ctx, binding.LocalDomainId, data.SourceDomainId, data.SourceHeight); err != nil {
-		return nil, err
+		return empty, err
 	} else if found {
 		_ = im.keeper.RecordAccountabilityEvent(ctx, packetAccountabilityEvent(data, relayer, "replay_packet", fmt.Sprintf("existing_hash=%X packet_hash=%X", existing.RemoteCheckpointHash, data.CheckpointHash), "reject_packet"))
-		return nil, errorsmod.Wrapf(types.ErrReplayPacket, "local=%s remote=%s height=%d existing_hash=%X packet_hash=%X", binding.LocalDomainId, data.SourceDomainId, data.SourceHeight, existing.RemoteCheckpointHash, data.CheckpointHash)
+		return empty, errorsmod.Wrapf(types.ErrReplayPacket, "local=%s remote=%s height=%d existing_hash=%X packet_hash=%X", binding.LocalDomainId, data.SourceDomainId, data.SourceHeight, existing.RemoteCheckpointHash, data.CheckpointHash)
 	}
 	if err := im.keeper.SetCheckpoint(ctx, checkpoint); err != nil {
-		return nil, err
+		return empty, err
 	}
+	receivedHeight := uint64(ctx.BlockHeight())
+	receivedTime := ctx.BlockTime().Unix()
 	if err := im.keeper.SetCrossReference(ctx, types.CrossReference{
-		LocalDomainId:        binding.LocalDomainId,
-		RemoteDomainId:       data.SourceDomainId,
-		RemoteHeight:         data.SourceHeight,
-		RemoteCheckpointHash: data.CheckpointHash,
-		PortId:               portID,
-		ChannelId:            channelID,
-		Relayer:              relayer,
-		ReceivedTimeUnix:     ctx.BlockTime().Unix(),
+		LocalDomainId:             binding.LocalDomainId,
+		RemoteDomainId:            data.SourceDomainId,
+		RemoteHeight:              data.SourceHeight,
+		RemoteCheckpointHash:      data.CheckpointHash,
+		PortId:                    portID,
+		ChannelId:                 channelID,
+		Relayer:                   relayer,
+		ReceivedTimeUnix:          receivedTime,
+		DestinationReceivedHeight: receivedHeight,
+		PacketSequence:            packetSequence,
 	}); err != nil {
-		return nil, err
+		return empty, err
 	}
-	return checkpoint.CheckpointHash, nil
+	return crossReferenceReceipt{
+		localDomainID:             binding.LocalDomainId,
+		remoteDomainID:            data.SourceDomainId,
+		remoteHeight:              data.SourceHeight,
+		portID:                    portID,
+		channelID:                 channelID,
+		packetSequence:            packetSequence,
+		storedCheckpointHash:      checkpoint.CheckpointHash,
+		destinationReceivedHeight: receivedHeight,
+		destinationReceivedTime:   receivedTime,
+	}, nil
 }
 
 func packetAccountabilityEvent(data *types.CrossReferencePacketData, relayer, eventType, evidence, action string) types.AccountabilityEvent {

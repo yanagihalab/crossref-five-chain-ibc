@@ -10,8 +10,20 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "stable"
-          check-latest: true
+          go-version: "1.26.9"
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Tests
         run: |
-          make test
+          make security-deps
+          go vet -mod=readonly -p 2 ./...
+          go test -mod=readonly -p 2 ./...
+          mkdir -p build
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -p 2 -o build/tx-pool-decode-linux-amd64 ./cmd/tx-pool-decode
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -p 2 -o build/crossrefd-linux-amd64 ./cmd/crossrefdd
+          make govulncheck-binary BINARY=build/crossrefd-linux-amd64
+          node --test --test-concurrency=2 deploy/network/test-*.mjs deploy/recovery/test-*.mjs docker/scripts/test-multi-relayer-adaptation.mjs
+      - name: Vulnerability Check
+        run: make govulncheck

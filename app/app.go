@@ -200,6 +200,7 @@ func New(
 	if err := app.registerIBCModules(appOpts); err != nil {
 		panic(err)
 	}
+	app.setupUpgradeHandlers()
 
 	/****  Module Options ****/
 

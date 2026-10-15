@@ -3,6 +3,8 @@ package cli
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -36,8 +38,76 @@ func GetTxCmd() *cobra.Command {
 		CmdSubmitCheckpoint(),
 		CmdSendCrossReferencePacket(),
 		CmdBroadcastCrossReferencePacket(),
+		CmdSignHistoryRound(),
+		CmdAttachHistoryProof(),
 	)
 
+	return cmd
+}
+
+func readHistoryProof(value string) ([]byte, error) {
+	var proof []byte
+	var err error
+	if strings.HasPrefix(value, "@") {
+		file, openErr := os.Open(strings.TrimPrefix(value, "@"))
+		if openErr != nil {
+			return nil, openErr
+		}
+		defer file.Close()
+		st, statErr := file.Stat()
+		if statErr != nil || !st.Mode().IsRegular() {
+			return nil, fmt.Errorf("history proof must be a regular file")
+		}
+		proof, err = io.ReadAll(io.LimitReader(file, types.MaxHistoryProofBytes+1))
+	} else {
+		if len(value) > base64.StdEncoding.EncodedLen(types.MaxHistoryProofBytes) {
+			return nil, fmt.Errorf("oversized history proof")
+		}
+		proof, err = base64.StdEncoding.DecodeString(value)
+	}
+	if err != nil || len(proof) == 0 || len(proof) > types.MaxHistoryProofBytes {
+		return nil, fmt.Errorf("invalid/oversized history proof")
+	}
+	return proof, nil
+}
+
+func CmdAttachHistoryProof() *cobra.Command {
+	cmd := &cobra.Command{Use: "attach-history-proof [round] [base64-proof|@binary-file]", Short: "Attach bounded ancestry proof before broadcasting the local history part", Args: cobra.ExactArgs(2), RunE: func(cmd *cobra.Command, args []string) error {
+		ctx, err := client.GetClientTxContext(cmd)
+		if err != nil {
+			return err
+		}
+		round, err := strconv.ParseUint(args[0], 10, 64)
+		if err != nil || round == 0 {
+			return fmt.Errorf("invalid history round")
+		}
+		proof, err := readHistoryProof(args[1])
+		if err != nil {
+			return err
+		}
+		return clienttx.GenerateOrBroadcastTxCLI(ctx, cmd.Flags(), &types.MsgAttachHistoryProof{Sender: ctx.GetFromAddress().String(), Round: round, Proof: proof})
+	}}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSignHistoryRound() *cobra.Command {
+	cmd := &cobra.Command{Use: "sign-history-round [round] [base64-signature]", Short: "Submit a history-v2 participant signature", Args: cobra.ExactArgs(2), RunE: func(cmd *cobra.Command, args []string) error {
+		ctx, err := client.GetClientTxContext(cmd)
+		if err != nil {
+			return err
+		}
+		round, err := strconv.ParseUint(args[0], 10, 64)
+		if err != nil || round == 0 {
+			return fmt.Errorf("invalid history round")
+		}
+		signature, err := base64.StdEncoding.DecodeString(args[1])
+		if err != nil || len(signature) != 64 {
+			return fmt.Errorf("expected 64-byte Ed25519 signature in base64")
+		}
+		return clienttx.GenerateOrBroadcastTxCLI(ctx, cmd.Flags(), &types.MsgSignHistoryRound{Sender: ctx.GetFromAddress().String(), Round: round, Signature: signature})
+	}}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 

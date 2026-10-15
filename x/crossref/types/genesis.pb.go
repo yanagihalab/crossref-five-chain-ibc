@@ -27,8 +27,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // GenesisState defines the crossref module's genesis state.
 type GenesisState struct {
 	// params defines all the parameters of the module.
-	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	PortId string `protobuf:"bytes,2,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	Params                   Params                    `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	PortId                   string                    `protobuf:"bytes,2,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	CrossReferenceAcks       []CrossReferenceAck       `protobuf:"bytes,3,rep,name=cross_reference_acks,json=crossReferenceAcks,proto3" json:"cross_reference_acks"`
+	TrustedLightClientStates []TrustedLightClientState `protobuf:"bytes,4,rep,name=trusted_light_client_states,json=trustedLightClientStates,proto3" json:"trusted_light_client_states"`
+	LightClientUpdates       []LightClientUpdate       `protobuf:"bytes,5,rep,name=light_client_updates,json=lightClientUpdates,proto3" json:"light_client_updates"`
+	HistoryState             *HistoryState             `protobuf:"bytes,6,opt,name=history_state,json=historyState,proto3" json:"history_state,omitempty"`
+	HistoryRounds            []HistoryRound            `protobuf:"bytes,7,rep,name=history_rounds,json=historyRounds,proto3" json:"history_rounds"`
+	Domains                  []DomainInfo              `protobuf:"bytes,8,rep,name=domains,proto3" json:"domains"`
+	DomainChannels           []DomainChannel           `protobuf:"bytes,9,rep,name=domain_channels,json=domainChannels,proto3" json:"domain_channels"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -78,6 +85,55 @@ func (m *GenesisState) GetPortId() string {
 	return ""
 }
 
+func (m *GenesisState) GetCrossReferenceAcks() []CrossReferenceAck {
+	if m != nil {
+		return m.CrossReferenceAcks
+	}
+	return nil
+}
+
+func (m *GenesisState) GetTrustedLightClientStates() []TrustedLightClientState {
+	if m != nil {
+		return m.TrustedLightClientStates
+	}
+	return nil
+}
+
+func (m *GenesisState) GetLightClientUpdates() []LightClientUpdate {
+	if m != nil {
+		return m.LightClientUpdates
+	}
+	return nil
+}
+
+func (m *GenesisState) GetHistoryState() *HistoryState {
+	if m != nil {
+		return m.HistoryState
+	}
+	return nil
+}
+
+func (m *GenesisState) GetHistoryRounds() []HistoryRound {
+	if m != nil {
+		return m.HistoryRounds
+	}
+	return nil
+}
+
+func (m *GenesisState) GetDomains() []DomainInfo {
+	if m != nil {
+		return m.Domains
+	}
+	return nil
+}
+
+func (m *GenesisState) GetDomainChannels() []DomainChannel {
+	if m != nil {
+		return m.DomainChannels
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "crossrefd.crossref.v1.GenesisState")
 }
@@ -87,22 +143,37 @@ func init() {
 }
 
 var fileDescriptor_dd02ed0149606f7f = []byte{
-	// 228 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4e, 0x2e, 0xca, 0x2f,
-	0x2e, 0x2e, 0x4a, 0x4d, 0x4b, 0xd1, 0x87, 0xb1, 0xf4, 0xcb, 0x0c, 0xf5, 0xd3, 0x53, 0xf3, 0x52,
-	0x8b, 0x33, 0x8b, 0xf5, 0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x44, 0xe1, 0x8a, 0xf4, 0x60, 0x2c,
-	0xbd, 0x32, 0x43, 0x29, 0xc1, 0xc4, 0xdc, 0xcc, 0xbc, 0x7c, 0x7d, 0x30, 0x09, 0x51, 0x29, 0xa5,
-	0x84, 0xdd, 0xb8, 0x82, 0xc4, 0xa2, 0xc4, 0x5c, 0xa8, 0x69, 0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9,
-	0x60, 0xa6, 0x3e, 0x88, 0x05, 0x11, 0x55, 0xca, 0xe4, 0xe2, 0x71, 0x87, 0x58, 0x1a, 0x5c, 0x92,
-	0x58, 0x92, 0x2a, 0xe4, 0xc0, 0xc5, 0x06, 0xd1, 0x25, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x6d, 0x24,
-	0xab, 0x87, 0xd5, 0x11, 0x7a, 0x01, 0x60, 0x45, 0x4e, 0x9c, 0x27, 0xee, 0xc9, 0x33, 0xac, 0x78,
-	0xbe, 0x41, 0x8b, 0x31, 0x08, 0xaa, 0x4f, 0x48, 0x9c, 0x8b, 0xbd, 0x20, 0xbf, 0xa8, 0x24, 0x3e,
-	0x33, 0x45, 0x82, 0x49, 0x81, 0x51, 0x83, 0x33, 0x88, 0x0d, 0xc4, 0xf5, 0x4c, 0x71, 0xf2, 0x38,
-	0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63,
-	0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xbd, 0xf4, 0xcc, 0x92, 0x8c, 0xd2,
-	0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x84, 0xfb, 0x11, 0x5e, 0xaa, 0x40, 0x08, 0x96, 0x54, 0x16, 0xa4,
-	0x16, 0x27, 0xb1, 0x81, 0xdd, 0x6e, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x6c, 0xa1, 0xb2, 0xf9,
-	0x46, 0x01, 0x00, 0x00,
+	// 480 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x93, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0x86, 0x63, 0xda, 0x26, 0x64, 0x5b, 0x8a, 0x58, 0x15, 0xb1, 0x0a, 0xc2, 0x84, 0x96, 0x43,
+	0xc4, 0xc1, 0x56, 0xcb, 0x0b, 0xd0, 0x04, 0x89, 0x54, 0xe2, 0x50, 0xb9, 0x70, 0xe1, 0x62, 0xdc,
+	0xf5, 0xc6, 0xb6, 0x92, 0xec, 0x5a, 0x3b, 0x9b, 0x8a, 0xbe, 0x05, 0x8f, 0xc1, 0x91, 0xc7, 0xe8,
+	0xb1, 0x27, 0xc4, 0x09, 0xa1, 0xe4, 0xc0, 0x6b, 0x20, 0xcf, 0xda, 0x24, 0x54, 0x71, 0x7b, 0x89,
+	0xc6, 0xb3, 0xff, 0xff, 0xfd, 0x33, 0x59, 0x2d, 0x39, 0xe0, 0x5a, 0x01, 0x68, 0x31, 0x8a, 0xfd,
+	0xaa, 0xf2, 0x2f, 0x0e, 0xfd, 0x44, 0x48, 0x01, 0x19, 0x78, 0xb9, 0x56, 0x46, 0xd1, 0xc7, 0xff,
+	0x44, 0x5e, 0x55, 0x79, 0x17, 0x87, 0x9d, 0x47, 0xd1, 0x34, 0x93, 0xca, 0xc7, 0x5f, 0xab, 0xec,
+	0xec, 0xaf, 0xc7, 0xe5, 0x11, 0x1f, 0x0b, 0x73, 0x97, 0x46, 0x47, 0xd3, 0x32, 0xb1, 0x53, 0x33,
+	0x56, 0x9a, 0x81, 0x51, 0xfa, 0xb2, 0x14, 0xed, 0x25, 0x2a, 0x51, 0x58, 0xfa, 0x45, 0x65, 0xbb,
+	0xfb, 0x3f, 0xb6, 0xc8, 0xce, 0x3b, 0x3b, 0xfe, 0x99, 0x89, 0x8c, 0xa0, 0x6f, 0x48, 0xd3, 0xb2,
+	0x99, 0xd3, 0x75, 0x7a, 0xdb, 0x47, 0xcf, 0xbc, 0xb5, 0xeb, 0x78, 0xa7, 0x28, 0xea, 0xb7, 0xaf,
+	0x7e, 0x3d, 0x6f, 0x7c, 0xfb, 0xf3, 0xfd, 0x95, 0x13, 0x94, 0x3e, 0xfa, 0x84, 0xb4, 0x72, 0xa5,
+	0x4d, 0x98, 0xc5, 0xec, 0x5e, 0xd7, 0xe9, 0xb5, 0x83, 0x66, 0xf1, 0x79, 0x12, 0xd3, 0xcf, 0x64,
+	0x0f, 0x09, 0xa1, 0x16, 0x23, 0xa1, 0x85, 0xe4, 0x22, 0x8c, 0xf8, 0x18, 0xd8, 0x46, 0x77, 0xa3,
+	0xb7, 0x7d, 0xd4, 0xab, 0x09, 0x1a, 0x14, 0x75, 0x50, 0x39, 0x8e, 0xf9, 0xb8, 0xbf, 0x59, 0x64,
+	0x06, 0x94, 0xdf, 0x3c, 0x00, 0x0a, 0xe4, 0xa9, 0xd1, 0x33, 0x30, 0x22, 0x0e, 0x27, 0x59, 0x92,
+	0x9a, 0x90, 0x4f, 0x32, 0x21, 0x4d, 0x08, 0xc5, 0x6a, 0xc0, 0x36, 0x31, 0xc8, 0xab, 0x09, 0xfa,
+	0x60, 0x9d, 0xef, 0x0b, 0xe3, 0x00, 0x7d, 0xf8, 0x8f, 0x94, 0x71, 0xcc, 0xac, 0x3f, 0x86, 0x62,
+	0xad, 0xff, 0xc2, 0x66, 0x79, 0x8c, 0x69, 0x5b, 0xb7, 0xae, 0xb5, 0xc2, 0xf9, 0x88, 0x86, 0x6a,
+	0xad, 0xc9, 0xcd, 0x03, 0xa0, 0x43, 0xf2, 0xa0, 0xbc, 0x4b, 0xbb, 0x09, 0x6b, 0xe2, 0xd5, 0x1c,
+	0xd4, 0xa0, 0x87, 0x56, 0x8b, 0xe3, 0x05, 0x3b, 0xe9, 0xca, 0x17, 0x3d, 0x25, 0xbb, 0x15, 0x49,
+	0xab, 0x99, 0x8c, 0x81, 0xb5, 0x70, 0xca, 0x3b, 0x50, 0x41, 0xa1, 0x2d, 0x07, 0xac, 0x46, 0xc1,
+	0x1e, 0xd0, 0x63, 0xd2, 0x8a, 0xd5, 0x34, 0xca, 0x24, 0xb0, 0xfb, 0x88, 0x7a, 0x51, 0x83, 0x7a,
+	0x8b, 0xaa, 0x13, 0x39, 0x52, 0x25, 0xa8, 0xf2, 0xd1, 0x33, 0xf2, 0xd0, 0x96, 0x21, 0x4f, 0x23,
+	0x29, 0xc5, 0x04, 0x58, 0x1b, 0x51, 0x2f, 0x6f, 0x45, 0x0d, 0xac, 0xb8, 0xa4, 0xed, 0xc6, 0xab,
+	0x4d, 0xe8, 0x0f, 0xaf, 0xe6, 0xae, 0x73, 0x3d, 0x77, 0x9d, 0xdf, 0x73, 0xd7, 0xf9, 0xba, 0x70,
+	0x1b, 0xd7, 0x0b, 0xb7, 0xf1, 0x73, 0xe1, 0x36, 0x3e, 0x79, 0x49, 0x66, 0xd2, 0xd9, 0xb9, 0xc7,
+	0xd5, 0x74, 0xf9, 0x5c, 0x96, 0x2f, 0xe8, 0xcb, 0xb2, 0x69, 0x2e, 0x73, 0x01, 0xe7, 0x4d, 0x7c,
+	0x29, 0xaf, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x39, 0x56, 0xd2, 0x52, 0xfd, 0x03, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -125,6 +196,102 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.DomainChannels) > 0 {
+		for iNdEx := len(m.DomainChannels) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.DomainChannels[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x4a
+		}
+	}
+	if len(m.Domains) > 0 {
+		for iNdEx := len(m.Domains) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Domains[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if len(m.HistoryRounds) > 0 {
+		for iNdEx := len(m.HistoryRounds) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.HistoryRounds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	if m.HistoryState != nil {
+		{
+			size, err := m.HistoryState.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.LightClientUpdates) > 0 {
+		for iNdEx := len(m.LightClientUpdates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.LightClientUpdates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.TrustedLightClientStates) > 0 {
+		for iNdEx := len(m.TrustedLightClientStates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TrustedLightClientStates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.CrossReferenceAcks) > 0 {
+		for iNdEx := len(m.CrossReferenceAcks) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.CrossReferenceAcks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
 	if len(m.PortId) > 0 {
 		i -= len(m.PortId)
 		copy(dAtA[i:], m.PortId)
@@ -167,6 +334,46 @@ func (m *GenesisState) Size() (n int) {
 	l = len(m.PortId)
 	if l > 0 {
 		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if len(m.CrossReferenceAcks) > 0 {
+		for _, e := range m.CrossReferenceAcks {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.TrustedLightClientStates) > 0 {
+		for _, e := range m.TrustedLightClientStates {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.LightClientUpdates) > 0 {
+		for _, e := range m.LightClientUpdates {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if m.HistoryState != nil {
+		l = m.HistoryState.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if len(m.HistoryRounds) > 0 {
+		for _, e := range m.HistoryRounds {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.Domains) > 0 {
+		for _, e := range m.Domains {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.DomainChannels) > 0 {
+		for _, e := range m.DomainChannels {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
 	}
 	return n
 }
@@ -270,6 +477,246 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.PortId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CrossReferenceAcks", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CrossReferenceAcks = append(m.CrossReferenceAcks, CrossReferenceAck{})
+			if err := m.CrossReferenceAcks[len(m.CrossReferenceAcks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustedLightClientStates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TrustedLightClientStates = append(m.TrustedLightClientStates, TrustedLightClientState{})
+			if err := m.TrustedLightClientStates[len(m.TrustedLightClientStates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LightClientUpdates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LightClientUpdates = append(m.LightClientUpdates, LightClientUpdate{})
+			if err := m.LightClientUpdates[len(m.LightClientUpdates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HistoryState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.HistoryState == nil {
+				m.HistoryState = &HistoryState{}
+			}
+			if err := m.HistoryState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HistoryRounds", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HistoryRounds = append(m.HistoryRounds, HistoryRound{})
+			if err := m.HistoryRounds[len(m.HistoryRounds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Domains", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Domains = append(m.Domains, DomainInfo{})
+			if err := m.Domains[len(m.Domains)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DomainChannels", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DomainChannels = append(m.DomainChannels, DomainChannel{})
+			if err := m.DomainChannels[len(m.DomainChannels)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

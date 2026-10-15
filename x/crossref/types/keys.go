@@ -31,8 +31,11 @@ var (
 	CheckpointKeyPrefix          = collections.NewPrefix("checkpoint/")
 	LatestCheckpointKeyPrefix    = collections.NewPrefix("latest-checkpoint/")
 	CrossReferenceKeyPrefix      = collections.NewPrefix("cross-reference/")
+	CrossReferenceAckKeyPrefix   = collections.NewPrefix("cross-reference-ack/")
 	OutgoingPacketKeyPrefix      = collections.NewPrefix("outgoing-packet/")
 	AccountabilityEventKeyPrefix = collections.NewPrefix("accountability-event/")
+	TrustedLightClientKeyPrefix  = collections.NewPrefix("trusted-light-client/")
+	LightClientUpdateKeyPrefix   = collections.NewPrefix("light-client-update/")
 )
 
 // ParamsKey is the prefix to retrieve all Params

@@ -77,6 +77,8 @@ global directed route number to every path:
 Build the Linux ARM64 daemon used by the Docker image:
 
 ```bash
+make security-deps
+mkdir -p build
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
 ```
 

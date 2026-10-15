@@ -1,6 +1,8 @@
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 COMMIT := $(shell git log -1 --format='%H')
 APPNAME := crossrefd
+GOLANGCI_LINT_VERSION := v2.14.0
+GOVULNCHECK_VERSION := v1.9.0
 
 # do not override user values
 ifeq (,$(VERSION))
@@ -23,21 +25,21 @@ BUILD_FLAGS := -ldflags '$(ldflags)'
 ###  Test  ###
 ##############
 
-test-unit:
+test-unit: security-deps
 	@echo Running unit tests...
 	@go test -mod=readonly -v -timeout 30m ./...
 
-test-race:
+test-race: security-deps
 	@echo Running unit tests with race condition reporting...
 	@go test -mod=readonly -v -race -timeout 30m ./...
 
-test-cover:
+test-cover: security-deps
 	@echo Running unit tests and creating coverage report...
 	@go test -mod=readonly -v -timeout 30m -coverprofile=$(COVER_FILE) -covermode=atomic ./...
 	@go tool cover -html=$(COVER_FILE) -o $(COVER_HTML_FILE)
 	@rm $(COVER_FILE)
 
-bench:
+bench: security-deps
 	@echo Running unit tests with benchmarking...
 	@go test -mod=readonly -v -timeout 30m -bench=. ./...
 
@@ -51,7 +53,7 @@ test: govet govulncheck test-unit
 
 all: install
 
-install:
+install: security-deps
 	@echo "--> ensure dependencies have not been modified"
 	@go mod verify
 	@echo "--> installing $(APPNAME)d"
@@ -79,13 +81,13 @@ proto-gen:
 ###  Linting  ###
 #################
 
-lint:
+lint: security-deps
 	@echo "--> Running linter"
-	@go tool github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --timeout 15m
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run ./... --timeout 15m
 
-lint-fix:
+lint-fix: security-deps
 	@echo "--> Running linter and fixing issues"
-	@go tool github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix --timeout 15m
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run ./... --fix --timeout 15m
 
 .PHONY: lint lint-fix
 
@@ -93,13 +95,20 @@ lint-fix:
 ### Development ###
 ###################
 
-govet:
+govet: security-deps
 	@echo Running go vet...
 	@go vet ./...
 
-govulncheck:
-	@echo Running govulncheck...
-	@go tool golang.org/x/vuln/cmd/govulncheck@latest
-	@govulncheck ./...
+security-deps:
+	@node deploy/recovery/prepare-sdk.mjs
 
-.PHONY: govet govulncheck
+govulncheck: security-deps
+	@echo Running govulncheck...
+	@node deploy/recovery/check-sdk-advisories.mjs
+	@go run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./...
+
+govulncheck-binary: security-deps
+	@test -n "$(BINARY)"
+	@go run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) -mode=binary "$(BINARY)"
+
+.PHONY: govet govulncheck govulncheck-binary security-deps

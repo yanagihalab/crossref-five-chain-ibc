@@ -18,6 +18,29 @@ SKIP_THRESHOLD="${SKIP_THRESHOLD:-0}"
 SKIP_BAD_PROOF="${SKIP_BAD_PROOF:-0}"
 SKIP_STALE_PROOF="${SKIP_STALE_PROOF:-0}"
 STALE_PROOF_MAX_WAIT_BLOCKS="${STALE_PROOF_MAX_WAIT_BLOCKS:-80}"
+SECURITY_CASES="${SECURITY_CASES:-}"
+SECURITY_SUMMARY_FILE="${SECURITY_SUMMARY_FILE:-docker/generated/security-hardening-${CHAIN_COUNT}c-${RELAYER_WORKER_COUNT}r.summary.json}"
+
+case_enabled() {
+  needle="$1"
+  if [ -z "${SECURITY_CASES}" ]; then
+    return 0
+  fi
+  for item in ${SECURITY_CASES}; do
+    if [ "${item}" = "${needle}" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+if [ -n "${SECURITY_CASES}" ]; then
+  case_enabled replay || SKIP_REPLAY=1
+  case_enabled rotation || SKIP_ROTATION=1
+  case_enabled threshold || SKIP_THRESHOLD=1
+  case_enabled invalid-proof || case_enabled bad-proof || SKIP_BAD_PROOF=1
+  case_enabled stale-proof || SKIP_STALE_PROOF=1
+fi
 
 dc() {
   docker compose -f "${COMPOSE_FILE}" "$@"
@@ -440,4 +463,25 @@ sleep 15
 assert_no_cross_reference "${DOMAIN_A}" "${DOMAIN_C}" "${STALE_PROOF_HEIGHT}"
 fi
 
-echo "Security hardening Docker test passed."
+mkdir -p "$(dirname "${SECURITY_SUMMARY_FILE}")"
+node - "${SECURITY_SUMMARY_FILE}" "${TOPOLOGY_FILE}" "${COMPOSE_FILE}" "${SECURITY_CASES:-all}" "${SKIP_REPLAY}" "${SKIP_ROTATION}" "${SKIP_THRESHOLD}" "${SKIP_BAD_PROOF}" "${SKIP_STALE_PROOF}" <<'NODE'
+const fs = require("fs");
+const [file, topologyFile, composeFile, cases, skipReplay, skipRotation, skipThreshold, skipBadProof, skipStaleProof] = process.argv.slice(2);
+const ran = {
+  replay: skipReplay !== "1",
+  rotation: skipRotation !== "1",
+  threshold: skipThreshold !== "1",
+  invalid_proof: skipBadProof !== "1",
+  stale_proof: skipStaleProof !== "1",
+};
+fs.writeFileSync(file, `${JSON.stringify({
+  generated_at: new Date().toISOString(),
+  topology_file: topologyFile,
+  compose_file: composeFile,
+  requested_cases: cases,
+  ran,
+  status: "passed",
+}, null, 2)}\n`);
+NODE
+
+echo "Security hardening Docker test passed. Summary: ${SECURITY_SUMMARY_FILE}"

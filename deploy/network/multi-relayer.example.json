@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "hermesOperations": {
+    "sshUser": "ubuntu",
+    "identityFile": "~/.ssh/id_ed25519",
+    "knownHostsFiles": ["~/.ssh/known_hosts"],
+    "timeoutMs": 90000
+  },
+  "relayers": [
+    {
+      "name": "crossref-relayer-1",
+      "publicIPv4": "192.0.2.11",
+      "hostConfigurationVerified": false,
+      "hermes": {"workspace": "/opt/crossref/fresh-study", "project": "crossref-fresh-study-relay-1", "composeFile": "compose.json", "service": "relayer", "ready": false}
+    },
+    {
+      "name": "crossref-relayer-2",
+      "publicIPv4": "192.0.2.12",
+      "hostConfigurationVerified": false,
+      "hermes": {"workspace": "/opt/crossref/fresh-study-relay-2", "project": "crossref-fresh-study-relay-2", "composeFile": "compose.json", "service": "relayer", "ready": false}
+    },
+    {
+      "name": "crossref-relayer-3",
+      "publicIPv4": "192.0.2.13",
+      "hostConfigurationVerified": false,
+      "hermes": {"workspace": "/opt/crossref/fresh-study-relay-3", "project": "crossref-fresh-study-relay-3", "composeFile": "compose.json", "service": "relayer", "ready": false}
+    }
+  ]
+}

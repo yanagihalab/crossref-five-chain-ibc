@@ -4,6 +4,13 @@ Crossref Five-Chain IBC is a Cosmos SDK prototype for a cross-reference blockcha
 
 Japanese documentation is available in [README.ja.md](README.ja.md).
 
+## Current Validator and Relayer Software
+
+Use Go 1.26.9 or newer and Node 22. Run `make security-deps` before the first build.
+See the [startup and restore guide](docs/NODE-STARTUP.md) and
+[32-advisory remediation record](docs/SECURITY-REMEDIATION-20261014.ja.md).
+This source-only distribution excludes operational keys, databases, credentials and inventories.
+
 ## What This Repository Contains
 
 - `x/crossref`: Cosmos SDK module for domain registration, checkpoint storage, channel binding, cross-reference packet send/receive, ICS23 proof verification, and hysteresis signature verification.
@@ -64,7 +71,7 @@ The module also supports an experimental threshold signature encoding in the exi
 ## Requirements
 
 - macOS or Linux shell
-- Go toolchain compatible with the generated Cosmos SDK app
+- Go 1.26.9 or newer and Node 22
 - Docker Desktop or Docker Engine with Docker Compose
 - Internet access for Docker image pulls and Go dependency resolution when the module cache is empty
 
@@ -73,6 +80,8 @@ The module also supports an experimental threshold signature encoding in the exi
 From the repository root:
 
 ```bash
+make security-deps
+mkdir -p build
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
 docker compose -f docker/docker-compose.yml up -d --build
 docker/scripts/run-crossref-experiment.sh
@@ -121,6 +130,7 @@ node visualizer/generate-from-log.mjs /tmp/crossref-experiment.log visualizer/te
 Run Go tests:
 
 ```bash
+make security-deps
 go test -count=1 ./...
 ```
 

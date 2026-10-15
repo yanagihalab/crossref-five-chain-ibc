@@ -16,6 +16,7 @@ const requireNonEmptyWorkers = process.env.STRICT_NONEMPTY_WORKERS === "1";
 const failures = [];
 const observed = {};
 const idleWorkers = [];
+const channelOwners = new Map();
 
 for (const worker of activeWorkers) {
   const configFile = configPattern.replaceAll("{worker}", String(worker));
@@ -25,11 +26,20 @@ for (const worker of activeWorkers) {
     routes: topology.routes.filter((route) => route.relayerWorker === worker).map((route) => route.id),
   };
   for (const route of topology.routes.filter((candidate) => candidate.relayerWorker === worker)) {
-    if (!config.includes(`["crossref", "${route.fromChannel}"]`)) {
+    if (!chainHasPacketFilter(config, route.fromChainId, route.fromChannel)) {
       failures.push(`${route.id} missing source channel ${route.from}/${route.fromChannel} in worker ${worker}`);
     }
-    if (!config.includes(`["crossref", "${route.toChannel}"]`)) {
+    if (!chainHasPacketFilter(config, route.toChainId, route.toChannel)) {
       failures.push(`${route.id} missing destination channel ${route.to}/${route.toChannel} in worker ${worker}`);
+    }
+  }
+
+  for (const [chainId, channels] of packetFiltersByChain(config)) {
+    for (const channel of channels) {
+      const key = `${chainId}/${channel}`;
+      const owners = channelOwners.get(key) ?? [];
+      owners.push(worker);
+      channelOwners.set(key, owners);
     }
   }
 }
@@ -40,6 +50,13 @@ for (const worker of activeWorkers) {
     if (requireNonEmptyWorkers) {
       failures.push(`worker ${worker} has no assigned routes`);
     }
+  }
+}
+
+for (const [channel, owners] of channelOwners) {
+  const uniqueOwners = [...new Set(owners)];
+  if (uniqueOwners.length > 1) {
+    failures.push(`${channel} is allowed by multiple workers: ${uniqueOwners.join(", ")}`);
   }
 }
 
@@ -56,3 +73,26 @@ console.log(JSON.stringify({
   routes: topology.routes.length,
   observed,
 }, null, 2));
+
+function chainHasPacketFilter(config, chainId, channel) {
+  const filters = packetFiltersByChain(config);
+  return filters.get(chainId)?.has(channel) ?? false;
+}
+
+function packetFiltersByChain(config) {
+  const filters = new Map();
+  let currentChain = "";
+  for (const line of config.split(/\n/)) {
+    const id = line.match(/^id = "([^"]+)"/);
+    if (id) {
+      currentChain = id[1];
+      continue;
+    }
+    const filter = line.match(/^packet_filter = .*list = \[(.*)\]/);
+    if (filter && currentChain) {
+      const channels = [...filter[1].matchAll(/\["crossref", "([^"]+)"\]/g)].map((match) => match[1]);
+      filters.set(currentChain, new Set(channels));
+    }
+  }
+  return filters;
+}

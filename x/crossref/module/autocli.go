@@ -13,6 +13,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service:              types.Query_serviceDesc.ServiceName,
 			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{RpcMethod: "History", Use: "history", Short: "Shows automatic history round and canonical signing bytes"},
+				{RpcMethod: "HistoryRound", Use: "history-round [round]", Short: "Shows a stored history round", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "round"}}},
 				{
 					RpcMethod: "Params",
 					Use:       "params",
@@ -50,6 +52,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
+					RpcMethod: "CrossReferenceAck",
+					Use:       "crossref-ack [port-id] [channel-id] [packet-sequence]",
+					Short:     "Shows a Crossref application ACK stored after an IBC acknowledgement",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "port_id"},
+						{ProtoField: "channel_id"},
+						{ProtoField: "packet_sequence"},
+					},
+				},
+				{
 					RpcMethod:      "AccountabilityEvent",
 					Use:            "accountability-event [event-id]",
 					Short:          "Shows an accountability event",
@@ -60,12 +72,27 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "accountability-events",
 					Short:     "Lists accountability events",
 				},
+				{
+					RpcMethod:      "TrustedLightClientState",
+					Use:            "trusted-light-client-state [domain-id]",
+					Short:          "Shows the trusted light-client state for a domain",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "domain_id"}},
+				},
+				{
+					RpcMethod:      "LightClientUpdates",
+					Use:            "light-client-updates [domain-id]",
+					Short:          "Lists trusted light-client updates for a domain",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "domain_id"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service:              types.Msg_serviceDesc.ServiceName,
 			EnhanceCustomCommand: true, // only required if you want to use the custom command
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{RpcMethod: "ConfigureHistory", Skip: true},
+				{RpcMethod: "AttachHistoryProof", Skip: true},
+				{RpcMethod: "SignHistoryRound", Use: "sign-history-round [round] [signature]", Short: "Submits an Ed25519 signature over the complete history round", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "round"}, {ProtoField: "signature"}}},
 				{
 					RpcMethod: "UpdateParams",
 					Skip:      true, // skipped because authority gated

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const deniedPath = /(^|\/)(?:\.env(?:\..*)?|secrets|hermes-keys|keyring-[^/]*|generated|\.security-deps)(?:\/|$)|\.(?:key|pem|p12|pfx|mnemonic|sparsebundle|cms)$|(?:^|\/)(?:priv_validator_key|node_key|priv_validator_state)\.json$/;
 const deniedText = [
+  ['fixed-mnemonic', /(?:mnemonic\s*[:=]\s*|MNEMONIC:\s*|\?\?\s*)["'](?:[a-z]+ ){11,23}[a-z]+["']/i],
   ['private-key-block', /-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----/],
   ['private-key-payload', /["']priv_key["']\s*:\s*\{[^}]*["']value["']\s*:\s*["'][A-Za-z0-9+/]{40,}={0,2}["']/],
   ['operator-home', /\/Users\/[a-zA-Z0-9_.-]+\//],

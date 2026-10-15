@@ -24,6 +24,7 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -p 2 -o build/tx-pool-decode-linux-amd64 ./cmd/tx-pool-decode
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -p 2 -o build/crossrefd-linux-amd64 ./cmd/crossrefdd
           make govulncheck-binary BINARY=build/crossrefd-linux-amd64
+          node docker/scripts/prepare-local-secrets.mjs --binary build/crossrefd-linux-amd64
           node --test --test-concurrency=2 deploy/network/test-*.mjs deploy/recovery/test-*.mjs docker/scripts/test-multi-relayer-adaptation.mjs
       - name: Vulnerability Check
         run: make govulncheck

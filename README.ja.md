@@ -82,6 +82,8 @@ domain は Ed25519 の `hysteresis_public_key` を登録できる。
 make security-deps
 mkdir -p build
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
+go build -mod=readonly -o build/crossrefdd ./cmd/crossrefdd
+node docker/scripts/prepare-local-secrets.mjs
 docker compose -f docker/docker-compose.yml up -d --build
 docker/scripts/run-crossref-experiment.sh
 ```
@@ -93,6 +95,8 @@ Five-chain cross-reference experiment passed.
 ```
 
 Docker 実験の詳細は [docker/README.ja.md](docker/README.ja.md) を参照する。
+Docker用の鍵も利用時に新規生成し、ignoredの `docker/generated/local-secrets` へ保存する。
+既存世代を上書き・再生成しない。過去の固定デモ鍵で作ったデータへ新しい鍵を混ぜない。
 
 ## Visualizer
 

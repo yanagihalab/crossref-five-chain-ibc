@@ -17,6 +17,7 @@ test('public distribution rejects runtime identities, credentials and private pa
     assert.ok(inspectPublicFile('fixture.txt', text).length);
   }
   assert.deepEqual(inspectPublicFile('inventory.example.json', '{"address":"192.0.2.1"}'), []);
+  assert.ok(inspectPublicFile('fixture.txt', 'const mnemonic = "' + Array(24).fill('synthetic').join(' ') + '"').includes('fixed-mnemonic'));
 });
 
 test('public source retains all 32 explicit remediation records', () => {

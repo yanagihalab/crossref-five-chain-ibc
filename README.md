@@ -83,6 +83,8 @@ From the repository root:
 make security-deps
 mkdir -p build
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
+go build -mod=readonly -o build/crossrefdd ./cmd/crossrefdd
+node docker/scripts/prepare-local-secrets.mjs
 docker compose -f docker/docker-compose.yml up -d --build
 docker/scripts/run-crossref-experiment.sh
 ```
@@ -94,6 +96,8 @@ Five-chain cross-reference experiment passed.
 ```
 
 For the detailed Docker experiment guide, see [docker/README.md](docker/README.md).
+Docker identities are generated locally in ignored `docker/generated/local-secrets`.
+Never regenerate an existing generation or mix new identities with data made using old demo keys.
 
 ## Visualizer
 

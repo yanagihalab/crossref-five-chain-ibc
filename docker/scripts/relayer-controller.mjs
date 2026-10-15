@@ -29,7 +29,7 @@ const routeFeeFile = resolvePath(args.routeFeeFile ?? process.env.CONTROLLER_ROU
 const minPacketFee = nonNegativeNumber(args.minPacketFee ?? process.env.CONTROLLER_MIN_PACKET_FEE ?? "0", "CONTROLLER_MIN_PACKET_FEE");
 const feeMode = enumValue(args.feeMode ?? process.env.CONTROLLER_FEE_MODE ?? "metadata", "CONTROLLER_FEE_MODE", ["off", "metadata", "enforce"]);
 const relayerImage = args.relayerImage ?? process.env.CONTROLLER_RELAYER_IMAGE ?? "ghcr.io/informalsystems/hermes:1.10.5";
-const relayerMnemonic = process.env.RELAYER_MNEMONIC ?? "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit";
+const relayerMnemonicFile = resolvePath(process.env.RELAYER_MNEMONIC_FILE ?? "docker/generated/local-secrets/relayer.mnemonic");
 const clearOnInterval = flag(args.clearOnInterval ?? process.env.CONTROLLER_CLEAR_ON_INTERVAL);
 const disabledWorkers = new Set(splitList(args.disabledWorkers ?? process.env.DISABLED_WORKERS ?? process.env.CONTROLLER_DISABLED_WORKERS ?? "").map(Number));
 const dryRunDelayMs = nonNegativeInt(args.dryRunDelayMs ?? process.env.CONTROLLER_DRY_RUN_DELAY_MS ?? "0", "CONTROLLER_DRY_RUN_DELAY_MS");
@@ -379,7 +379,7 @@ function hermesCommand(topology, route, worker, hermesArgs, key = keyForWorker(w
   const config = writeControllerHermesConfig(topology, worker, key);
   const network = dryRun ? "" : composeNetwork(topology);
   const env = [
-    "-e", `RELAYER_MNEMONIC=${relayerMnemonic}`,
+    "-e", "RELAYER_MNEMONIC_FILE=/run/secrets/relayer.mnemonic",
     "-e", "HERMES_CONFIG=/config.toml",
     "-e", `RELAYER_INDEX=${worker}`,
     "-e", `RELAYER_KEY_NAME=${key.keyName}`,
@@ -393,6 +393,7 @@ function hermesCommand(topology, route, worker, hermesArgs, key = keyForWorker(w
       "--rm",
       ...(network ? ["--network", network] : []),
       ...env,
+      "-v", `${relayerMnemonicFile}:/run/secrets/relayer.mnemonic:ro`,
       "-v", `${config}:/config.toml:ro`,
       "-v", `${path.join(root, "docker/scripts")}:/opt/crossref/scripts:ro`,
       "--entrypoint", "/bin/sh",

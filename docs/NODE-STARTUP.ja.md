@@ -165,3 +165,8 @@ checkpointは `chainId`、10進文字列の`signingHeight`、相対名からSHA2
 公開用テストは合成fixtureとmock SSHを使う。新VPSでの実consensusやHermes実配送、
 Rust製Hermesの脆弱性検査、旧データのupgrade互換性を実証したという意味ではない。
 既存lint指摘は脆弱性対応と別に残る。全CIが常にgreenとは主張しない。
+
+従来の固定デモ秘密鍵・Docker用復元フレーズは現行ソースから除いた。
+ローカルDocker実験も `docker/scripts/prepare-local-secrets.mjs` で利用時に生成する。
+生成した新規世代は上書きせず、古いvolumeや署名状態を新しい鍵へ無断で差し替えない。
+すでに公開されていた履歴は書き換えないため、古いデモ鍵は秘密として再利用できない。

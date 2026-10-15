@@ -80,6 +80,8 @@ Build the Linux ARM64 daemon used by the Docker image:
 make security-deps
 mkdir -p build
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
+go build -mod=readonly -o build/crossrefdd ./cmd/crossrefdd
+node docker/scripts/prepare-local-secrets.mjs
 ```
 
 For an Intel/AMD Linux Docker host, build `linux/amd64` instead and update the

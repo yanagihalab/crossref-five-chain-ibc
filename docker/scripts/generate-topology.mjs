@@ -23,11 +23,6 @@ if (relayerShardMode === "destination" && channelMode !== "directed") {
 
 fs.mkdirSync(outDir, { recursive: true });
 
-const mnemonic =
-  "flight theme grace pulp vocal pistol slight assume major blossom upgrade solution picture script behind human whip rule goat raw search cube breeze hundred";
-const relayerMnemonic =
-  "turtle all pyramid produce tray equip elder border rose risk slight panther grant price smile try fly street carpet wage among hole join suit";
-
 const chains = Array.from({ length: chainCount }, (_, index) => {
   const suffix = suffixFor(index);
   return {
@@ -248,8 +243,8 @@ function compose(topology, stem) {
     lines.push(`      CHAIN_ID: ${chain.chainId}`);
     lines.push(`      MONIKER: ${chain.service}`);
     lines.push("      HOME_DIR: /var/crossref");
-    lines.push(`      VALIDATOR_MNEMONIC: "${mnemonic}"`);
-    lines.push(`      RELAYER_MNEMONIC: "${relayerMnemonic}"`);
+    lines.push("      VALIDATOR_MNEMONIC_FILE: /run/secrets/validator.mnemonic");
+    lines.push("      RELAYER_MNEMONIC_FILE: /run/secrets/relayer.mnemonic");
     lines.push(`      RELAYER_WORKER_COUNT: "${topology.relayerCount}"`);
     lines.push('      CROSSREF_MAX_CHECKPOINT_PROOF_LAG: "${CROSSREF_MAX_CHECKPOINT_PROOF_LAG:-10000}"');
     lines.push('      CROSSREF_REQUIRE_CONSENSUS_PROOF: "${CROSSREF_REQUIRE_CONSENSUS_PROOF:-false}"');
@@ -260,6 +255,8 @@ function compose(topology, stem) {
     lines.push(`      - "${chain.apiPort}:1317"`);
     lines.push("    volumes:");
     lines.push(`      - ${chain.service}-data:/var/crossref`);
+    lines.push("      - ./local-secrets/validator.mnemonic:/run/secrets/validator.mnemonic:ro");
+    lines.push("      - ./local-secrets/relayer.mnemonic:/run/secrets/relayer.mnemonic:ro");
     lines.push("    healthcheck:");
     lines.push(`      test: ["CMD-SHELL", "curl -sf http://localhost:26657/status | grep -Eq '\\"latest_block_height\\":\\"[1-9][0-9]*\\"'"]`);
     lines.push("      interval: 5s");
@@ -277,7 +274,7 @@ function compose(topology, stem) {
     lines.push("        condition: service_healthy");
   }
   lines.push("    environment:");
-  lines.push(`      RELAYER_MNEMONIC: "${relayerMnemonic}"`);
+  lines.push("      RELAYER_MNEMONIC_FILE: /run/secrets/relayer.mnemonic");
   lines.push("      HERMES_CONFIG: /root/.hermes/config.toml");
   lines.push("      RELAYER_MODE: init");
   lines.push(`      CROSSREF_CHAIN_IDS: "${topology.chains.map((c) => c.chainId).join(" ")}"`);
@@ -286,6 +283,7 @@ function compose(topology, stem) {
   lines.push("    volumes:");
   lines.push(`      - ./hermes-${stem}.toml:/root/.hermes/config.toml:ro`);
   lines.push("      - ../scripts:/opt/crossref/scripts:ro");
+  lines.push("      - ./local-secrets/relayer.mnemonic:/run/secrets/relayer.mnemonic:ro");
   lines.push("");
   for (let worker = 1; worker <= topology.relayerCount; worker++) {
     lines.push(`  relayer-${worker}:`);
@@ -295,7 +293,7 @@ function compose(topology, stem) {
     lines.push("      relayer-init:");
     lines.push("        condition: service_completed_successfully");
     lines.push("    environment:");
-    lines.push(`      RELAYER_MNEMONIC: "${relayerMnemonic}"`);
+    lines.push("      RELAYER_MNEMONIC_FILE: /run/secrets/relayer.mnemonic");
     lines.push("      HERMES_CONFIG: /root/.hermes/config.toml");
     lines.push("      RELAYER_MODE: start");
     lines.push(`      RELAYER_INDEX: "${worker}"`);
@@ -305,6 +303,7 @@ function compose(topology, stem) {
     lines.push("    volumes:");
     lines.push(`      - ./hermes-${stem}-worker-${worker}.toml:/root/.hermes/config.toml:ro`);
     lines.push("      - ../scripts:/opt/crossref/scripts:ro");
+    lines.push("      - ./local-secrets/relayer.mnemonic:/run/secrets/relayer.mnemonic:ro");
     lines.push("");
   }
   lines.push("volumes:");

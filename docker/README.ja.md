@@ -75,6 +75,8 @@ Docker image 内で使う Linux ARM64 版の daemon をビルドする。
 make security-deps
 mkdir -p build
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./build/crossrefd-linux-arm64 ./cmd/crossrefdd
+go build -mod=readonly -o build/crossrefdd ./cmd/crossrefdd
+node docker/scripts/prepare-local-secrets.mjs
 ```
 
 Intel/AMD Linux Docker host で動かす場合は `linux/amd64` で build し、Dockerfile または出力 path を合わせて変更する。

@@ -1,8 +1,13 @@
 #!/usr/bin/env sh
 set -eu
+umask 077
 
 CONFIG="${HERMES_CONFIG:-/root/.hermes/config.toml}"
-RELAYER_MNEMONIC="${RELAYER_MNEMONIC:?RELAYER_MNEMONIC is required}"
+RELAYER_MNEMONIC="${RELAYER_MNEMONIC:-}"
+if [ -z "$RELAYER_MNEMONIC" ] && [ -n "${RELAYER_MNEMONIC_FILE:-}" ]; then
+  IFS= read -r RELAYER_MNEMONIC < "$RELAYER_MNEMONIC_FILE"
+fi
+test -n "$RELAYER_MNEMONIC" || { echo "A local Relayer mnemonic file is required" >&2; exit 1; }
 MNEMONIC_FILE="/tmp/crossref-relayer-mnemonic"
 RELAYER_INDEX="${RELAYER_INDEX:-0}"
 CHAIN_IDS="${CROSSREF_CHAIN_IDS:-crossref-a crossref-b crossref-c crossref-d crossref-e}"
